@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence } from "framer-motion";
 
 // ─── GLOBAL STYLES ────────────────────────────────────────────────────────────
 const GlobalStyles = () => (
@@ -177,15 +177,15 @@ const Check = ({ s = 16 }) => (
 const S = {
   async get(k) {
     try {
-      const r = await window.storage.get(k);
-      return r ? JSON.parse(r.value) : null;
+      const v = localStorage.getItem(k);
+      return v ? JSON.parse(v) : null;
     } catch {
       return null;
     }
   },
   async set(k, v) {
     try {
-      await window.storage.set(k, JSON.stringify(v));
+      localStorage.setItem(k, JSON.stringify(v));
     } catch (e) {
       console.error("Storage error:", e);
     }
@@ -346,7 +346,7 @@ STRUCTURE :
 
 Si tu te souviens d'un échange : utilise "Tu me parlais de…" naturellement.`;
 
-  const resp = await fetch("https://api.anthropic.com/v1/messages", {
+  const resp = await fetch("/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
