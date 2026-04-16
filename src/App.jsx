@@ -248,7 +248,7 @@ function StripeModal({ profile, onClose, onSuccess }) {
 
         <div style={{ textAlign: "center", marginBottom: 28 }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "linear-gradient(135deg,var(--terra),var(--terra-d))", borderRadius: 50, padding: "6px 14px", color: "#fff", fontSize: 12, fontWeight: 500, marginBottom: 16 }}>
-            <Star s={12} /> Parentaly Premium
+            <Star s={12} /> Parentelïa Premium
           </div>
           <h2 className="serif" style={{ fontSize: 28, fontWeight: 600, marginBottom: 8 }}>Accompagnement complet</h2>
           <p style={{ color: "var(--brown-m)", fontSize: 14, fontWeight: 300, lineHeight: 1.5 }}>
@@ -419,7 +419,7 @@ function Onboarding({ onDone }) {
         <div style={{ textAlign: "center", marginBottom: 32 }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "var(--terra)" }}>
             <Leaf s={22} />
-            <span className="serif" style={{ fontSize: 13, fontWeight: 600, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--terra-d)" }}>Parentaly</span>
+            <span className="serif" style={{ fontSize: 13, fontWeight: 600, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--terra-d)" }}>Parentelïa</span>
           </div>
         </div>
 
@@ -557,7 +557,7 @@ function Home({ profile, onStart, onPremium }) {
         <div style={{ textAlign: "center", marginBottom: 36 }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "var(--terra)", marginBottom: 22 }}>
             <Leaf s={24} />
-            <span className="serif" style={{ fontSize: 13, fontWeight: 600, letterSpacing: ".14em", textTransform: "uppercase", color: "var(--terra-d)" }}>Parentaly</span>
+            <span className="serif" style={{ fontSize: 13, fontWeight: 600, letterSpacing: ".14em", textTransform: "uppercase", color: "var(--terra-d)" }}>Parentelïa</span>
           </div>
           <h1 className="serif" style={{ fontSize: 36, fontWeight: 400, lineHeight: 1.2, marginBottom: 10 }}>
             {greet},<br /><em>{profile.parentName}</em> 🌸

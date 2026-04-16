@@ -1,4 +1,4 @@
-// server.js — Backend Parentaly (Node.js + Express + Stripe)
+// server.js — Backend Parentelïa (Node.js + Express + Stripe)
 // Déploie sur Railway, Render, ou Vercel Functions
 
 import express from "express";
@@ -73,4 +73,4 @@ app.get("*", (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🌿 Parentaly server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🌿 Parentelïa server running on port ${PORT}`));
