@@ -172,6 +172,23 @@ const Check = ({ s = 16 }) => (
     <polyline points="20 6 9 17 4 12"/>
   </svg>
 );
+const HomeIcon = ({ s = 22 }) => (
+  <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+    <polyline points="9 22 9 12 15 12 15 22"/>
+  </svg>
+);
+const ChatIcon = ({ s = 22 }) => (
+  <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+  </svg>
+);
+const UserIcon = ({ s = 22 }) => (
+  <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+    <circle cx="12" cy="7" r="4"/>
+  </svg>
+);
 
 // ─── STORAGE ──────────────────────────────────────────────────────────────────
 const S = {
@@ -270,7 +287,7 @@ function StripeModal({ profile, onClose, onSuccess }) {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
           {[
             { key: "monthly", label: "Mensuel", price: "9,99€/mois", sub: "" },
-            { key: "annual",  label: "Annuel",  price: "7,99€/mois", sub: "2 mois offerts" },
+            { key: "annual",  label: "Annuel",  price: "79,99€/an",  sub: "2 mois offerts" },
           ].map(p => (
             <button key={p.key} onClick={() => setSelected(p.key)}
               style={{
@@ -350,7 +367,7 @@ Si tu te souviens d'un échange : utilise "Tu me parlais de…" naturellement.`;
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-sonnet-4-6",
       max_tokens: 1000,
       system,
       messages: messages.map(m => ({ role: m.role, content: m.content }))
@@ -369,17 +386,19 @@ function calcAge(birth) {
     const b = new Date(birth);
     if (isNaN(b.getTime())) return null;
     const now = new Date();
-    const mo = (now.getFullYear() - b.getFullYear()) * 12 + now.getMonth() - b.getMonth();
+    let mo = (now.getFullYear() - b.getFullYear()) * 12 + now.getMonth() - b.getMonth();
+    if (now.getDate() < b.getDate()) mo--;
     if (mo < 0) return null;
-    if (mo < 1) return "Nouveau-né";
+    if (mo === 0) return "Nouveau-né";
     if (mo < 12) return mo + " mois";
     const y = Math.floor(mo / 12), m = mo % 12;
-    return m > 0 ? y + " ans " + m + " mois" : y + " ans";
+    return m > 0 ? `${y} ans ${m} mois` : `${y} ans`;
   } catch {
     return null;
   }
 }
-const newChild = () => ({ id: Date.now().toString(), firstName: "", birthDate: "", temperament: "", notes: "" });
+let _childId = 0;
+const newChild = () => ({ id: `c-${Date.now()}-${++_childId}`, firstName: "", birthDate: "", temperament: "", notes: "" });
 
 // ─── ONBOARDING ───────────────────────────────────────────────────────────────
 const ROLES = ["Maman", "Papa", "Co-parent", "Autre"];
@@ -576,12 +595,15 @@ function Home({ profile, onStart, onPremium }) {
         {profile.children.filter(c => c.firstName).length > 0 && (
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .3 }}
             style={{ background: "var(--white)", borderRadius: 20, padding: "14px 18px", marginBottom: 16, border: "1px solid var(--petal)", display: "flex", gap: 8, flexWrap: "wrap", boxShadow: "var(--shadow-s)" }}>
-            {profile.children.filter(c => c.firstName).map(c => (
-              <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 6, background: "var(--cream)", borderRadius: 50, padding: "5px 13px" }}>
-                <span style={{ fontSize: 13, fontWeight: 500 }}>{c.firstName}</span>
-                {c.age && <span style={{ fontSize: 11, color: "var(--brown-l)", fontStyle: "italic" }}>{c.age}</span>}
-              </div>
-            ))}
+            {profile.children.filter(c => c.firstName).map(c => {
+              const age = calcAge(c.birthDate) || c.age;
+              return (
+                <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 6, background: "var(--cream)", borderRadius: 50, padding: "5px 13px" }}>
+                  <span style={{ fontSize: 13, fontWeight: 500 }}>{c.firstName}</span>
+                  {age && <span style={{ fontSize: 11, color: "var(--brown-l)", fontStyle: "italic" }}>{age}</span>}
+                </div>
+              );
+            })}
           </motion.div>
         )}
 
@@ -715,9 +737,9 @@ function Chat({ profile, isSos, onBack, onPremium }) {
       {/* Header */}
       <div style={{ background: "var(--white)", borderBottom: "1px solid var(--petal)", padding: "14px 20px", display: "flex", alignItems: "center", gap: 12, boxShadow: "var(--shadow-s)", flexShrink: 0 }}>
         <button onClick={onBack} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--brown-m)", display: "flex", padding: 4 }}><Back s={19} /></button>
-        <div className="av">E</div>
+        <div className="av">El</div>
         <div>
-          <div className="serif" style={{ fontSize: 17, fontWeight: 600, lineHeight: 1.1 }}>Elïa</div>
+          <div className="serif" style={{ fontSize: 17, fontWeight: 600, lineHeight: 1.1 }}>{"El\u00EFa"}</div>
           <div style={{ fontSize: 11, color: isSos ? "var(--terra)" : "var(--sage)", fontStyle: "italic" }}>
             {isSos ? "🔴 Mode SOS" : "Assistante parentale"}
           </div>
@@ -838,6 +860,173 @@ function Chat({ profile, isSos, onBack, onPremium }) {
   );
 }
 
+// ─── BOTTOM NAV ───────────────────────────────────────────────────────────────
+function BottomNav({ screen, onNavigate }) {
+  const tabs = [
+    { id: "home",    label: "Accueil", Icon: HomeIcon },
+    { id: "chat",    label: "Elïa",    Icon: ChatIcon },
+    { id: "profile", label: "Profil",  Icon: UserIcon },
+  ];
+  return (
+    <div style={{
+      position: "fixed", bottom: 0, left: 0, right: 0,
+      background: "var(--white)", borderTop: "1px solid var(--petal)",
+      display: "flex", zIndex: 100, boxShadow: "0 -4px 20px rgba(46,31,22,.06)"
+    }}>
+      {tabs.map(({ id, label, Icon }) => {
+        const active = screen === id;
+        return (
+          <button key={id} onClick={() => onNavigate(id)} style={{
+            flex: 1, display: "flex", flexDirection: "column", alignItems: "center",
+            justifyContent: "center", gap: 4, padding: "10px 0 12px",
+            background: "none", border: "none", cursor: "pointer",
+            color: active ? "var(--terra)" : "var(--brown-l)",
+            transition: "color .18s"
+          }}>
+            <Icon s={21} />
+            <span style={{ fontSize: 10, fontWeight: active ? 500 : 400, letterSpacing: ".03em" }}>{label}</span>
+            {active && <span style={{ position: "absolute", bottom: 0, width: 24, height: 2, background: "var(--terra)", borderRadius: 2 }} />}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── PROFILE SCREEN ───────────────────────────────────────────────────────────
+function ProfileScreen({ profile, onSave, onPremium }) {
+  const [d, setD] = useState({ ...profile, children: profile.children.map(c => ({ ...c })) });
+  const [saved, setSaved] = useState(false);
+
+  const upd = patch => setD(p => ({ ...p, ...patch }));
+  const updChild = (i, field, val) => {
+    const c = [...d.children];
+    c[i] = { ...c[i], [field]: val };
+    upd({ children: c });
+  };
+
+  const save = async () => {
+    const enriched = { ...d, children: d.children.map(c => ({ ...c, age: calcAge(c.birthDate) || c.age })) };
+    await S.set("elia_profile", enriched);
+    onSave(enriched);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", background: "var(--cream)", paddingBottom: 80 }}>
+      <div style={{ background: "var(--white)", borderBottom: "1px solid var(--petal)", padding: "20px 24px", boxShadow: "var(--shadow-s)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--terra)", marginBottom: 4 }}>
+          <Leaf s={18} />
+          <span className="serif" style={{ fontSize: 12, fontWeight: 600, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--terra-d)" }}>Parentelïa</span>
+        </div>
+        <h1 className="serif" style={{ fontSize: 26, fontWeight: 600 }}>Mon profil</h1>
+      </div>
+
+      <div style={{ maxWidth: 480, margin: "0 auto", padding: "24px 20px", display: "flex", flexDirection: "column", gap: 20 }}>
+
+        {/* Premium badge */}
+        {profile.isPremium ? (
+          <div style={{ background: "linear-gradient(135deg,var(--terra),var(--terra-d))", borderRadius: 16, padding: "14px 18px", display: "flex", alignItems: "center", gap: 10, color: "#fff" }}>
+            <Star s={16} />
+            <div>
+              <p style={{ fontSize: 13, fontWeight: 500 }}>Abonnement Premium actif</p>
+              <p style={{ fontSize: 12, opacity: .85, fontWeight: 300 }}>Mémoire longue · Analyses · Illimité</p>
+            </div>
+          </div>
+        ) : (
+          <div onClick={onPremium} style={{ background: "var(--white)", border: "1.5px dashed var(--rose-d)", borderRadius: 16, padding: "14px 18px", display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
+            <Star s={16} />
+            <div style={{ flex: 1 }}>
+              <p style={{ fontSize: 13, fontWeight: 500, color: "var(--terra-d)" }}>Passer à Premium</p>
+              <p style={{ fontSize: 12, color: "var(--brown-m)", fontWeight: 300 }}>9,99€/mois · Résiliable à tout moment</p>
+            </div>
+            <span style={{ fontSize: 13, color: "var(--terra)" }}>→</span>
+          </div>
+        )}
+
+        {/* Identité */}
+        <div style={{ background: "var(--white)", borderRadius: 20, padding: "20px", border: "1px solid var(--petal)", boxShadow: "var(--shadow-s)" }}>
+          <p style={{ fontSize: 11, fontWeight: 500, color: "var(--brown-l)", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 14 }}>Identité</p>
+          <div style={{ marginBottom: 14 }}>
+            <label style={{ fontSize: 11, color: "var(--brown-l)", display: "block", marginBottom: 6 }}>Prénom</label>
+            <input className="field" value={d.parentName} onChange={e => upd({ parentName: e.target.value })} />
+          </div>
+          <div>
+            <label style={{ fontSize: 11, color: "var(--brown-l)", display: "block", marginBottom: 8 }}>Tu es…</label>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {ROLES.map(r => (
+                <button key={r} className={`chip ${d.parentRole === r ? "on" : ""}`} onClick={() => upd({ parentRole: r })}>{r}</button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Enfants */}
+        <div style={{ background: "var(--white)", borderRadius: 20, padding: "20px", border: "1px solid var(--petal)", boxShadow: "var(--shadow-s)" }}>
+          <p style={{ fontSize: 11, fontWeight: 500, color: "var(--brown-l)", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 14 }}>Mes enfants</p>
+          {d.children.map((c, i) => (
+            <div key={c.id} style={{ background: "var(--cream)", borderRadius: 14, padding: 14, marginBottom: 10, border: "1px solid var(--petal)", position: "relative" }}>
+              {d.children.length > 1 && (
+                <button onClick={() => upd({ children: d.children.filter((_, idx) => idx !== i) })}
+                  style={{ position: "absolute", top: 10, right: 10, background: "none", border: "none", cursor: "pointer", color: "var(--brown-l)" }}>
+                  <Xmark />
+                </button>
+              )}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
+                <input className="field" placeholder="Prénom" value={c.firstName} onChange={e => updChild(i, "firstName", e.target.value)} style={{ fontSize: 14 }} />
+                <input className="field" type="date" value={c.birthDate} onChange={e => updChild(i, "birthDate", e.target.value)} style={{ fontSize: 13 }} />
+              </div>
+              {c.birthDate && calcAge(c.birthDate) && (
+                <p style={{ fontSize: 12, color: "var(--terra)", marginBottom: 8, fontStyle: "italic" }}>🌿 {calcAge(c.birthDate)}</p>
+              )}
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {TEMPS.map(t => (
+                  <button key={t} className={`chip ${c.temperament === t ? "on" : ""}`} style={{ fontSize: 11, padding: "5px 11px" }} onClick={() => updChild(i, "temperament", c.temperament === t ? "" : t)}>{t}</button>
+                ))}
+              </div>
+            </div>
+          ))}
+          <button onClick={() => upd({ children: [...d.children, newChild()] })}
+            style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "1.5px dashed var(--rose-d)", borderRadius: 12, padding: "9px 16px", color: "var(--brown-m)", cursor: "pointer", fontSize: 13, width: "100%", justifyContent: "center" }}>
+            <Plus /> Ajouter un enfant
+          </button>
+        </div>
+
+        {/* Défis */}
+        <div style={{ background: "var(--white)", borderRadius: 20, padding: "20px", border: "1px solid var(--petal)", boxShadow: "var(--shadow-s)" }}>
+          <p style={{ fontSize: 11, fontWeight: 500, color: "var(--brown-l)", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 14 }}>Ce qui me touche</p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {CHALS.map(c => (
+              <button key={c} className={`chip ${d.challenges.includes(c) ? "on" : ""}`}
+                onClick={() => upd({ challenges: d.challenges.includes(c) ? d.challenges.filter(x => x !== c) : [...d.challenges, c] })}>
+                {c}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Contexte */}
+        <div style={{ background: "var(--white)", borderRadius: 20, padding: "20px", border: "1px solid var(--petal)", boxShadow: "var(--shadow-s)" }}>
+          <p style={{ fontSize: 11, fontWeight: 500, color: "var(--brown-l)", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 14 }}>Mon contexte</p>
+          <textarea className="field" placeholder="ex. Je suis séparée, je gère tout seul…" value={d.freeText} onChange={e => upd({ freeText: e.target.value })} rows={4} style={{ resize: "none", lineHeight: 1.6 }} />
+        </div>
+
+        {/* Save */}
+        <button className="btn btn-t" onClick={save} style={{ position: "relative" }}>
+          {saved ? <><Check s={16} /> Sauvegardé !</> : "Enregistrer les modifications"}
+        </button>
+
+        {/* Reset */}
+        <button onClick={async () => { await S.set("elia_profile", null); await S.set("elia_memory", null); await S.set("elia_sessions", null); window.location.reload(); }}
+          style={{ background: "none", border: "none", cursor: "pointer", color: "var(--brown-l)", fontSize: 12, textAlign: "center", padding: "8px", fontStyle: "italic" }}>
+          Réinitialiser mon profil
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── ROOT ─────────────────────────────────────────────────────────────────────
 export default function App() {
   const [profile, setProfile] = useState(null);
@@ -851,7 +1040,6 @@ export default function App() {
       setScreen(p ? "home" : "onboarding");
     });
 
-    // Handle Stripe return
     const params = new URLSearchParams(window.location.search);
     if (params.get("success") === "1") {
       S.get("elia_profile").then(p => {
@@ -871,7 +1059,14 @@ export default function App() {
     setScreen("home");
   };
 
-  const handleStart = s => { setSos(s); setScreen("chat"); };
+  const handleNavigate = s => {
+    if (s === "chat") { setSos(false); }
+    setScreen(s);
+  };
+
+  const updateProfile = p => { setProfile(p); };
+
+  const showNav = ["home", "chat", "profile"].includes(screen);
 
   if (screen === "loading") return (
     <>
@@ -887,6 +1082,8 @@ export default function App() {
   return (
     <>
       <GlobalStyles />
+      {/* Extra padding for bottom nav */}
+      {showNav && <style>{`.has-nav { padding-bottom: 68px; }`}</style>}
 
       <AnimatePresence mode="wait">
         {screen === "onboarding" && (
@@ -895,8 +1092,8 @@ export default function App() {
           </motion.div>
         )}
         {screen === "home" && profile && (
-          <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <Home profile={profile} onStart={handleStart} onPremium={() => setShowPremium(true)} />
+          <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="has-nav">
+            <Home profile={profile} onStart={s => { setSos(s); setScreen("chat"); }} onPremium={() => setShowPremium(true)} />
           </motion.div>
         )}
         {screen === "chat" && profile && (
@@ -904,9 +1101,15 @@ export default function App() {
             <Chat profile={profile} isSos={sos} onBack={() => setScreen("home")} onPremium={() => setShowPremium(true)} />
           </motion.div>
         )}
+        {screen === "profile" && profile && (
+          <motion.div key="profile" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="has-nav">
+            <ProfileScreen profile={profile} onSave={updateProfile} onPremium={() => setShowPremium(true)} />
+          </motion.div>
+        )}
       </AnimatePresence>
 
-      {/* Stripe Premium Modal */}
+      {showNav && <BottomNav screen={screen} onNavigate={handleNavigate} />}
+
       <AnimatePresence>
         {showPremium && profile && (
           <StripeModal

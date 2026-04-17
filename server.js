@@ -1,6 +1,7 @@
 // server.js — Backend Parentelïa (Node.js + Express + Stripe)
 // Déploie sur Railway, Render, ou Vercel Functions
 
+import "dotenv/config";
 import express from "express";
 import Stripe from "stripe";
 import cors from "cors";
@@ -11,6 +12,27 @@ const app = express();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY); // clé secrète dans les variables d'env
 
 app.use(cors({ origin: process.env.FRONTEND_URL || "*" }));
+
+// ─── Webhook Stripe (doit être avant express.json pour lire le body brut) ───
+app.post("/api/webhook", express.raw({ type: "application/json" }), (req, res) => {
+  const sig = req.headers["stripe-signature"];
+  let event;
+
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+  } catch (err) {
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object;
+    console.log("✅ Paiement confirmé :", session.customer_email);
+    // Ici tu peux mettre à jour une DB, envoyer un email, etc.
+  }
+
+  res.json({ received: true });
+});
+
 app.use(express.json());
 
 app.post("/api/chat", async (req, res) => {
@@ -63,26 +85,6 @@ app.post("/api/create-checkout-session", async (req, res) => {
     console.error("Stripe error:", err.message);
     res.status(500).json({ error: err.message });
   }
-});
-
-// ─── Webhook Stripe (pour confirmer paiements) ──────────────────────────────
-app.post("/api/webhook", express.raw({ type: "application/json" }), (req, res) => {
-  const sig = req.headers["stripe-signature"];
-  let event;
-
-  try {
-    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
-  } catch (err) {
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
-
-  if (event.type === "checkout.session.completed") {
-    const session = event.data.object;
-    console.log("✅ Paiement confirmé :", session.customer_email);
-    // Ici tu peux mettre à jour une DB, envoyer un email, etc.
-  }
-
-  res.json({ received: true });
 });
 
 // ─── Catch-all → React app ───────────────────────────────────────────────────
