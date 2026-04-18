@@ -1,5 +1,25 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, Component } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+
+// ─── ERROR BOUNDARY ───────────────────────────────────────────────────────────
+class ErrorBoundary extends Component {
+  state = { error: null };
+  static getDerivedStateFromError(error) { return { error }; }
+  render() {
+    if (this.state.error) return (
+      <div style={{ minHeight: "100vh", background: "#F9F5EF", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+        <div style={{ textAlign: "center" }}>
+          <p style={{ fontSize: 16, color: "#6B4E3D", marginBottom: 16 }}>Une erreur est survenue. Merci de recharger la page.</p>
+          <button onClick={() => window.location.reload()} style={{ padding: "10px 24px", background: "#B96A4B", color: "#fff", border: "none", borderRadius: 10, cursor: "pointer", fontSize: 15 }}>Recharger</button>
+        </div>
+      </div>
+    );
+    return this.props.children;
+  }
+}
+
+// ─── SANITIZE ─────────────────────────────────────────────────────────────────
+const sanitize = str => (str || "").slice(0, 500).replace(/\[INST\]|\[\/INST\]|<\|system\|>|<\|user\|>/gi, "").replace(/\n{4,}/g, "\n\n");
 
 // ─── GLOBAL STYLES ────────────────────────────────────────────────────────────
 const GlobalStyles = () => (
@@ -409,8 +429,8 @@ function StripeModal({ profile, onClose, onSuccess }) {
         {/* Plan selector */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
           {[
-            { key: "monthly", label: "Mensuel", price: "9,99€/mois", sub: "" },
-            { key: "annual",  label: "Annuel",  price: "79,99€/an",  sub: "2 mois offerts" },
+            { key: "monthly", label: "Mensuel", price: "9,99€ TTC/mois", sub: "" },
+            { key: "annual",  label: "Annuel",  price: "79,99€ TTC/an",  sub: "2 mois offerts" },
           ].map(p => (
             <button key={p.key} onClick={() => setSelected(p.key)}
               style={{
@@ -437,7 +457,7 @@ function StripeModal({ profile, onClose, onSuccess }) {
           {loading ? "Chargement…" : "Commencer · Paiement sécurisé 🔒"}
         </button>
         <p style={{ fontSize: 11, color: "var(--brown-l)", textAlign: "center", marginTop: 10, fontStyle: "italic" }}>
-          Résiliable à tout moment · Paiement via Stripe
+          Résiliable à tout moment · Droit de rétractation 14j · Paiement via Stripe
         </p>
       </motion.div>
     </div>
@@ -483,11 +503,11 @@ NIVEAU GRATUIT :
 - 1 piste concrète maximum`;
 
   const system = `Tu es Elia, une assistante parentale émotionnelle et bienveillante.
-Tu accompagnes ${profile.parentName} (${profile.parentRole}).
+Tu accompagnes ${sanitize(profile.parentName)} (${sanitize(profile.parentRole)}).
 Enfants : ${children}.${multipleLabel ? ` (${multipleLabel})` : ""}
 ${birthCtx}
 ${profile.challenges?.length ? "Défis déclarés : " + profile.challenges.join(", ") + "." : ""}
-${profile.freeText ? "Contexte personnel : " + profile.freeText : ""}
+${profile.freeText ? "Contexte personnel : " + sanitize(profile.freeText) : ""}
 ${memBlock}
 ${premiumBlock}
 
@@ -744,9 +764,8 @@ const TIPS = [
 ];
 
 const MOODS = ["😰", "😔", "😐", "🙂", "😊"];
-const TODAY = new Date().toLocaleDateString("fr-FR");
-
 function Home({ profile, onStart, onPremium }) {
+  const TODAY = new Date().toLocaleDateString("fr-FR");
   const hour = new Date().getHours();
   const greet = hour < 12 ? "Bonjour" : hour < 18 ? "Bon après-midi" : "Bonsoir";
   const tip = TIPS[new Date().getDate() % TIPS.length];
@@ -884,7 +903,7 @@ function Home({ profile, onStart, onPremium }) {
               <p style={{ fontSize: 13, fontWeight: 500, color: "var(--terra-d)", marginBottom: 2 }}>Passer à Premium</p>
               <p style={{ fontSize: 12, color: "var(--brown-m)", fontWeight: 300 }}>Mémoire longue · Analyses · Suivi · Illimité</p>
             </div>
-            <span style={{ fontSize: 13, color: "var(--terra)", fontWeight: 500 }}>9,99€/mois →</span>
+            <span style={{ fontSize: 13, color: "var(--terra)", fontWeight: 500 }}>9,99€ TTC/mois →</span>
           </motion.div>
         )}
 
@@ -922,6 +941,14 @@ function Chat({ profile, isSos, onBack, onPremium }) {
       setMemory(mem);
       await S.set("elia_sessions", cnt + 1);
       if (isSos) await S.set("elia_last_sos", Date.now());
+
+      if (!isSos) {
+        const saved = await S.get("elia_chat_history") || [];
+        if (saved.length > 0) {
+          setMsgs(saved);
+          return;
+        }
+      }
 
       let welcome;
       if (isSos) {
@@ -974,7 +1001,11 @@ function Chat({ profile, isSos, onBack, onPremium }) {
         memory
       });
       const am = { role: "assistant", content: reply, id: "a" + Date.now() };
-      setMsgs(prev => [...prev, am]);
+      setMsgs(prev => {
+        const updated = [...prev, am];
+        if (!isSos) S.set("elia_chat_history", updated);
+        return updated;
+      });
 
       const entry = `${new Date().toLocaleDateString("fr-FR")} : "${txt.slice(0, 80)}"`;
       setMemory(prev => {
@@ -1048,7 +1079,7 @@ function Chat({ profile, isSos, onBack, onPremium }) {
                       <button
                         onClick={onPremium}
                         style={{ background: "var(--terra)", color: "#fff", border: "none", borderRadius: 10, padding: "8px 16px", fontSize: 13, cursor: "pointer", fontWeight: 500 }}>
-                        Découvrir · 9,99€/mois
+                        Découvrir · 9,99€ TTC/mois
                       </button>
                       <button onClick={() => setNudge(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--brown-l)", fontSize: 13 }}>Plus tard</button>
                     </div>
@@ -1160,7 +1191,7 @@ function BottomNav({ screen, onNavigate }) {
             justifyContent: "center", gap: 4, padding: "10px 0 12px",
             background: "none", border: "none", cursor: "pointer",
             color: active ? "var(--terra)" : "var(--brown-l)",
-            transition: "color .18s"
+            transition: "color .18s", position: "relative"
           }}>
             <Icon s={21} />
             <span style={{ fontSize: 10, fontWeight: active ? 500 : 400, letterSpacing: ".03em", fontVariantLigatures: "none" }}>{label}</span>
@@ -1218,7 +1249,7 @@ function ProfileScreen({ profile, onSave, onPremium }) {
             <Star s={16} />
             <div style={{ flex: 1 }}>
               <p style={{ fontSize: 13, fontWeight: 500, color: "var(--terra-d)" }}>Passer à Premium</p>
-              <p style={{ fontSize: 12, color: "var(--brown-m)", fontWeight: 300 }}>9,99€/mois · Résiliable à tout moment</p>
+              <p style={{ fontSize: 12, color: "var(--brown-m)", fontWeight: 300 }}>9,99€ TTC/mois · Résiliable à tout moment</p>
             </div>
             <span style={{ fontSize: 13, color: "var(--terra)" }}>→</span>
           </div>
@@ -1315,11 +1346,40 @@ function ProfileScreen({ profile, onSave, onPremium }) {
         </button>
 
         {/* Reset */}
-        <button onClick={async () => { await S.set("elia_profile", null); await S.set("elia_memory", null); await S.set("elia_sessions", null); window.location.reload(); }}
+        <button onClick={async () => { await S.set("elia_profile", null); await S.set("elia_memory", null); await S.set("elia_sessions", null); await S.set("elia_tracking", null); await S.set("elia_last_sos", null); await S.set("elia_chat_history", null); window.location.reload(); }}
           style={{ background: "none", border: "none", cursor: "pointer", color: "var(--brown-l)", fontSize: 12, textAlign: "center", padding: "8px", fontStyle: "italic" }}>
           Réinitialiser mon profil
         </button>
+
+        <MentionsLegales />
       </div>
+    </div>
+  );
+}
+
+function MentionsLegales() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ marginTop: 8 }}>
+      <button onClick={() => setOpen(!open)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--brown-l)", fontSize: 11, textAlign: "center", width: "100%", textDecoration: "underline" }}>
+        Mentions légales
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+            style={{ overflow: "hidden", background: "var(--white)", borderRadius: 16, padding: "16px 18px", marginTop: 8, fontSize: 11, color: "var(--brown-m)", lineHeight: 1.8, border: "1px solid var(--petal)" }}>
+            <strong style={{ display: "block", marginBottom: 8 }}>Mentions légales — Parentelïa</strong>
+            <strong>Éditeur :</strong> [Nom / Raison sociale à renseigner]<br />
+            <strong>Siège social :</strong> [Adresse à renseigner]<br />
+            <strong>SIRET :</strong> [Numéro à renseigner]<br />
+            <strong>Directeur de publication :</strong> [Nom à renseigner]<br /><br />
+            <strong>Hébergement :</strong> Railway (Railway Corp, 340 S Lemon Ave #4133, Walnut, CA 91789, USA)<br /><br />
+            <strong>Contact :</strong> privacy@parentelia.com<br /><br />
+            <strong>Droit de rétractation :</strong> Conformément à l'article L221-18 du Code de la consommation, vous disposez de 14 jours à compter de la souscription pour exercer votre droit de rétractation, sauf si vous avez expressément renoncé à ce droit après début d'exécution du service. Pour exercer ce droit : privacy@parentelia.com<br /><br />
+            <strong>Traitement des données :</strong> Les messages sont traités par l'API Anthropic (Claude), entreprise américaine. Ce transfert hors UE est encadré par les clauses contractuelles types de la Commission européenne.
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -1339,15 +1399,23 @@ export default function App() {
     });
 
     const params = new URLSearchParams(window.location.search);
-    if (params.get("success") === "1") {
-      S.get("elia_profile").then(p => {
-        if (p) {
-          const updated = { ...p, isPremium: true };
-          S.set("elia_profile", updated);
-          setProfile(updated);
-        }
-      });
+    const sessionId = params.get("session_id");
+    if (sessionId) {
       window.history.replaceState({}, "", window.location.pathname);
+      fetch(`/api/verify-session?id=${encodeURIComponent(sessionId)}`)
+        .then(r => r.json())
+        .then(({ paid }) => {
+          if (paid) {
+            S.get("elia_profile").then(p => {
+              if (p) {
+                const updated = { ...p, isPremium: true };
+                S.set("elia_profile", updated);
+                setProfile(updated);
+              }
+            });
+          }
+        })
+        .catch(() => {});
     }
   }, []);
 
@@ -1367,17 +1435,18 @@ export default function App() {
   const showNav = ["home", "chat", "profile"].includes(screen);
 
   if (screen === "loading") return (
-    <>
+    <ErrorBoundary>
       <GlobalStyles />
       <div style={{ minHeight: "100vh", background: "var(--cream)", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <motion.div animate={{ opacity: [.4, 1, .4] }} transition={{ duration: 2, repeat: Infinity }} style={{ color: "var(--terra)" }}>
           <Leaf s={32} />
         </motion.div>
       </div>
-    </>
+    </ErrorBoundary>
   );
 
   return (
+    <ErrorBoundary>
     <>
       <GlobalStyles />
       {/* Extra padding for bottom nav */}
@@ -1432,5 +1501,6 @@ export default function App() {
         )}
       </AnimatePresence>
     </>
+    </ErrorBoundary>
   );
 }
