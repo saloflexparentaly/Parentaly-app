@@ -210,6 +210,23 @@ const UserIcon = ({ s = 22 }) => (
   </svg>
 );
 
+// ─── DAILY LIMIT ─────────────────────────────────────────────────────────────
+const FREE_DAILY_LIMIT = 10;
+
+async function getDailyUsage() {
+  const today = new Date().toLocaleDateString("fr-FR");
+  const data = await S.get("elia_daily") || { date: "", count: 0 };
+  return data.date === today ? data.count : 0;
+}
+
+async function incrementDailyUsage() {
+  const today = new Date().toLocaleDateString("fr-FR");
+  const data = await S.get("elia_daily") || { date: "", count: 0 };
+  const count = data.date === today ? data.count + 1 : 1;
+  await S.set("elia_daily", { date: today, count });
+  return count;
+}
+
 // ─── STORAGE ──────────────────────────────────────────────────────────────────
 const S = {
   async get(k) {
@@ -355,8 +372,8 @@ function CrisisModal({ onClose }) {
 // ─── STRIPE MODAL ─────────────────────────────────────────────────────────────
 // Price IDs from your Stripe account
 const STRIPE_PRICES = {
-  monthly: "price_1TNFXv9TErY2lFQDN082ETex",
-  annual:  "price_1TNFXv9TErY2lFQDVoQGb1li",
+  monthly: "price_1TOHRf9TErY2lFQDoObZAF6t",
+  annual:  "price_1TOHS59TErY2lFQDZz2AterS",
 };
 
 function StripeModal({ profile, onClose, onSuccess }) {
@@ -429,8 +446,8 @@ function StripeModal({ profile, onClose, onSuccess }) {
         {/* Plan selector */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
           {[
-            { key: "monthly", label: "Mensuel", price: "9,99€ TTC/mois", sub: "" },
-            { key: "annual",  label: "Annuel",  price: "79,99€ TTC/an",  sub: "2 mois offerts" },
+            { key: "monthly", label: "Mensuel", price: "12,99€ TTC/mois", sub: "" },
+            { key: "annual",  label: "Annuel",  price: "99€ TTC/an",  sub: "~5€/mois offerts" },
           ].map(p => (
             <button key={p.key} onClick={() => setSelected(p.key)}
               style={{
@@ -530,7 +547,7 @@ Si tu te souviens d'un échange : utilise "Tu me parlais de…" naturellement.`;
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "claude-sonnet-4-6",
+      tier: isPremium ? "premium" : "free",
       max_tokens: isPremium ? 1200 : 600,
       system,
       messages: messages.slice(-msgLimit).map(m => ({ role: m.role, content: m.content }))
@@ -903,7 +920,7 @@ function Home({ profile, onStart, onPremium }) {
               <p style={{ fontSize: 13, fontWeight: 500, color: "var(--terra-d)", marginBottom: 2 }}>Passer à Premium</p>
               <p style={{ fontSize: 12, color: "var(--brown-m)", fontWeight: 300 }}>Mémoire longue · Analyses · Suivi · Illimité</p>
             </div>
-            <span style={{ fontSize: 13, color: "var(--terra)", fontWeight: 500 }}>9,99€ TTC/mois →</span>
+            <span style={{ fontSize: 13, color: "var(--terra)", fontWeight: 500 }}>12,99€ TTC/mois →</span>
           </motion.div>
         )}
 
@@ -918,7 +935,6 @@ function Home({ profile, onStart, onPremium }) {
 
 // ─── CHAT ─────────────────────────────────────────────────────────────────────
 const SOS_SHORTS = ["Je suis épuisée(é)", "Mon enfant ne dort pas", "Je me sens seul(e)", "J'ai besoin de souffler"];
-const FREE_MSG_LIMIT = 5;
 
 function Chat({ profile, isSos, onBack, onPremium }) {
   const [msgs, setMsgs] = useState([]);
@@ -927,6 +943,7 @@ function Chat({ profile, isSos, onBack, onPremium }) {
   const [memory, setMemory] = useState([]);
   const [nudge, setNudge] = useState(false);
   const [crisis, setCrisis] = useState(false);
+  const [dailyCount, setDailyCount] = useState(0);
   const bottomRef = useRef(null);
   const taRef = useRef(null);
   const initialized = useRef(false);
@@ -938,7 +955,9 @@ function Chat({ profile, isSos, onBack, onPremium }) {
     const init = async () => {
       const mem = await S.get("elia_memory") || [];
       const cnt = await S.get("elia_sessions") || 0;
+      const daily = await getDailyUsage();
       setMemory(mem);
+      setDailyCount(daily);
       await S.set("elia_sessions", cnt + 1);
       if (isSos) await S.set("elia_last_sos", Date.now());
 
@@ -978,8 +997,8 @@ function Chat({ profile, isSos, onBack, onPremium }) {
       setCrisis(true);
     }
 
-    // Freemium gate
-    if (!profile.isPremium && userMsgCount >= FREE_MSG_LIMIT) {
+    // Limite journalière gratuit
+    if (!profile.isPremium && dailyCount >= FREE_DAILY_LIMIT) {
       setNudge(true);
       return;
     }
@@ -1014,9 +1033,12 @@ function Chat({ profile, isSos, onBack, onPremium }) {
         return nm;
       });
 
-      // Show nudge after 4th user message for free users
-      if (!profile.isPremium && userMsgCount + 1 >= 4) {
-        setTimeout(() => setNudge(true), 800);
+      if (!profile.isPremium) {
+        const newCount = await incrementDailyUsage();
+        setDailyCount(newCount);
+        if (newCount >= FREE_DAILY_LIMIT - 2) {
+          setTimeout(() => setNudge(true), 800);
+        }
       }
     } catch (err) {
       console.error(err);
@@ -1071,15 +1093,19 @@ function Chat({ profile, isSos, onBack, onPremium }) {
                 <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
                   <Star s={15} />
                   <div>
-                    <p className="serif" style={{ fontSize: 15, fontStyle: "italic", marginBottom: 6 }}>Je commence à percevoir des tendances dans ce que tu vis…</p>
+                    <p className="serif" style={{ fontSize: 15, fontStyle: "italic", marginBottom: 6 }}>
+                      {dailyCount >= FREE_DAILY_LIMIT ? "Tu as atteint ta limite de 10 messages aujourd'hui." : "Je commence à percevoir des tendances dans ce que tu vis…"}
+                    </p>
                     <p style={{ fontSize: 13, color: "var(--brown-m)", lineHeight: 1.55, marginBottom: 12, fontWeight: 300 }}>
-                      Mes analyses approfondies, ma mémoire longue et tes rapports personnalisés sont dans la version complète.
+                      {dailyCount >= FREE_DAILY_LIMIT
+                        ? "Reviens demain ou passe à Premium pour un accès illimité avec Elia."
+                        : "Mes analyses approfondies, ma mémoire longue et tes rapports personnalisés sont dans la version complète."}
                     </p>
                     <div style={{ display: "flex", gap: 8 }}>
                       <button
                         onClick={onPremium}
                         style={{ background: "var(--terra)", color: "#fff", border: "none", borderRadius: 10, padding: "8px 16px", fontSize: 13, cursor: "pointer", fontWeight: 500 }}>
-                        Découvrir · 9,99€ TTC/mois
+                        Découvrir · 12,99€ TTC/mois
                       </button>
                       <button onClick={() => setNudge(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--brown-l)", fontSize: 13 }}>Plus tard</button>
                     </div>
@@ -1160,6 +1186,13 @@ function Chat({ profile, isSos, onBack, onPremium }) {
         <p style={{ fontSize: 11, color: "var(--brown-l)", textAlign: "center", marginTop: 8, fontStyle: "italic" }}>
           Elia ne remplace pas un professionnel de santé · Urgences : <a href="tel:15" style={{ color: "var(--terra)", textDecoration: "none" }}>15</a> · <a href="tel:3114" style={{ color: "var(--terra)", textDecoration: "none" }}>3114</a>
         </p>
+        {!profile.isPremium && (
+          <p style={{ fontSize: 11, color: FREE_DAILY_LIMIT - dailyCount <= 2 ? "var(--terra)" : "var(--brown-l)", textAlign: "center", marginTop: 2 }}>
+            {FREE_DAILY_LIMIT - dailyCount > 0
+              ? `${FREE_DAILY_LIMIT - dailyCount} message${FREE_DAILY_LIMIT - dailyCount > 1 ? "s" : ""} restant${FREE_DAILY_LIMIT - dailyCount > 1 ? "s" : ""} aujourd'hui`
+              : "Limite atteinte · Reviens demain ou passe à Premium"}
+          </p>
+        )}
       </div>
 
       {/* Crisis modal */}
@@ -1249,7 +1282,7 @@ function ProfileScreen({ profile, onSave, onPremium }) {
             <Star s={16} />
             <div style={{ flex: 1 }}>
               <p style={{ fontSize: 13, fontWeight: 500, color: "var(--terra-d)" }}>Passer à Premium</p>
-              <p style={{ fontSize: 12, color: "var(--brown-m)", fontWeight: 300 }}>9,99€ TTC/mois · Résiliable à tout moment</p>
+              <p style={{ fontSize: 12, color: "var(--brown-m)", fontWeight: 300 }}>12,99€ TTC/mois · Résiliable à tout moment</p>
             </div>
             <span style={{ fontSize: 13, color: "var(--terra)" }}>→</span>
           </div>
@@ -1346,7 +1379,7 @@ function ProfileScreen({ profile, onSave, onPremium }) {
         </button>
 
         {/* Reset */}
-        <button onClick={async () => { await S.set("elia_profile", null); await S.set("elia_memory", null); await S.set("elia_sessions", null); await S.set("elia_tracking", null); await S.set("elia_last_sos", null); await S.set("elia_chat_history", null); window.location.reload(); }}
+        <button onClick={async () => { await S.set("elia_profile", null); await S.set("elia_memory", null); await S.set("elia_sessions", null); await S.set("elia_tracking", null); await S.set("elia_last_sos", null); await S.set("elia_chat_history", null); await S.set("elia_daily", null); window.location.reload(); }}
           style={{ background: "none", border: "none", cursor: "pointer", color: "var(--brown-l)", fontSize: 12, textAlign: "center", padding: "8px", fontStyle: "italic" }}>
           Réinitialiser mon profil
         </button>

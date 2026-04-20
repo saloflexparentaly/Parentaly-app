@@ -61,15 +61,19 @@ app.use(express.json({ limit: "50kb" }));
 
 // ─── Chat API ─────────────────────────────────────────────────────────────────
 app.post("/api/chat", chatLimiter, async (req, res) => {
-  const { model, max_tokens, system, messages } = req.body;
+  const { tier, max_tokens, system, messages } = req.body;
 
-  // Validation basique
   if (!messages || !Array.isArray(messages) || messages.length === 0) {
     return res.status(400).json({ error: "Messages invalides." });
   }
   if (!max_tokens || typeof max_tokens !== "number" || max_tokens > 1500) {
     return res.status(400).json({ error: "max_tokens invalide." });
   }
+
+  // Le serveur choisit le modèle — le client ne peut pas le falsifier
+  const model = tier === "premium"
+    ? "claude-sonnet-4-6"
+    : "claude-haiku-4-5-20251001";
 
   try {
     const response = await fetch("https://api.anthropic.com/v1/messages", {
@@ -100,8 +104,8 @@ app.post("/api/create-checkout-session", checkoutLimiter, async (req, res) => {
   const allowedPrices = [
     process.env.STRIPE_PRICE_MONTHLY,
     process.env.STRIPE_PRICE_ANNUAL,
-    "price_1TNFXv9TErY2lFQDN082ETex",
-    "price_1TNFXv9TErY2lFQDVoQGb1li",
+    "price_1TOHRf9TErY2lFQDoObZAF6t",
+    "price_1TOHS59TErY2lFQDZz2AterS",
   ].filter(Boolean);
 
   if (!allowedPrices.includes(priceId)) {
