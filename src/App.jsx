@@ -7,10 +7,10 @@ class ErrorBoundary extends Component {
   static getDerivedStateFromError(error) { return { error }; }
   render() {
     if (this.state.error) return (
-      <div style={{ minHeight: "100vh", background: "#F9F5EF", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+      <div style={{ minHeight: "100vh", background: "#1A0F0A", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
         <div style={{ textAlign: "center" }}>
-          <p style={{ fontSize: 16, color: "#6B4E3D", marginBottom: 16 }}>Une erreur est survenue. Merci de recharger la page.</p>
-          <button onClick={() => window.location.reload()} style={{ padding: "10px 24px", background: "#B96A4B", color: "#fff", border: "none", borderRadius: 10, cursor: "pointer", fontSize: 15 }}>Recharger</button>
+          <p style={{ fontSize: 16, color: "rgba(249,245,239,0.62)", marginBottom: 16 }}>Une erreur est survenue. Merci de recharger la page.</p>
+          <button onClick={() => window.location.reload()} style={{ padding: "10px 24px", background: "linear-gradient(135deg,#B96A4B,#9A4F32)", color: "#fff", border: "none", borderRadius: 10, cursor: "pointer", fontSize: 15 }}>Recharger</button>
         </div>
       </div>
     );
@@ -24,34 +24,31 @@ const sanitize = str => (str || "").slice(0, 500).replace(/\[INST\]|\[\/INST\]|<
 // ─── GLOBAL STYLES ────────────────────────────────────────────────────────────
 const GlobalStyles = () => (
   <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Jost:wght@300;400;500&display=swap');
-
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --cream: #F9F5EF;
-      --cream-2: #F2EBE0;
-      --petal: #EDD5C5;
-      --terra: #B96A4B;
-      --terra-l: #CC8068;
+      --cream:   #1A0F0A;
+      --cream-2: #140C08;
+      --petal:   rgba(255,255,255,0.10);
+      --terra:   #B96A4B;
+      --terra-l: #C87B5A;
       --terra-d: #9A4F32;
-      --sage: #7A9178;
-      --sage-l: #A8BDA6;
-      --brown: #2E1F16;
-      --brown-m: #6B4E3D;
-      --brown-l: #9B7B6A;
-      --rose: #E8CABB;
-      --rose-d: #D4AE9B;
-      --white: #FFFDFB;
-      --shadow-s: 0 2px 12px rgba(46,31,22,0.07);
-      --shadow-m: 0 6px 32px rgba(46,31,22,0.10);
-      --shadow-l: 0 16px 64px rgba(46,31,22,0.13);
+      --sage:    #7A9178;
+      --sage-l:  #A8BDA6;
+      --brown:   #F9F5EF;
+      --brown-m: rgba(249,245,239,0.62);
+      --brown-l: rgba(249,245,239,0.35);
+      --rose:    rgba(255,255,255,0.04);
+      --rose-d:  rgba(255,255,255,0.10);
+      --white:   rgba(255,255,255,0.06);
+      --shadow-s: 0 4px 16px rgba(0,0,0,0.32);
+      --shadow-m: 0 8px 32px rgba(0,0,0,0.40);
+      --shadow-l: 0 20px 60px rgba(0,0,0,0.55);
     }
 
     html, body, #root {
       height: 100%;
       font-family: 'Jost', system-ui, sans-serif;
-      background: var(--cream);
       color: var(--brown);
       -webkit-font-smoothing: antialiased;
     }
@@ -59,95 +56,111 @@ const GlobalStyles = () => (
     .serif { font-family: 'Cormorant Garamond', Georgia, serif; }
     input, textarea, button { font-family: 'Jost', system-ui, sans-serif; }
 
-    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar { width: 2px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--petal); border-radius: 2px; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.18); border-radius: 2px; }
+
+    ::selection { background: rgba(185,106,75,0.38); color: #F9F5EF; }
 
     .field {
-      width: 100%; padding: 14px 18px; border-radius: 14px;
-      border: 1.5px solid var(--petal); background: var(--white);
+      width: 100%; padding: 13px 16px; border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.06);
       color: var(--brown); font-size: 15px; font-weight: 300; outline: none;
       transition: border-color .2s, box-shadow .2s;
     }
-    .field:focus { border-color: var(--terra-l); box-shadow: 0 0 0 3px rgba(185,106,75,.10); }
-    .field::placeholder { color: var(--brown-l); font-style: italic; }
+    .field:focus { border-color: rgba(255,255,255,0.28); box-shadow: 0 0 0 3px rgba(185,106,75,.18); }
+    .field::placeholder { color: var(--brown-l); }
 
     .chip {
-      padding: 9px 18px; border-radius: 50px;
-      border: 1.5px solid var(--petal); background: var(--white);
+      padding: 8px 16px; border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04);
       color: var(--brown-m); font-size: 13px; cursor: pointer;
-      transition: all .18s; white-space: nowrap;
+      transition: all .15s; white-space: nowrap; font-weight: 400;
     }
-    .chip:hover { border-color: var(--terra-l); color: var(--terra); }
+    .chip:hover { border-color: rgba(255,255,255,0.25); color: var(--brown); background: rgba(255,255,255,0.08); }
     .chip.on { background: var(--terra); border-color: var(--terra); color: #fff; }
 
     .btn {
-      width: 100%; padding: 15px 24px; border-radius: 14px;
-      font-size: 16px; font-weight: 500; cursor: pointer; border: none;
+      width: 100%; padding: 14px 24px; border-radius: 10px;
+      font-size: 15px; font-weight: 500; cursor: pointer; border: none;
       transition: all .18s; display: flex; align-items: center; justify-content: center; gap: 8px;
+      letter-spacing: .03em;
     }
-    .btn-t { background: linear-gradient(135deg, var(--terra), var(--terra-d)); color: #fff; box-shadow: 0 4px 20px rgba(185,106,75,.35); }
-    .btn-t:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(185,106,75,.45); }
-    .btn-t:disabled { opacity: .5; cursor: default; transform: none; }
+    .btn-t { background: linear-gradient(135deg, var(--terra) 0%, var(--terra-d) 100%); color: #fff; box-shadow: 0 4px 20px rgba(185,106,75,.30); }
+    .btn-t:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(185,106,75,.45); filter: brightness(1.08); }
+    .btn-t:disabled { opacity: .35; cursor: default; transform: none; box-shadow: none; }
     .btn-g {
-      background: transparent; color: var(--terra-d);
-      border: 1.5px solid var(--rose-d);
+      background: rgba(255,255,255,0.05); color: var(--brown-m);
+      border: 1px solid rgba(255,255,255,0.12);
       font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 17px;
+      backdrop-filter: blur(12px);
     }
-    .btn-g:hover { background: rgba(185,106,75,.05); border-color: var(--terra-l); }
+    .btn-g:hover { border-color: rgba(255,255,255,0.28); color: var(--brown); background: rgba(255,255,255,0.09); }
 
     .bubble-u {
-      background: linear-gradient(135deg,var(--terra),var(--terra-d));
+      background: linear-gradient(135deg, var(--terra), var(--terra-d));
       color: #fff; border-radius: 18px 18px 4px 18px;
-      box-shadow: 0 3px 14px rgba(185,106,75,.25);
+      box-shadow: 0 4px 16px rgba(185,106,75,.28);
     }
     .bubble-a {
-      background: var(--white); color: var(--brown);
+      background: rgba(255,255,255,0.06); color: var(--brown);
       border-radius: 18px 18px 18px 4px;
-      border: 1px solid var(--petal); box-shadow: var(--shadow-s);
+      border: 1px solid rgba(255,255,255,0.10);
+      backdrop-filter: blur(20px);
     }
 
     .dots span {
-      display: inline-block; width: 6px; height: 6px; border-radius: 50%;
-      background: var(--terra-l); margin: 0 2px;
+      display: inline-block; width: 5px; height: 5px; border-radius: 50%;
+      background: var(--brown-m); margin: 0 2px;
       animation: bounce 1.2s ease-in-out infinite;
     }
     .dots span:nth-child(2) { animation-delay: .2s; }
     .dots span:nth-child(3) { animation-delay: .4s; }
     @keyframes bounce {
-      0%,60%,100% { transform: translateY(0); opacity: .4; }
-      30% { transform: translateY(-6px); opacity: 1; }
+      0%,60%,100% { transform: translateY(0); opacity: .3; }
+      30% { transform: translateY(-5px); opacity: 1; }
     }
 
-    .sos-ring { animation: sosR 2s ease-in-out infinite; }
+    .sos-ring { animation: sosR 2.5s ease-in-out infinite; }
     @keyframes sosR {
-      0%,100% { box-shadow: 0 0 0 0 rgba(185,106,75,.3); }
-      50% { box-shadow: 0 0 0 10px rgba(185,106,75,0); }
+      0%,100% { box-shadow: 0 0 0 0 rgba(185,106,75,.35); }
+      50% { box-shadow: 0 0 0 12px rgba(185,106,75,0); }
     }
 
-    .step-bar { display: flex; gap: 5px; justify-content: center; margin-bottom: 36px; }
-    .step-bar span { height: 3px; border-radius: 3px; background: var(--petal); transition: all .35s; }
+    .step-bar { display: flex; gap: 4px; justify-content: center; margin-bottom: 36px; }
+    .step-bar span { height: 2px; border-radius: 2px; background: rgba(255,255,255,0.12); transition: all .35s; }
     .step-bar span.on { background: var(--terra); }
 
     .av {
-      width: 36px; height: 36px; border-radius: 50%;
-      background: linear-gradient(135deg,var(--terra-l),var(--sage));
+      width: 34px; height: 34px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--terra), var(--terra-d));
       display: flex; align-items: center; justify-content: center;
-      font-family: 'Cormorant Garamond',serif; font-size: 16px; color: #fff;
-      flex-shrink: 0; box-shadow: 0 2px 10px rgba(185,106,75,.25);
+      font-family: 'Cormorant Garamond',serif; font-size: 15px; color: #fff;
+      flex-shrink: 0;
+      box-shadow: 0 2px 10px rgba(185,106,75,.35);
     }
 
-    /* Stripe modal */
     .modal-overlay {
-      position: fixed; inset: 0; background: rgba(46,31,22,.45);
-      backdrop-filter: blur(4px); z-index: 1000;
+      position: fixed; inset: 0; background: rgba(0,0,0,.72);
+      backdrop-filter: blur(14px); z-index: 1000;
       display: flex; align-items: center; justify-content: center; padding: 24px;
     }
     .modal-box {
-      background: var(--white); border-radius: 28px; padding: 40px 36px;
-      max-width: 400px; width: 100%; box-shadow: var(--shadow-l);
-      border: 1px solid var(--petal);
+      background: rgba(26,15,10,0.90); border-radius: 24px; padding: 36px 32px;
+      max-width: 400px; width: 100%; box-shadow: 0 24px 64px rgba(0,0,0,.65);
+      border: 1px solid rgba(255,255,255,0.12);
+      backdrop-filter: blur(28px);
+      position: relative;
     }
+
+    .btn-sos {
+      height: 52px; width: 100%; border-radius: 10px;
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.10);
+      color: rgba(249,245,239,0.62); font-family: 'Jost', system-ui, sans-serif;
+      font-size: 14px; font-weight: 500; cursor: pointer; transition: all .2s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .btn-sos:hover { border-color: rgba(185,106,75,0.45); color: #B96A4B; }
   `}</style>
 );
 
@@ -256,16 +269,16 @@ function LegalConsent({ onAccept }) {
   const canContinue = age && cgu && rgpd;
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--cream)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-        style={{ background: "var(--white)", borderRadius: 28, padding: "36px 32px", maxWidth: 440, width: "100%", boxShadow: "var(--shadow-l)", border: "1px solid var(--petal)" }}>
+        style={{ background: "rgba(26,15,10,0.85)", borderRadius: 28, padding: "36px 32px", maxWidth: 440, width: "100%", boxShadow: "var(--shadow-l)", border: "1px solid rgba(255,255,255,0.12)", backdropFilter: "blur(24px)" }}>
 
         <div style={{ textAlign: "center", marginBottom: 28 }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "var(--terra)", marginBottom: 16 }}>
             <Leaf s={22} />
-            <span className="serif" style={{ fontSize: 13, fontWeight: 600, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--terra-d)" }}>Parentelïa</span>
+            <span className="serif" style={{ fontSize: 15, fontWeight: 600, letterSpacing: ".04em", color: "var(--terra-d)" }}>Parentelïa</span>
           </div>
-          <h2 className="serif" style={{ fontSize: 26, fontWeight: 600, marginBottom: 8 }}>Avant de commencer</h2>
+          <h2 className="serif" style={{ fontSize: 28, fontWeight: 600, marginBottom: 8 }}>Avant de commencer</h2>
           <p style={{ fontSize: 13, color: "var(--brown-m)", fontWeight: 300, lineHeight: 1.6 }}>
             Elia est une assistante bienveillante, <strong>pas un professionnel de santé</strong>. En cas d'urgence médicale, contacte le <strong>15</strong> (SAMU) ou le <strong>3114</strong> (numéro national de prévention du suicide).
           </p>
@@ -279,7 +292,7 @@ function LegalConsent({ onAccept }) {
           ].map((item, i) => (
             <label key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12, cursor: "pointer" }}>
               <div onClick={() => item.set(!item.val)}
-                style={{ width: 20, height: 20, borderRadius: 6, border: `2px solid ${item.val ? "var(--terra)" : "var(--petal)"}`, background: item.val ? "var(--terra)" : "var(--white)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", transition: "all .15s", marginTop: 1 }}>
+                style={{ width: 20, height: 20, borderRadius: 6, border: `2px solid ${item.val ? "var(--terra)" : "rgba(255,255,255,0.20)"}`, background: item.val ? "var(--terra)" : "rgba(255,255,255,0.08)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", transition: "all .15s", marginTop: 1 }}>
                 {item.val && <Check s={12} />}
               </div>
               <span style={{ fontSize: 13, color: "var(--brown-m)", lineHeight: 1.5, fontWeight: 300 }}>
@@ -295,7 +308,7 @@ function LegalConsent({ onAccept }) {
         <AnimatePresence>
           {showCgu && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-              style={{ overflow: "hidden", background: "var(--cream)", borderRadius: 12, padding: "14px 16px", marginBottom: 16, fontSize: 12, color: "var(--brown-m)", lineHeight: 1.7, fontWeight: 300 }}>
+              style={{ overflow: "hidden", background: "rgba(255,255,255,0.05)", borderRadius: 12, padding: "14px 16px", marginBottom: 16, fontSize: 12, color: "var(--brown-m)", lineHeight: 1.7, fontWeight: 300 }}>
               <strong style={{ display: "block", marginBottom: 6 }}>CGU — Parentelïa</strong>
               L'application Parentelïa fournit un soutien émotionnel et des informations générales à titre indicatif uniquement. Elle ne remplace en aucun cas un avis médical, psychologique ou thérapeutique professionnel.<br /><br />
               L'utilisateur s'engage à utiliser le service de bonne foi, à ne pas tenter d'en détourner le fonctionnement, et à ne pas transmettre de données personnelles de tiers sans leur consentement.<br /><br />
@@ -309,7 +322,7 @@ function LegalConsent({ onAccept }) {
         <AnimatePresence>
           {showRgpd && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-              style={{ overflow: "hidden", background: "var(--cream)", borderRadius: 12, padding: "14px 16px", marginBottom: 16, fontSize: 12, color: "var(--brown-m)", lineHeight: 1.7, fontWeight: 300 }}>
+              style={{ overflow: "hidden", background: "rgba(255,255,255,0.05)", borderRadius: 12, padding: "14px 16px", marginBottom: 16, fontSize: 12, color: "var(--brown-m)", lineHeight: 1.7, fontWeight: 300 }}>
               <strong style={{ display: "block", marginBottom: 6 }}>Politique de confidentialité — RGPD</strong>
               <strong>Données collectées :</strong> prénom, rôle parental, informations sur les enfants, défis déclarés et échanges avec Elia. Ces données sont stockées <em>uniquement sur votre appareil</em> (localStorage) et ne sont pas transmises à nos serveurs.<br /><br />
               <strong>Traitement IA :</strong> les messages envoyés à Elia sont traités par l'API d'Anthropic (Claude) de manière anonyme. Aucune donnée identifiante n'est conservée par Anthropic au-delà du traitement de la requête.<br /><br />
@@ -343,7 +356,7 @@ function CrisisModal({ onClose }) {
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       <motion.div className="modal-box" initial={{ opacity: 0, scale: .95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: .95 }}>
         <div style={{ textAlign: "center", marginBottom: 20 }}>
-          <div style={{ fontSize: 32, marginBottom: 8 }}>🌿</div>
+          <div style={{ color: "var(--terra)", marginBottom: 12 }}><Leaf s={28} /></div>
           <h2 className="serif" style={{ fontSize: 22, fontWeight: 600, marginBottom: 8 }}>Je suis là avec toi</h2>
           <p style={{ fontSize: 13, color: "var(--brown-m)", fontWeight: 300, lineHeight: 1.6 }}>
             Ce que tu traverses est très difficile. Tu n'es pas seul(e). Des professionnels formés sont disponibles maintenant, gratuitement.
@@ -352,7 +365,7 @@ function CrisisModal({ onClose }) {
         <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
           {EMERGENCY_NUMBERS.map(e => (
             <a key={e.num} href={`tel:${e.num}`}
-              style={{ display: "flex", alignItems: "center", gap: 14, background: "var(--cream)", borderRadius: 14, padding: "12px 16px", textDecoration: "none", border: "1px solid var(--petal)" }}>
+              style={{ display: "flex", alignItems: "center", gap: 14, background: "rgba(255,255,255,0.06)", borderRadius: 14, padding: "12px 16px", textDecoration: "none", border: "1px solid rgba(255,255,255,0.12)" }}>
               <div style={{ background: "var(--terra)", color: "#fff", borderRadius: 10, padding: "6px 12px", fontSize: 15, fontWeight: 600, flexShrink: 0 }}>{e.num}</div>
               <div>
                 <p style={{ fontSize: 13, fontWeight: 500, color: "var(--brown)" }}>{e.label}</p>
@@ -434,7 +447,7 @@ function StripeModal({ profile, onClose, onSuccess }) {
         </div>
 
         {/* Features */}
-        <div style={{ background: "var(--cream)", borderRadius: 16, padding: "16px 18px", marginBottom: 24 }}>
+        <div style={{ background: "rgba(255,255,255,0.05)", borderRadius: 16, padding: "16px 18px", marginBottom: 24 }}>
           {["Conversations illimitées avec Elïa", "Mémoire longue & suivi personnalisé", "Analyses et tendances hebdomadaires", "Accès prioritaire aux nouvelles fonctions"].map(f => (
             <div key={f} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
               <div style={{ color: "var(--sage)", flexShrink: 0 }}><Check s={14} /></div>
@@ -452,8 +465,8 @@ function StripeModal({ profile, onClose, onSuccess }) {
             <button key={p.key} onClick={() => setSelected(p.key)}
               style={{
                 padding: "14px 12px", borderRadius: 14, cursor: "pointer", textAlign: "center",
-                border: selected === p.key ? "2px solid var(--terra)" : "1.5px solid var(--petal)",
-                background: selected === p.key ? "rgba(185,106,75,.07)" : "var(--white)",
+                border: selected === p.key ? "2px solid var(--terra)" : "1.5px solid rgba(255,255,255,0.12)",
+                background: selected === p.key ? "rgba(185,106,75,.14)" : "rgba(255,255,255,0.05)",
                 transition: "all .18s", position: "relative",
               }}>
               {p.sub && <div style={{ position: "absolute", top: -8, left: "50%", transform: "translateX(-50%)", background: "var(--sage)", color: "#fff", fontSize: 10, padding: "2px 8px", borderRadius: 50, whiteSpace: "nowrap", fontWeight: 500 }}>{p.sub}</div>}
@@ -471,7 +484,7 @@ function StripeModal({ profile, onClose, onSuccess }) {
         {error && <p style={{ color: "var(--terra-d)", fontSize: 13, marginBottom: 12, textAlign: "center" }}>{error}</p>}
 
         <button className="btn btn-t" onClick={handleCheckout} disabled={loading}>
-          {loading ? "Chargement…" : "Commencer · Paiement sécurisé 🔒"}
+          {loading ? "Chargement…" : "Commencer · Paiement sécurisé"}
         </button>
         <p style={{ fontSize: 11, color: "var(--brown-l)", textAlign: "center", marginTop: 10, fontStyle: "italic" }}>
           Résiliable à tout moment · Droit de rétractation 14j · Paiement via Stripe
@@ -629,61 +642,73 @@ function Onboarding({ onDone }) {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--cream)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .5 }}
-        style={{ background: "var(--white)", borderRadius: 32, padding: "44px 40px", maxWidth: 440, width: "100%", boxShadow: "var(--shadow-l)", border: "1px solid var(--petal)" }}>
+    <div style={{ minHeight: "100vh", padding: "0 32px 48px" }}>
+      <div style={{ maxWidth: 440, margin: "0 auto" }}>
 
-        <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "var(--terra)" }}>
-            <Leaf s={22} />
-            <span className="serif" style={{ fontSize: 13, fontWeight: 600, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--terra-d)" }}>Parentelïa</span>
-          </div>
+        {/* Progress bar – full width, top, segments */}
+        <div style={{ display: "flex", gap: 6, paddingTop: 52, marginBottom: 40 }}>
+          {Array.from({ length: STEPS }).map((_, i) => (
+            <div key={i} style={{ flex: 1, height: 2, borderRadius: 2, background: i <= step ? "var(--terra)" : "rgba(255,255,255,0.08)", transition: "background .4s" }} />
+          ))}
         </div>
 
-        <div className="step-bar">
-          {Array.from({ length: STEPS }).map((_, i) => (
-            <span key={i} className={i <= step ? "on" : ""} style={{ width: i === step ? 28 : 8 }} />
-          ))}
+        {/* Logo – wordmark only */}
+        <div style={{ textAlign: "center", marginBottom: 44 }}>
+          <span className="serif" style={{ fontStyle: "italic", fontSize: 18, fontWeight: 400, color: "#E8CABB", letterSpacing: ".04em" }}>Parentelïa</span>
         </div>
 
         <AnimatePresence mode="wait">
           {step === 0 && (
-            <motion.div key="s0" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: .3 }}>
-              <h2 className="serif" style={{ fontSize: 30, fontWeight: 600, marginBottom: 6 }}>Bienvenue 🌸</h2>
-              <p style={{ color: "var(--brown-m)", fontSize: 14, marginBottom: 28, fontWeight: 300 }}>Je suis Elïa. Dis-moi comment t'appeler.</p>
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ fontSize: 11, fontWeight: 500, color: "var(--brown-l)", textTransform: "uppercase", letterSpacing: ".08em", display: "block", marginBottom: 8 }}>Ton prénom</label>
-                <input className="field" placeholder="ex. Sophie…" value={d.parentName} onChange={e => upd({ parentName: e.target.value })} />
-              </div>
-              <div style={{ marginBottom: 32 }}>
-                <label style={{ fontSize: 11, fontWeight: 500, color: "var(--brown-l)", textTransform: "uppercase", letterSpacing: ".08em", display: "block", marginBottom: 10 }}>Tu es…</label>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            <motion.div key="s0" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, x: -16 }} transition={{ duration: .2 }}>
+
+              <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0, duration: .38 }}>
+                <h2 className="serif" style={{ fontSize: 34, fontWeight: 600, marginBottom: 8 }}>Bienvenue</h2>
+                <p style={{ color: "var(--brown-m)", fontSize: 14, fontWeight: 300, lineHeight: 1.65 }}>Je suis Elïa. Dis-moi comment t'appeler.</p>
+              </motion.div>
+
+              <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .06, duration: .38 }}
+                style={{ marginTop: 48 }}>
+                <label style={{ fontSize: 11, fontWeight: 500, color: "var(--brown-l)", textTransform: "uppercase", letterSpacing: ".08em", display: "block", marginBottom: 12 }}>Ton prénom</label>
+                <input className="field" placeholder="ex. Sophie…" value={d.parentName} onChange={e => upd({ parentName: e.target.value })}
+                  style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)" }} />
+              </motion.div>
+
+              <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .12, duration: .38 }}
+                style={{ marginTop: 40 }}>
+                <label style={{ fontSize: 11, fontWeight: 500, color: "var(--brown-l)", textTransform: "uppercase", letterSpacing: ".08em", display: "block", marginBottom: 12 }}>Tu es…</label>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
                   {ROLES.map(r => (
-                    <button key={r} className={`chip ${d.parentRole === r ? "on" : ""}`} onClick={() => upd({ parentRole: r })}>{r}</button>
+                    <button key={r} className={`chip ${d.parentRole === r ? "on" : ""}`}
+                      style={{ borderRadius: 999, padding: "11px 22px" }}
+                      onClick={() => upd({ parentRole: r })}>{r}</button>
                   ))}
                 </div>
-              </div>
-              <button className="btn btn-t" onClick={() => setStep(1)} disabled={!d.parentName.trim()}>Continuer →</button>
+              </motion.div>
+
+              <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .18, duration: .38 }}
+                style={{ marginTop: 56 }}>
+                <button className="btn btn-t" onClick={() => setStep(1)} disabled={!d.parentName.trim()}
+                  style={{ color: "#F9F5EF", fontWeight: 500 }}>
+                  Continuer →
+                </button>
+              </motion.div>
             </motion.div>
           )}
 
           {step === 1 && (
             <motion.div key="s1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: .3 }}>
-              <h2 className="serif" style={{ fontSize: 30, fontWeight: 600, marginBottom: 6 }}>Tes enfants 💛</h2>
+              <h2 className="serif" style={{ fontSize: 34, fontWeight: 600, marginBottom: 8 }}>Tes enfants</h2>
               <p style={{ color: "var(--brown-m)", fontSize: 14, marginBottom: 24, fontWeight: 300 }}>Pour t'accompagner au mieux, parle-moi d'eux.</p>
-              {/* Badge jumeaux/triplés auto */}
               {detectMultiple(d.children) && (
                 <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "linear-gradient(135deg,var(--terra),var(--terra-d))", borderRadius: 50, padding: "5px 14px", color: "#fff", fontSize: 12, fontWeight: 500, marginBottom: 12 }}>
-                  ✨ {detectMultiple(d.children)} détectés
+                  {detectMultiple(d.children)} détectés
                 </div>
               )}
               <div style={{ maxHeight: 300, overflowY: "auto", paddingRight: 4 }}>
                 {d.children.map((c, i) => (
-                  <div key={c.id} style={{ background: "var(--cream)", borderRadius: 18, padding: 16, marginBottom: 12, border: "1px solid var(--petal)", position: "relative" }}>
+                  <div key={c.id} style={{ background: "rgba(255,255,255,0.05)", borderRadius: 18, padding: 16, marginBottom: 12, border: "1px solid rgba(255,255,255,0.10)", position: "relative" }}>
                     {d.children.length > 1 && (
-                      <button
-                        onClick={() => upd({ children: d.children.filter((_, idx) => idx !== i) })}
+                      <button onClick={() => upd({ children: d.children.filter((_, idx) => idx !== i) })}
                         style={{ position: "absolute", top: 10, right: 10, background: "none", border: "none", cursor: "pointer", color: "var(--brown-l)" }}>
                         <Xmark />
                       </button>
@@ -693,7 +718,7 @@ function Onboarding({ onDone }) {
                       <input className="field" type="date" value={c.birthDate} onChange={e => updChild(i, "birthDate", e.target.value)} style={{ fontSize: 13 }} />
                     </div>
                     {c.birthDate && calcAge(c.birthDate) && (
-                      <p style={{ fontSize: 12, color: "var(--terra)", marginBottom: 8, fontStyle: "italic" }}>🌿 {calcAge(c.birthDate)}</p>
+                      <p style={{ fontSize: 12, color: "var(--terra)", marginBottom: 8, fontStyle: "italic" }}>{calcAge(c.birthDate)}</p>
                     )}
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
                       {TEMPS.map(t => (
@@ -715,26 +740,24 @@ function Onboarding({ onDone }) {
                   ))}
                 </div>
               </div>
-              <button
-                onClick={() => upd({ children: [...d.children, newChild()] })}
-                style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "1.5px dashed var(--rose-d)", borderRadius: 12, padding: "9px 16px", color: "var(--brown-m)", cursor: "pointer", fontSize: 13, marginBottom: 22, marginTop: 8, width: "100%", justifyContent: "center" }}>
+              <button onClick={() => upd({ children: [...d.children, newChild()] })}
+                style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "1px dashed rgba(255,255,255,0.18)", borderRadius: 12, padding: "9px 16px", color: "var(--brown-m)", cursor: "pointer", fontSize: 13, marginBottom: 22, marginTop: 8, width: "100%", justifyContent: "center" }}>
                 <Plus /> Ajouter un enfant
               </button>
               <div style={{ display: "flex", gap: 10 }}>
                 <button className="btn btn-g" onClick={() => setStep(0)} style={{ width: "auto", padding: "14px 18px" }}><Back /></button>
-                <button className="btn btn-t" onClick={() => setStep(2)}>Continuer →</button>
+                <button className="btn btn-t" onClick={() => setStep(2)} style={{ color: "#F9F5EF", fontWeight: 500 }}>Continuer →</button>
               </div>
             </motion.div>
           )}
 
           {step === 2 && (
             <motion.div key="s2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: .3 }}>
-              <h2 className="serif" style={{ fontSize: 30, fontWeight: 600, marginBottom: 6 }}>Ce qui te pèse 🌿</h2>
+              <h2 className="serif" style={{ fontSize: 34, fontWeight: 600, marginBottom: 8 }}>Ce qui te pèse</h2>
               <p style={{ color: "var(--brown-m)", fontSize: 14, marginBottom: 24, fontWeight: 300 }}>Sélectionne ce qui te touche en ce moment.</p>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 28 }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 32 }}>
                 {CHALS.map(c => (
-                  <button key={c}
-                    className={`chip ${d.challenges.includes(c) ? "on" : ""}`}
+                  <button key={c} className={`chip ${d.challenges.includes(c) ? "on" : ""}`}
                     onClick={() => upd({ challenges: d.challenges.includes(c) ? d.challenges.filter(x => x !== c) : [...d.challenges, c] })}>
                     {c}
                   </button>
@@ -742,31 +765,28 @@ function Onboarding({ onDone }) {
               </div>
               <div style={{ display: "flex", gap: 10 }}>
                 <button className="btn btn-g" onClick={() => setStep(1)} style={{ width: "auto", padding: "14px 18px" }}><Back /></button>
-                <button className="btn btn-t" onClick={() => setStep(3)}>Continuer →</button>
+                <button className="btn btn-t" onClick={() => setStep(3)} style={{ color: "#F9F5EF", fontWeight: 500 }}>Continuer →</button>
               </div>
             </motion.div>
           )}
 
           {step === 3 && (
             <motion.div key="s3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: .3 }}>
-              <h2 className="serif" style={{ fontSize: 30, fontWeight: 600, marginBottom: 6 }}>En quelques mots… 🤍</h2>
+              <h2 className="serif" style={{ fontSize: 34, fontWeight: 600, marginBottom: 8 }}>En quelques mots</h2>
               <p style={{ color: "var(--brown-m)", fontSize: 14, marginBottom: 24, fontWeight: 300 }}>Y a-t-il quelque chose d'important à savoir ? Facultatif.</p>
-              <textarea
-                className="field"
+              <textarea className="field"
                 placeholder="ex. Je suis séparée, je gère tout seul, ma fille a été hospitalisée récemment…"
-                value={d.freeText}
-                onChange={e => upd({ freeText: e.target.value })}
-                rows={5}
-                style={{ resize: "none", lineHeight: 1.6 }}
+                value={d.freeText} onChange={e => upd({ freeText: e.target.value })}
+                rows={5} style={{ resize: "none", lineHeight: 1.6 }}
               />
               <div style={{ display: "flex", gap: 10, marginTop: 24 }}>
                 <button className="btn btn-g" onClick={() => setStep(2)} style={{ width: "auto", padding: "14px 18px" }}><Back /></button>
-                <button className="btn btn-t" onClick={finish}>Commencer avec Elïa 🌿</button>
+                <button className="btn btn-t" onClick={finish} style={{ color: "#F9F5EF", fontWeight: 500 }}>Commencer avec Elïa</button>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
-      </motion.div>
+      </div>
     </div>
   );
 }
@@ -779,14 +799,31 @@ const TIPS = [
   "Toutes les émotions que tu ressens sont valides. Même la culpabilité.",
   "Tu n'as pas à tout réussir. Tu as juste à essayer.",
 ];
+const SIGNATURES = [
+  "— pour les nuits courtes",
+  "— pour les moments difficiles",
+  "— pour les parents épuisés",
+  "— pour quand c'est trop lourd",
+  "— pour les jours sans lumière",
+];
+const CHECKIN_MOODS = ["Difficile", "Mitigée", "Douce", "Lumineuse"];
 
-const MOODS = ["😰", "😔", "😐", "🙂", "😊"];
 function Home({ profile, onStart, onPremium }) {
   const TODAY = new Date().toLocaleDateString("fr-FR");
   const hour = new Date().getHours();
   const greet = hour < 12 ? "Bonjour" : hour < 18 ? "Bon après-midi" : "Bonsoir";
-  const tip = TIPS[new Date().getDate() % TIPS.length];
-  const multipleLabel = detectMultiple(profile.children);
+  const tipIdx = new Date().getDate() % TIPS.length;
+  const tip = TIPS[tipIdx];
+  const sig = SIGNATURES[tipIdx];
+
+  const firstChild = profile.children.filter(c => c.firstName)[0];
+  const childAge = firstChild ? (calcAge(firstChild.birthDate) || firstChild.age) : null;
+  const dayNum = firstChild?.birthDate
+    ? Math.max(1, Math.floor((new Date() - new Date(firstChild.birthDate)) / 86400000) + 1)
+    : null;
+  const subtitle = firstChild
+    ? [firstChild.firstName, childAge, dayNum ? `jour ${dayNum}` : null].filter(Boolean).join(" · ")
+    : null;
 
   const [tracking, setTracking] = useState(null);
   const [sosBanner, setSosBanner] = useState(false);
@@ -805,42 +842,47 @@ function Home({ profile, onStart, onPremium }) {
     }
   }, []);
 
-  const saveMood = async (mood) => {
+  const saveCheckin = async (checkin) => {
     const t = await S.get("elia_tracking") || [];
-    const updated = [...t.filter(d => d.date !== TODAY), { date: TODAY, mood, sleep: tracking?.sleep }];
+    const existing = t.find(d => d.date === TODAY) || {};
+    const updated = [...t.filter(d => d.date !== TODAY), { ...existing, date: TODAY, checkin }];
     await S.set("elia_tracking", updated);
-    setTracking(prev => ({ ...prev, date: TODAY, mood }));
+    setTracking(prev => ({ ...prev, date: TODAY, checkin }));
   };
 
-  const saveSleep = async (sleep) => {
-    const t = await S.get("elia_tracking") || [];
-    const updated = [...t.filter(d => d.date !== TODAY), { date: TODAY, mood: tracking?.mood, sleep }];
-    await S.set("elia_tracking", updated);
-    setTracking(prev => ({ ...prev, date: TODAY, sleep }));
-  };
+  const fd = (delay) => ({ initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 }, transition: { delay, duration: .4 } });
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--cream)", padding: 24 }}>
-      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .5 }} style={{ maxWidth: 420, width: "100%", margin: "0 auto" }}>
+    <div style={{ minHeight: "100vh", padding: "0 24px 24px" }}>
+      <div style={{ maxWidth: 420, margin: "0 auto" }}>
 
-        <div style={{ textAlign: "center", marginBottom: 28, paddingTop: 16 }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "var(--terra)", marginBottom: 18 }}>
-            <Leaf s={24} />
-            <span className="serif" style={{ fontSize: 13, fontWeight: 600, letterSpacing: ".14em", textTransform: "uppercase", color: "var(--terra-d)" }}>Parentelïa</span>
-          </div>
-          <h1 className="serif" style={{ fontSize: 34, fontWeight: 400, lineHeight: 1.2, marginBottom: 6 }}>
-            {greet},<br /><em>{profile.parentName}</em> 🌸
+        {/* Wordmark */}
+        <motion.div {...fd(0)} style={{ textAlign: "center", paddingTop: 52, marginBottom: 48 }}>
+          <span className="serif" style={{ fontStyle: "italic", fontSize: 18, fontWeight: 400, color: "#E8CABB", letterSpacing: ".04em" }}>Parentelïa</span>
+        </motion.div>
+
+        {/* Greeting */}
+        <motion.div {...fd(.06)} style={{ textAlign: "center", marginBottom: subtitle ? 10 : 40 }}>
+          <h1 className="serif" style={{ fontSize: 52, fontWeight: 400, lineHeight: 1.1, color: "#F9F5EF", margin: 0 }}>
+            {greet},<br /><em>{profile.parentName}</em>
           </h1>
-        </div>
+        </motion.div>
 
-        {/* SOS follow-up banner (premium) */}
+        {/* Subtitle */}
+        {subtitle && (
+          <motion.div {...fd(.12)} style={{ textAlign: "center", marginBottom: 40 }}>
+            <p style={{ fontSize: 14, color: "rgba(249,245,239,0.55)", fontWeight: 400 }}>{subtitle}</p>
+          </motion.div>
+        )}
+
+        {/* SOS follow-up banner (premium only) */}
         <AnimatePresence>
           {sosBanner && (
             <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-              style={{ background: "var(--white)", border: "1.5px solid var(--petal)", borderRadius: 18, padding: "16px 18px", marginBottom: 14, boxShadow: "var(--shadow-s)" }}>
+              style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 18, padding: "16px 18px", marginBottom: 16, backdropFilter: "blur(20px)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: 13, fontWeight: 500, color: "var(--terra-d)", marginBottom: 4 }}>🌿 Comment ça va depuis hier ?</p>
+                  <p style={{ fontSize: 13, fontWeight: 500, color: "var(--terra-d)", marginBottom: 4 }}>Comment ça va depuis hier ?</p>
                   <p style={{ fontSize: 12, color: "var(--brown-m)", fontWeight: 300, lineHeight: 1.5 }}>Tu avais besoin d'aide. Je voulais prendre de tes nouvelles.</p>
                 </div>
                 <button onClick={() => setSosBanner(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--brown-l)", flexShrink: 0 }}><Xmark /></button>
@@ -853,82 +895,51 @@ function Home({ profile, onStart, onPremium }) {
           )}
         </AnimatePresence>
 
-        {/* Suivi quotidien (premium) */}
-        {profile.isPremium && (
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .1 }}
-            style={{ background: "var(--white)", borderRadius: 20, padding: "16px 18px", marginBottom: 14, border: "1px solid var(--petal)", boxShadow: "var(--shadow-s)" }}>
-            <p style={{ fontSize: 11, fontWeight: 500, color: "var(--sage)", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 12 }}>Suivi du jour</p>
-            <div style={{ marginBottom: 12 }}>
-              <p style={{ fontSize: 12, color: "var(--brown-m)", marginBottom: 8 }}>Comment tu te sens ?</p>
-              <div style={{ display: "flex", gap: 8 }}>
-                {MOODS.map((m, i) => (
-                  <button key={i} onClick={() => saveMood(i)}
-                    style={{ fontSize: 20, background: tracking?.mood === i ? "var(--cream-2)" : "none", border: tracking?.mood === i ? "2px solid var(--terra)" : "2px solid transparent", borderRadius: 10, padding: "4px 8px", cursor: "pointer", transition: "all .15s" }}>
-                    {m}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <p style={{ fontSize: 12, color: "var(--brown-m)", marginBottom: 8 }}>Heures de sommeil cette nuit ?</p>
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                {["<4h", "4-5h", "5-6h", "6-7h", "7h+"].map(s => (
-                  <button key={s} className={`chip ${tracking?.sleep === s ? "on" : ""}`} style={{ fontSize: 11, padding: "5px 12px" }} onClick={() => saveSleep(s)}>{s}</button>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Tip du jour */}
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .2 }}
-          style={{ background: "var(--white)", borderRadius: 20, padding: "18px 22px", marginBottom: 14, border: "1px solid var(--petal)", boxShadow: "var(--shadow-s)" }}>
-          <p style={{ fontSize: 11, fontWeight: 500, color: "var(--sage)", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 8 }}>🌿 Pour toi aujourd'hui</p>
-          <p className="serif" style={{ fontSize: 17, fontStyle: "italic", color: "var(--brown-m)", lineHeight: 1.5 }}>"{tip}"</p>
+        {/* Card – Pour toi aujourd'hui */}
+        <motion.div {...fd(.18)}
+          style={{ background: "rgba(255,255,255,0.06)", borderRadius: 22, padding: 28, marginBottom: 16, border: "1px solid rgba(255,255,255,0.10)", backdropFilter: "blur(20px)", position: "relative", overflow: "hidden" }}>
+          <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(249,245,239,0.45)", textTransform: "uppercase", letterSpacing: ".22em", marginBottom: 18 }}>Pour toi aujourd'hui</p>
+          <div style={{ position: "relative", paddingLeft: 10 }}>
+            <span className="serif" style={{ position: "absolute", top: -22, left: -6, fontSize: 56, lineHeight: 1, color: "var(--terra)", opacity: 0.4, fontWeight: 400, userSelect: "none" }}>«</span>
+            <p className="serif" style={{ fontStyle: "italic", fontSize: 22, lineHeight: 1.4, color: "#F9F5EF", paddingTop: 10 }}>{tip}</p>
+          </div>
+          <p style={{ fontSize: 12, fontStyle: "italic", color: "var(--brown-m)", textAlign: "right", marginTop: 18 }}>{sig}</p>
         </motion.div>
 
-        {/* Enfants + badge jumeaux */}
-        {profile.children.filter(c => c.firstName).length > 0 && (
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .3 }}
-            style={{ background: "var(--white)", borderRadius: 20, padding: "14px 18px", marginBottom: 14, border: "1px solid var(--petal)", boxShadow: "var(--shadow-s)" }}>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-              {profile.children.filter(c => c.firstName).map(c => {
-                const age = calcAge(c.birthDate) || c.age;
-                return (
-                  <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 6, background: "var(--cream)", borderRadius: 50, padding: "5px 13px" }}>
-                    <span style={{ fontSize: 13, fontWeight: 500 }}>{c.firstName}</span>
-                    {age && <span style={{ fontSize: 11, color: "var(--brown-l)", fontStyle: "italic" }}>{age}</span>}
-                  </div>
-                );
-              })}
-              {multipleLabel && (
-                <div style={{ background: "linear-gradient(135deg,var(--terra),var(--terra-d))", borderRadius: 50, padding: "4px 12px", color: "#fff", fontSize: 11, fontWeight: 500 }}>
-                  ✨ {multipleLabel}
-                </div>
-              )}
-            </div>
-          </motion.div>
-        )}
-
-        {/* Premium banner */}
-        {!profile.isPremium && (
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .35 }}
-            onClick={onPremium}
-            style={{ background: "linear-gradient(135deg,rgba(185,106,75,.08),rgba(122,145,120,.08))", border: "1.5px solid var(--rose-d)", borderRadius: 16, padding: "14px 18px", marginBottom: 14, cursor: "pointer", display: "flex", alignItems: "center", gap: 12 }}>
-            <Star s={16} />
-            <div style={{ flex: 1 }}>
-              <p style={{ fontSize: 13, fontWeight: 500, color: "var(--terra-d)", marginBottom: 2 }}>Passer à Premium</p>
-              <p style={{ fontSize: 12, color: "var(--brown-m)", fontWeight: 300 }}>Mémoire longue · Analyses · Suivi · Illimité</p>
-            </div>
-            <span style={{ fontSize: 13, color: "var(--terra)", fontWeight: 500 }}>12,99€ TTC/mois →</span>
-          </motion.div>
-        )}
-
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .4 }} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          <button className="btn btn-t" onClick={() => onStart(false)}>Parler avec Elia →</button>
-          <button className="btn btn-g sos-ring" onClick={() => onStart(true)}>J'ai besoin d'aide là · SOS</button>
+        {/* Card – Check-in du soir */}
+        <motion.div {...fd(.24)}
+          style={{ background: "rgba(255,255,255,0.06)", borderRadius: 22, padding: 28, marginBottom: 16, border: "1px solid rgba(255,255,255,0.10)", backdropFilter: "blur(20px)" }}>
+          <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(249,245,239,0.45)", textTransform: "uppercase", letterSpacing: ".22em", marginBottom: 14 }}>Check-in du soir</p>
+          <p className="serif" style={{ fontSize: 26, fontWeight: 400, color: "#F9F5EF", marginBottom: 20, lineHeight: 1.2 }}>Comment s'est passée ta journée ?</p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+            {CHECKIN_MOODS.map(m => (
+              <button key={m} className={`chip ${tracking?.checkin === m ? "on" : ""}`}
+                style={{ borderRadius: 999 }}
+                onClick={() => saveCheckin(tracking?.checkin === m ? null : m)}>
+                {m}
+              </button>
+            ))}
+          </div>
         </motion.div>
-      </motion.div>
+
+        {/* Presence indicator + CTAs */}
+        <motion.div {...fd(.30)} style={{ marginTop: 32 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#7A9178", boxShadow: "0 0 8px rgba(122,145,120,0.65)", flexShrink: 0, display: "inline-block" }} />
+            <span style={{ fontSize: 13, color: "rgba(249,245,239,0.6)", fontWeight: 400 }}>Elia est là, disponible</span>
+          </div>
+
+          <button className="btn btn-t" onClick={() => onStart(false)}
+            style={{ height: 56, color: "#F9F5EF", fontWeight: 500, marginBottom: 12 }}>
+            Parler avec Elia →
+          </button>
+
+          <button className="btn-sos sos-ring" onClick={() => onStart(true)}>
+            Besoin d'aide maintenant
+          </button>
+        </motion.div>
+
+      </div>
     </div>
   );
 }
@@ -999,6 +1010,14 @@ function Chat({ profile, isSos, onBack, onPremium }) {
 
     // Limite journalière gratuit
     if (!profile.isPremium && dailyCount >= FREE_DAILY_LIMIT) {
+      const alreadyBlocked = msgs.some(m => m.id === "limit-msg");
+      if (!alreadyBlocked) {
+        setMsgs(prev => [...prev, {
+          role: "assistant",
+          content: `Tu as atteint ta limite de ${FREE_DAILY_LIMIT} messages pour aujourd'hui 🌿\n\nPasse à Premium pour continuer à me parler sans limite, avec des analyses approfondies et ma mémoire longue. Ou reviens demain pour de nouveaux messages gratuits.`,
+          id: "limit-msg"
+        }]);
+      }
       setNudge(true);
       return;
     }
@@ -1059,16 +1078,16 @@ function Chat({ profile, isSos, onBack, onPremium }) {
   };
 
   return (
-    <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: "var(--cream)" }}>
+    <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
 
       {/* Header */}
-      <div style={{ background: "var(--white)", borderBottom: "1px solid var(--petal)", padding: "14px 20px", display: "flex", alignItems: "center", gap: 12, boxShadow: "var(--shadow-s)", flexShrink: 0 }}>
+      <div style={{ background: "rgba(26,15,10,0.80)", borderBottom: "1px solid rgba(255,255,255,0.10)", padding: "14px 20px", display: "flex", alignItems: "center", gap: 12, boxShadow: "var(--shadow-s)", flexShrink: 0, backdropFilter: "blur(20px)" }}>
         <button onClick={onBack} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--brown-m)", display: "flex", padding: 4 }}><Back s={19} /></button>
         <div className="av">E</div>
         <div>
           <div style={{ fontSize: 17, fontWeight: 600, lineHeight: 1.1 }}>Elia</div>
           <div style={{ fontSize: 11, color: isSos ? "var(--terra)" : "var(--sage)", fontStyle: "italic" }}>
-            {isSos ? "🔴 Mode SOS" : "Assistante parentale"}
+            {isSos ? <span style={{ display: "flex", alignItems: "center", gap: 5 }}><span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--terra)", display: "inline-block" }} />Mode SOS</span> : "Assistante parentale"}
           </div>
         </div>
         {!profile.isPremium && (
@@ -1081,7 +1100,7 @@ function Chat({ profile, isSos, onBack, onPremium }) {
       </div>
 
       {/* Messages */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "20px 16px", display: "flex", flexDirection: "column", gap: 14 }}>
+      <div style={{ flex: 1, overflowY: "auto", padding: "20px 16px", display: "flex", flexDirection: "column", gap: 14, background: "transparent" }}>
         <div style={{ maxWidth: 640, width: "100%", margin: "0 auto", display: "flex", flexDirection: "column", gap: 14 }}>
 
           {/* Nudge premium */}
@@ -1089,7 +1108,7 @@ function Chat({ profile, isSos, onBack, onPremium }) {
             {nudge && !profile.isPremium && (
               <motion.div
                 initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                style={{ background: "linear-gradient(135deg,rgba(185,106,75,.07),rgba(122,145,120,.07))", border: "1.5px dashed var(--rose-d)", borderRadius: 18, padding: 18 }}>
+                style={{ background: "linear-gradient(135deg,rgba(185,106,75,.12),rgba(122,145,120,.09))", border: "1px solid rgba(185,106,75,.28)", borderRadius: 18, padding: 18, backdropFilter: "blur(16px)" }}>
                 <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
                   <Star s={15} />
                   <div>
@@ -1152,46 +1171,62 @@ function Chat({ profile, isSos, onBack, onPremium }) {
       )}
 
       {/* Input */}
-      <div style={{ background: "var(--white)", borderTop: "1px solid var(--petal)", padding: "14px 16px", flexShrink: 0 }}>
-        <div style={{ maxWidth: 640, margin: "0 auto", display: "flex", gap: 10, alignItems: "flex-end" }}>
-          <textarea
-            ref={taRef}
-            className="field"
-            value={input}
-            onChange={e => {
-              setInput(e.target.value);
-              e.target.style.height = "auto";
-              e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
-            }}
-            onKeyDown={handleKey}
-            placeholder="Écris ici…"
-            rows={1}
-            style={{ resize: "none", lineHeight: 1.55, maxHeight: 120, overflow: "auto" }}
-          />
-          <button
-            onClick={() => send(input)}
-            disabled={!input.trim() || loading}
-            style={{
-              width: 44, height: 44, borderRadius: "50%",
-              background: input.trim() && !loading ? "linear-gradient(135deg,var(--terra),var(--terra-d))" : "var(--petal)",
-              border: "none",
-              cursor: input.trim() && !loading ? "pointer" : "default",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              flexShrink: 0, transition: "all .2s",
-              boxShadow: input.trim() && !loading ? "0 3px 12px rgba(185,106,75,.3)" : "none"
-            }}>
-            <Send s={17} />
-          </button>
-        </div>
-        <p style={{ fontSize: 11, color: "var(--brown-l)", textAlign: "center", marginTop: 8, fontStyle: "italic" }}>
-          Elia ne remplace pas un professionnel de santé · Urgences : <a href="tel:15" style={{ color: "var(--terra)", textDecoration: "none" }}>15</a> · <a href="tel:3114" style={{ color: "var(--terra)", textDecoration: "none" }}>3114</a>
-        </p>
-        {!profile.isPremium && (
-          <p style={{ fontSize: 11, color: FREE_DAILY_LIMIT - dailyCount <= 2 ? "var(--terra)" : "var(--brown-l)", textAlign: "center", marginTop: 2 }}>
-            {FREE_DAILY_LIMIT - dailyCount > 0
-              ? `${FREE_DAILY_LIMIT - dailyCount} message${FREE_DAILY_LIMIT - dailyCount > 1 ? "s" : ""} restant${FREE_DAILY_LIMIT - dailyCount > 1 ? "s" : ""} aujourd'hui`
-              : "Limite atteinte · Reviens demain ou passe à Premium"}
-          </p>
+      <div style={{ background: "rgba(26,15,10,0.80)", borderTop: "1px solid rgba(255,255,255,0.10)", padding: "14px 16px", flexShrink: 0, backdropFilter: "blur(20px)" }}>
+        {!profile.isPremium && dailyCount >= FREE_DAILY_LIMIT ? (
+          <div style={{ maxWidth: 640, margin: "0 auto", textAlign: "center" }}>
+            <p style={{ fontSize: 14, fontWeight: 500, color: "var(--terra-d)", marginBottom: 12 }}>
+              Limite de {FREE_DAILY_LIMIT} messages atteinte pour aujourd'hui
+            </p>
+            <button className="btn btn-t" onClick={onPremium} style={{ marginBottom: 8 }}>
+              Passer à Premium — illimité
+            </button>
+            <p style={{ fontSize: 11, color: "var(--brown-l)", fontStyle: "italic" }}>
+              Ou reviens demain pour de nouveaux messages gratuits
+            </p>
+          </div>
+        ) : (
+          <>
+            <div style={{ maxWidth: 640, margin: "0 auto", display: "flex", gap: 10, alignItems: "flex-end" }}>
+              <textarea
+                ref={taRef}
+                className="field"
+                value={input}
+                onChange={e => {
+                  setInput(e.target.value);
+                  e.target.style.height = "auto";
+                  e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
+                }}
+                onKeyDown={handleKey}
+                placeholder="Écris ici…"
+                rows={1}
+                style={{ resize: "none", lineHeight: 1.55, maxHeight: 120, overflow: "auto" }}
+              />
+              <button
+                onClick={() => send(input)}
+                disabled={!input.trim() || loading}
+                style={{
+                  width: 44, height: 44, borderRadius: "50%",
+                  background: input.trim() && !loading ? "linear-gradient(135deg,var(--terra),var(--terra-d))" : "rgba(255,255,255,0.10)",
+                  border: "none",
+                  cursor: input.trim() && !loading ? "pointer" : "default",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  flexShrink: 0, transition: "all .2s",
+                  boxShadow: input.trim() && !loading ? "0 3px 12px rgba(185,106,75,.3)" : "none"
+                }}>
+                <Send s={17} />
+              </button>
+            </div>
+            <p style={{ fontSize: 11, color: "var(--brown-l)", textAlign: "center", marginTop: 8, fontStyle: "italic" }}>
+              Elia ne remplace pas un professionnel de santé · Urgences : <a href="tel:15" style={{ color: "var(--terra)", textDecoration: "none" }}>15</a> · <a href="tel:3114" style={{ color: "var(--terra)", textDecoration: "none" }}>3114</a>
+            </p>
+            {!profile.isPremium && (
+              <p style={{ fontSize: 11, color: FREE_DAILY_LIMIT - dailyCount <= 2 ? "var(--terra)" : "var(--brown-l)", textAlign: "center", marginTop: 2 }}>
+                {FREE_DAILY_LIMIT - dailyCount > 0
+                  ? `${FREE_DAILY_LIMIT - dailyCount} message${FREE_DAILY_LIMIT - dailyCount > 1 ? "s" : ""} restant${FREE_DAILY_LIMIT - dailyCount > 1 ? "s" : ""} aujourd'hui`
+                  : ""}
+              </p>
+            )}
+          </>
         )}
       </div>
 
@@ -1213,8 +1248,9 @@ function BottomNav({ screen, onNavigate }) {
   return (
     <div style={{
       position: "fixed", bottom: 0, left: 0, right: 0,
-      background: "var(--white)", borderTop: "1px solid var(--petal)",
-      display: "flex", zIndex: 100, boxShadow: "0 -4px 20px rgba(46,31,22,.06)"
+      background: "rgba(18,8,4,0.82)", borderTop: "1px solid rgba(255,255,255,0.09)",
+      display: "flex", zIndex: 100, boxShadow: "0 -4px 32px rgba(0,0,0,.45)",
+      backdropFilter: "blur(20px)"
     }}>
       {tabs.map(({ id, label, Icon }) => {
         const active = screen === id;
@@ -1257,11 +1293,11 @@ function ProfileScreen({ profile, onSave, onPremium }) {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--cream)", paddingBottom: 80 }}>
-      <div style={{ background: "var(--white)", borderBottom: "1px solid var(--petal)", padding: "20px 24px", boxShadow: "var(--shadow-s)" }}>
+    <div style={{ minHeight: "100vh", paddingBottom: 80 }}>
+      <div style={{ background: "rgba(26,15,10,0.80)", borderBottom: "1px solid rgba(255,255,255,0.10)", padding: "20px 24px", boxShadow: "var(--shadow-s)", backdropFilter: "blur(20px)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--terra)", marginBottom: 4 }}>
           <Leaf s={18} />
-          <span className="serif" style={{ fontSize: 12, fontWeight: 600, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--terra-d)" }}>Parentelïa</span>
+          <span className="serif" style={{ fontSize: 15, fontWeight: 600, letterSpacing: ".04em", color: "var(--terra-d)" }}>Parentelïa</span>
         </div>
         <h1 className="serif" style={{ fontSize: 26, fontWeight: 600 }}>Mon profil</h1>
       </div>
@@ -1278,7 +1314,7 @@ function ProfileScreen({ profile, onSave, onPremium }) {
             </div>
           </div>
         ) : (
-          <div onClick={onPremium} style={{ background: "var(--white)", border: "1.5px dashed var(--rose-d)", borderRadius: 16, padding: "14px 18px", display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
+          <div onClick={onPremium} style={{ background: "rgba(185,106,75,.10)", border: "1px solid rgba(185,106,75,.28)", borderRadius: 16, padding: "14px 18px", display: "flex", alignItems: "center", gap: 10, cursor: "pointer", backdropFilter: "blur(16px)" }}>
             <Star s={16} />
             <div style={{ flex: 1 }}>
               <p style={{ fontSize: 13, fontWeight: 500, color: "var(--terra-d)" }}>Passer à Premium</p>
@@ -1289,7 +1325,7 @@ function ProfileScreen({ profile, onSave, onPremium }) {
         )}
 
         {/* Identité */}
-        <div style={{ background: "var(--white)", borderRadius: 20, padding: "20px", border: "1px solid var(--petal)", boxShadow: "var(--shadow-s)" }}>
+        <div style={{ background: "rgba(255,255,255,0.06)", borderRadius: 20, padding: "20px", border: "1px solid rgba(255,255,255,0.10)", boxShadow: "var(--shadow-s)", backdropFilter: "blur(20px)" }}>
           <p style={{ fontSize: 11, fontWeight: 500, color: "var(--brown-l)", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 14 }}>Identité</p>
           <div style={{ marginBottom: 14 }}>
             <label style={{ fontSize: 11, color: "var(--brown-l)", display: "block", marginBottom: 6 }}>Prénom</label>
@@ -1306,10 +1342,10 @@ function ProfileScreen({ profile, onSave, onPremium }) {
         </div>
 
         {/* Enfants */}
-        <div style={{ background: "var(--white)", borderRadius: 20, padding: "20px", border: "1px solid var(--petal)", boxShadow: "var(--shadow-s)" }}>
+        <div style={{ background: "rgba(255,255,255,0.06)", borderRadius: 20, padding: "20px", border: "1px solid rgba(255,255,255,0.10)", boxShadow: "var(--shadow-s)", backdropFilter: "blur(20px)" }}>
           <p style={{ fontSize: 11, fontWeight: 500, color: "var(--brown-l)", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 14 }}>Mes enfants</p>
           {d.children.map((c, i) => (
-            <div key={c.id} style={{ background: "var(--cream)", borderRadius: 14, padding: 14, marginBottom: 10, border: "1px solid var(--petal)", position: "relative" }}>
+            <div key={c.id} style={{ background: "rgba(255,255,255,0.05)", borderRadius: 14, padding: 14, marginBottom: 10, border: "1px solid rgba(255,255,255,0.09)", position: "relative" }}>
               {d.children.length > 1 && (
                 <button onClick={() => upd({ children: d.children.filter((_, idx) => idx !== i) })}
                   style={{ position: "absolute", top: 10, right: 10, background: "none", border: "none", cursor: "pointer", color: "var(--brown-l)" }}>
@@ -1321,7 +1357,7 @@ function ProfileScreen({ profile, onSave, onPremium }) {
                 <input className="field" type="date" value={c.birthDate} onChange={e => updChild(i, "birthDate", e.target.value)} style={{ fontSize: 13 }} />
               </div>
               {c.birthDate && calcAge(c.birthDate) && (
-                <p style={{ fontSize: 12, color: "var(--terra)", marginBottom: 8, fontStyle: "italic" }}>🌿 {calcAge(c.birthDate)}</p>
+                <p style={{ fontSize: 12, color: "var(--terra)", marginBottom: 8, fontStyle: "italic" }}>{calcAge(c.birthDate)}</p>
               )}
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                 {TEMPS.map(t => (
@@ -1331,18 +1367,18 @@ function ProfileScreen({ profile, onSave, onPremium }) {
             </div>
           ))}
           <button onClick={() => upd({ children: [...d.children, newChild()] })}
-            style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "1.5px dashed var(--rose-d)", borderRadius: 12, padding: "9px 16px", color: "var(--brown-m)", cursor: "pointer", fontSize: 13, width: "100%", justifyContent: "center" }}>
+            style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "1px dashed rgba(255,255,255,0.18)", borderRadius: 12, padding: "9px 16px", color: "var(--brown-m)", cursor: "pointer", fontSize: 13, width: "100%", justifyContent: "center" }}>
             <Plus /> Ajouter un enfant
           </button>
           {detectMultiple(d.children) && (
             <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "linear-gradient(135deg,var(--terra),var(--terra-d))", borderRadius: 50, padding: "5px 14px", color: "#fff", fontSize: 12, fontWeight: 500, marginTop: 8 }}>
-              ✨ {detectMultiple(d.children)} détectés automatiquement
+              {detectMultiple(d.children)} détectés automatiquement
             </div>
           )}
         </div>
 
         {/* Type de naissance */}
-        <div style={{ background: "var(--white)", borderRadius: 20, padding: "20px", border: "1px solid var(--petal)", boxShadow: "var(--shadow-s)" }}>
+        <div style={{ background: "rgba(255,255,255,0.06)", borderRadius: 20, padding: "20px", border: "1px solid rgba(255,255,255,0.10)", boxShadow: "var(--shadow-s)", backdropFilter: "blur(20px)" }}>
           <p style={{ fontSize: 11, fontWeight: 500, color: "var(--brown-l)", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 14 }}>Type de naissance</p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {BIRTH_TYPES.map(t => (
@@ -1355,7 +1391,7 @@ function ProfileScreen({ profile, onSave, onPremium }) {
         </div>
 
         {/* Défis */}
-        <div style={{ background: "var(--white)", borderRadius: 20, padding: "20px", border: "1px solid var(--petal)", boxShadow: "var(--shadow-s)" }}>
+        <div style={{ background: "rgba(255,255,255,0.06)", borderRadius: 20, padding: "20px", border: "1px solid rgba(255,255,255,0.10)", boxShadow: "var(--shadow-s)", backdropFilter: "blur(20px)" }}>
           <p style={{ fontSize: 11, fontWeight: 500, color: "var(--brown-l)", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 14 }}>Ce qui me touche</p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {CHALS.map(c => (
@@ -1368,7 +1404,7 @@ function ProfileScreen({ profile, onSave, onPremium }) {
         </div>
 
         {/* Contexte */}
-        <div style={{ background: "var(--white)", borderRadius: 20, padding: "20px", border: "1px solid var(--petal)", boxShadow: "var(--shadow-s)" }}>
+        <div style={{ background: "rgba(255,255,255,0.06)", borderRadius: 20, padding: "20px", border: "1px solid rgba(255,255,255,0.10)", boxShadow: "var(--shadow-s)", backdropFilter: "blur(20px)" }}>
           <p style={{ fontSize: 11, fontWeight: 500, color: "var(--brown-l)", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 14 }}>Mon contexte</p>
           <textarea className="field" placeholder="ex. Je suis séparée, je gère tout seul…" value={d.freeText} onChange={e => upd({ freeText: e.target.value })} rows={4} style={{ resize: "none", lineHeight: 1.6 }} />
         </div>
@@ -1379,7 +1415,14 @@ function ProfileScreen({ profile, onSave, onPremium }) {
         </button>
 
         {/* Reset */}
-        <button onClick={async () => { await S.set("elia_profile", null); await S.set("elia_memory", null); await S.set("elia_sessions", null); await S.set("elia_tracking", null); await S.set("elia_last_sos", null); await S.set("elia_chat_history", null); await S.set("elia_daily", null); window.location.reload(); }}
+        <button onClick={async () => {
+          const isPremium = profile.isPremium || false;
+          await S.set("elia_profile", isPremium ? { isPremium: true } : null);
+          await S.set("elia_memory", null); await S.set("elia_sessions", null);
+          await S.set("elia_tracking", null); await S.set("elia_last_sos", null);
+          await S.set("elia_chat_history", null); await S.set("elia_daily", null);
+          window.location.reload();
+        }}
           style={{ background: "none", border: "none", cursor: "pointer", color: "var(--brown-l)", fontSize: 12, textAlign: "center", padding: "8px", fontStyle: "italic" }}>
           Réinitialiser mon profil
         </button>
@@ -1400,7 +1443,7 @@ function MentionsLegales() {
       <AnimatePresence>
         {open && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-            style={{ overflow: "hidden", background: "var(--white)", borderRadius: 16, padding: "16px 18px", marginTop: 8, fontSize: 11, color: "var(--brown-m)", lineHeight: 1.8, border: "1px solid var(--petal)" }}>
+            style={{ overflow: "hidden", background: "rgba(255,255,255,0.05)", borderRadius: 16, padding: "16px 18px", marginTop: 8, fontSize: 11, color: "var(--brown-m)", lineHeight: 1.8, border: "1px solid rgba(255,255,255,0.10)", backdropFilter: "blur(16px)" }}>
             <strong style={{ display: "block", marginBottom: 8 }}>Mentions légales — Parentelïa</strong>
             <strong>Éditeur :</strong> [Nom / Raison sociale à renseigner]<br />
             <strong>Siège social :</strong> [Adresse à renseigner]<br />
@@ -1428,7 +1471,7 @@ export default function App() {
     Promise.all([S.get("elia_profile"), S.get("elia_legal")]).then(([p, legal]) => {
       setProfile(p);
       if (!legal) setScreen("legal");
-      else setScreen(p ? "home" : "onboarding");
+      else setScreen(p?.parentName ? "home" : "onboarding");
     });
 
     const params = new URLSearchParams(window.location.search);
@@ -1453,8 +1496,10 @@ export default function App() {
   }, []);
 
   const handleDone = async p => {
-    await S.set("elia_profile", p);
-    setProfile(p);
+    const existing = await S.get("elia_profile");
+    const merged = { ...p, isPremium: existing?.isPremium || false };
+    await S.set("elia_profile", merged);
+    setProfile(merged);
     setScreen("home");
   };
 
@@ -1470,7 +1515,7 @@ export default function App() {
   if (screen === "loading") return (
     <ErrorBoundary>
       <GlobalStyles />
-      <div style={{ minHeight: "100vh", background: "var(--cream)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <motion.div animate={{ opacity: [.4, 1, .4] }} transition={{ duration: 2, repeat: Infinity }} style={{ color: "var(--terra)" }}>
           <Leaf s={32} />
         </motion.div>
