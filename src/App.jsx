@@ -27,23 +27,54 @@ const GlobalStyles = () => (
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --cream:   #1A0F0A;
-      --cream-2: #140C08;
-      --petal:   rgba(255,255,255,0.10);
+      --surface:   rgba(26,15,10,0.80);
+      --surface-d: rgba(26,15,10,0.85);
+      --glass:     rgba(255,255,255,0.06);
+      --glass-s:   rgba(255,255,255,0.05);
+      --glass-xs:  rgba(255,255,255,0.04);
+      --b:      rgba(255,255,255,0.10);
+      --b-s:    rgba(255,255,255,0.12);
+      --b-xs:   var(--b-xs);
+      --b-m:    var(--b-m);
+      --b-d:    var(--b-d);
+      --b-h:    rgba(255,255,255,0.25);
+      --b-f:    rgba(255,255,255,0.28);
+      --brown:    #F9F5EF;
+      --brown-m:  rgba(249,245,239,0.62);
+      --brown-l:  rgba(249,245,239,0.35);
+      --brown-sm: rgba(249,245,239,0.45);
+      --brand:   #E8CABB;
       --terra:   #B96A4B;
       --terra-l: #C87B5A;
       --terra-d: #9A4F32;
       --sage:    #7A9178;
       --sage-l:  #A8BDA6;
-      --brown:   #F9F5EF;
-      --brown-m: rgba(249,245,239,0.62);
-      --brown-l: rgba(249,245,239,0.35);
-      --rose:    rgba(255,255,255,0.04);
-      --rose-d:  rgba(255,255,255,0.10);
-      --white:   rgba(255,255,255,0.06);
       --shadow-s: 0 4px 16px rgba(0,0,0,0.32);
       --shadow-m: 0 8px 32px rgba(0,0,0,0.40);
       --shadow-l: 0 20px 60px rgba(0,0,0,0.55);
+    }
+
+    [data-theme="light"] {
+      --surface:   rgba(250,245,239,0.92);
+      --surface-d: rgba(250,245,239,0.96);
+      --glass:     rgba(255,255,255,0.72);
+      --glass-s:   rgba(255,255,255,0.58);
+      --glass-xs:  rgba(255,255,255,0.45);
+      --b:      rgba(0,0,0,0.09);
+      --b-s:    rgba(0,0,0,0.11);
+      --b-xs:   rgba(0,0,0,0.07);
+      --b-m:    rgba(0,0,0,0.14);
+      --b-d:    rgba(0,0,0,0.16);
+      --b-h:    rgba(0,0,0,0.20);
+      --b-f:    rgba(0,0,0,0.22);
+      --brown:    #2C1810;
+      --brown-m:  rgba(44,24,16,0.62);
+      --brown-l:  rgba(44,24,16,0.38);
+      --brown-sm: rgba(44,24,16,0.45);
+      --brand:   #8A4A2A;
+      --shadow-s: 0 4px 16px rgba(0,0,0,0.08);
+      --shadow-m: 0 8px 32px rgba(0,0,0,0.12);
+      --shadow-l: 0 20px 60px rgba(0,0,0,0.20);
     }
 
     html, body, #root {
@@ -53,31 +84,63 @@ const GlobalStyles = () => (
       -webkit-font-smoothing: antialiased;
     }
 
+    body { background: #1A0F0A; }
+    [data-theme="light"] body { background: #FAF5EF; }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      pointer-events: none; z-index: 0;
+      background:
+        radial-gradient(ellipse 75% 55% at 15% 12%, rgba(185,106,75,0.38) 0%, transparent 55%),
+        radial-gradient(ellipse 65% 50% at 85% 80%, rgba(122,145,120,0.22) 0%, transparent 50%),
+        radial-gradient(ellipse 55% 45% at 60% 50%, rgba(140,80,50,0.16) 0%, transparent 60%);
+    }
+    [data-theme="light"] body::before {
+      background:
+        radial-gradient(ellipse 75% 55% at 15% 12%, rgba(185,106,75,0.14) 0%, transparent 55%),
+        radial-gradient(ellipse 65% 50% at 85% 80%, rgba(122,145,120,0.10) 0%, transparent 50%),
+        radial-gradient(ellipse 55% 45% at 60% 50%, rgba(140,80,50,0.07) 0%, transparent 60%);
+    }
+
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      pointer-events: none; z-index: 0;
+      opacity: 0.028;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-repeat: repeat;
+      background-size: 200px 200px;
+    }
+    [data-theme="light"] body::after { opacity: 0.012; }
+
+    #root { position: relative; z-index: 1; min-height: 100vh; }
+
     .serif { font-family: 'Cormorant Garamond', Georgia, serif; }
     input, textarea, button { font-family: 'Jost', system-ui, sans-serif; }
 
     ::-webkit-scrollbar { width: 2px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.18); border-radius: 2px; }
+    ::-webkit-scrollbar-thumb { background: var(--b-m); border-radius: 2px; }
 
     ::selection { background: rgba(185,106,75,0.38); color: #F9F5EF; }
 
     .field {
       width: 100%; padding: 13px 16px; border-radius: 10px;
-      border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.06);
+      border: 1px solid var(--b-s); background: var(--glass);
       color: var(--brown); font-size: 15px; font-weight: 300; outline: none;
       transition: border-color .2s, box-shadow .2s;
     }
-    .field:focus { border-color: rgba(255,255,255,0.28); box-shadow: 0 0 0 3px rgba(185,106,75,.18); }
+    .field:focus { border-color: var(--b-f); box-shadow: 0 0 0 3px rgba(185,106,75,.18); }
     .field::placeholder { color: var(--brown-l); }
 
     .chip {
       padding: 8px 16px; border-radius: 8px;
-      border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04);
+      border: 1px solid var(--b-s); background: var(--glass-xs);
       color: var(--brown-m); font-size: 13px; cursor: pointer;
       transition: all .15s; white-space: nowrap; font-weight: 400;
     }
-    .chip:hover { border-color: rgba(255,255,255,0.25); color: var(--brown); background: rgba(255,255,255,0.08); }
+    .chip:hover { border-color: var(--b-h); color: var(--brown); background: var(--glass-s); }
     .chip.on { background: var(--terra); border-color: var(--terra); color: #fff; }
 
     .btn {
@@ -90,12 +153,12 @@ const GlobalStyles = () => (
     .btn-t:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(185,106,75,.45); filter: brightness(1.08); }
     .btn-t:disabled { opacity: .35; cursor: default; transform: none; box-shadow: none; }
     .btn-g {
-      background: rgba(255,255,255,0.05); color: var(--brown-m);
-      border: 1px solid rgba(255,255,255,0.12);
+      background: var(--glass-xs); color: var(--brown-m);
+      border: 1px solid var(--b-s);
       font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 17px;
       backdrop-filter: blur(12px);
     }
-    .btn-g:hover { border-color: rgba(255,255,255,0.28); color: var(--brown); background: rgba(255,255,255,0.09); }
+    .btn-g:hover { border-color: var(--b-h); color: var(--brown); background: var(--glass-s); }
 
     .bubble-u {
       background: linear-gradient(135deg, var(--terra), var(--terra-d));
@@ -103,9 +166,9 @@ const GlobalStyles = () => (
       box-shadow: 0 4px 16px rgba(185,106,75,.28);
     }
     .bubble-a {
-      background: rgba(255,255,255,0.06); color: var(--brown);
+      background: var(--glass); color: var(--brown);
       border-radius: 18px 18px 18px 4px;
-      border: 1px solid rgba(255,255,255,0.10);
+      border: 1px solid var(--b);
       backdrop-filter: blur(20px);
     }
 
@@ -128,7 +191,7 @@ const GlobalStyles = () => (
     }
 
     .step-bar { display: flex; gap: 4px; justify-content: center; margin-bottom: 36px; }
-    .step-bar span { height: 2px; border-radius: 2px; background: rgba(255,255,255,0.12); transition: all .35s; }
+    .step-bar span { height: 2px; border-radius: 2px; background: var(--b-s); transition: all .35s; }
     .step-bar span.on { background: var(--terra); }
 
     .av {
@@ -146,21 +209,21 @@ const GlobalStyles = () => (
       display: flex; align-items: center; justify-content: center; padding: 24px;
     }
     .modal-box {
-      background: rgba(26,15,10,0.90); border-radius: 24px; padding: 36px 32px;
+      background: var(--surface-d); border-radius: 24px; padding: 36px 32px;
       max-width: 400px; width: 100%; box-shadow: 0 24px 64px rgba(0,0,0,.65);
-      border: 1px solid rgba(255,255,255,0.12);
+      border: 1px solid var(--b-s);
       backdrop-filter: blur(28px);
       position: relative;
     }
 
     .btn-sos {
       height: 52px; width: 100%; border-radius: 10px;
-      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.10);
-      color: rgba(249,245,239,0.62); font-family: 'Jost', system-ui, sans-serif;
+      background: var(--glass-xs); border: 1px solid var(--b);
+      color: var(--brown-m); font-family: 'Jost', system-ui, sans-serif;
       font-size: 14px; font-weight: 500; cursor: pointer; transition: all .2s;
       display: flex; align-items: center; justify-content: center;
     }
-    .btn-sos:hover { border-color: rgba(185,106,75,0.45); color: #B96A4B; }
+    .btn-sos:hover { border-color: rgba(185,106,75,0.45); color: var(--terra); }
   `}</style>
 );
 
@@ -222,6 +285,20 @@ const UserIcon = ({ s = 22 }) => (
     <circle cx="12" cy="7" r="4"/>
   </svg>
 );
+const Sun = ({ s = 16 }) => (
+  <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="4"/>
+    <line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/>
+    <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/>
+    <line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/>
+    <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/>
+  </svg>
+);
+const Moon = ({ s = 16 }) => (
+  <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+);
 
 // ─── DAILY LIMIT ─────────────────────────────────────────────────────────────
 const FREE_DAILY_LIMIT = 10;
@@ -271,12 +348,11 @@ function LegalConsent({ onAccept }) {
   return (
     <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-        style={{ background: "rgba(26,15,10,0.85)", borderRadius: 28, padding: "36px 32px", maxWidth: 440, width: "100%", boxShadow: "var(--shadow-l)", border: "1px solid rgba(255,255,255,0.12)", backdropFilter: "blur(24px)" }}>
+        style={{ background: "var(--surface-d)", borderRadius: 28, padding: "36px 32px", maxWidth: 440, width: "100%", boxShadow: "var(--shadow-l)", border: "1px solid var(--b-s)", backdropFilter: "blur(24px)" }}>
 
         <div style={{ textAlign: "center", marginBottom: 28 }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "var(--terra)", marginBottom: 16 }}>
-            <Leaf s={22} />
-            <span className="serif" style={{ fontSize: 15, fontWeight: 600, letterSpacing: ".04em", color: "var(--terra-d)" }}>Parentelïa</span>
+          <div style={{ marginBottom: 16 }}>
+            <span className="serif" style={{ fontStyle: "italic", fontSize: 18, fontWeight: 400, color: "var(--brand)", letterSpacing: ".04em" }}>Parentelïa</span>
           </div>
           <h2 className="serif" style={{ fontSize: 28, fontWeight: 600, marginBottom: 8 }}>Avant de commencer</h2>
           <p style={{ fontSize: 13, color: "var(--brown-m)", fontWeight: 300, lineHeight: 1.6 }}>
@@ -292,7 +368,7 @@ function LegalConsent({ onAccept }) {
           ].map((item, i) => (
             <label key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12, cursor: "pointer" }}>
               <div onClick={() => item.set(!item.val)}
-                style={{ width: 20, height: 20, borderRadius: 6, border: `2px solid ${item.val ? "var(--terra)" : "rgba(255,255,255,0.20)"}`, background: item.val ? "var(--terra)" : "rgba(255,255,255,0.08)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", transition: "all .15s", marginTop: 1 }}>
+                style={{ width: 20, height: 20, borderRadius: 6, border: `2px solid ${item.val ? "var(--terra)" : "var(--b-d)"}`, background: item.val ? "var(--terra)" : "var(--b-s)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", transition: "all .15s", marginTop: 1 }}>
                 {item.val && <Check s={12} />}
               </div>
               <span style={{ fontSize: 13, color: "var(--brown-m)", lineHeight: 1.5, fontWeight: 300 }}>
@@ -308,7 +384,7 @@ function LegalConsent({ onAccept }) {
         <AnimatePresence>
           {showCgu && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-              style={{ overflow: "hidden", background: "rgba(255,255,255,0.05)", borderRadius: 12, padding: "14px 16px", marginBottom: 16, fontSize: 12, color: "var(--brown-m)", lineHeight: 1.7, fontWeight: 300 }}>
+              style={{ overflow: "hidden", background: "var(--glass-s)", borderRadius: 12, padding: "14px 16px", marginBottom: 16, fontSize: 12, color: "var(--brown-m)", lineHeight: 1.7, fontWeight: 300 }}>
               <strong style={{ display: "block", marginBottom: 6 }}>CGU — Parentelïa</strong>
               L'application Parentelïa fournit un soutien émotionnel et des informations générales à titre indicatif uniquement. Elle ne remplace en aucun cas un avis médical, psychologique ou thérapeutique professionnel.<br /><br />
               L'utilisateur s'engage à utiliser le service de bonne foi, à ne pas tenter d'en détourner le fonctionnement, et à ne pas transmettre de données personnelles de tiers sans leur consentement.<br /><br />
@@ -322,7 +398,7 @@ function LegalConsent({ onAccept }) {
         <AnimatePresence>
           {showRgpd && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-              style={{ overflow: "hidden", background: "rgba(255,255,255,0.05)", borderRadius: 12, padding: "14px 16px", marginBottom: 16, fontSize: 12, color: "var(--brown-m)", lineHeight: 1.7, fontWeight: 300 }}>
+              style={{ overflow: "hidden", background: "var(--glass-s)", borderRadius: 12, padding: "14px 16px", marginBottom: 16, fontSize: 12, color: "var(--brown-m)", lineHeight: 1.7, fontWeight: 300 }}>
               <strong style={{ display: "block", marginBottom: 6 }}>Politique de confidentialité — RGPD</strong>
               <strong>Données collectées :</strong> prénom, rôle parental, informations sur les enfants, défis déclarés et échanges avec Elia. Ces données sont stockées <em>uniquement sur votre appareil</em> (localStorage) et ne sont pas transmises à nos serveurs.<br /><br />
               <strong>Traitement IA :</strong> les messages envoyés à Elia sont traités par l'API d'Anthropic (Claude) de manière anonyme. Aucune donnée identifiante n'est conservée par Anthropic au-delà du traitement de la requête.<br /><br />
@@ -356,7 +432,6 @@ function CrisisModal({ onClose }) {
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       <motion.div className="modal-box" initial={{ opacity: 0, scale: .95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: .95 }}>
         <div style={{ textAlign: "center", marginBottom: 20 }}>
-          <div style={{ color: "var(--terra)", marginBottom: 12 }}><Leaf s={28} /></div>
           <h2 className="serif" style={{ fontSize: 22, fontWeight: 600, marginBottom: 8 }}>Je suis là avec toi</h2>
           <p style={{ fontSize: 13, color: "var(--brown-m)", fontWeight: 300, lineHeight: 1.6 }}>
             Ce que tu traverses est très difficile. Tu n'es pas seul(e). Des professionnels formés sont disponibles maintenant, gratuitement.
@@ -365,7 +440,7 @@ function CrisisModal({ onClose }) {
         <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
           {EMERGENCY_NUMBERS.map(e => (
             <a key={e.num} href={`tel:${e.num}`}
-              style={{ display: "flex", alignItems: "center", gap: 14, background: "rgba(255,255,255,0.06)", borderRadius: 14, padding: "12px 16px", textDecoration: "none", border: "1px solid rgba(255,255,255,0.12)" }}>
+              style={{ display: "flex", alignItems: "center", gap: 14, background: "var(--glass)", borderRadius: 14, padding: "12px 16px", textDecoration: "none", border: "1px solid var(--b-s)" }}>
               <div style={{ background: "var(--terra)", color: "#fff", borderRadius: 10, padding: "6px 12px", fontSize: 15, fontWeight: 600, flexShrink: 0 }}>{e.num}</div>
               <div>
                 <p style={{ fontSize: 13, fontWeight: 500, color: "var(--brown)" }}>{e.label}</p>
@@ -447,7 +522,7 @@ function StripeModal({ profile, onClose, onSuccess }) {
         </div>
 
         {/* Features */}
-        <div style={{ background: "rgba(255,255,255,0.05)", borderRadius: 16, padding: "16px 18px", marginBottom: 24 }}>
+        <div style={{ background: "var(--glass-s)", borderRadius: 16, padding: "16px 18px", marginBottom: 24 }}>
           {["Conversations illimitées avec Elïa", "Mémoire longue & suivi personnalisé", "Analyses et tendances hebdomadaires", "Accès prioritaire aux nouvelles fonctions"].map(f => (
             <div key={f} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
               <div style={{ color: "var(--sage)", flexShrink: 0 }}><Check s={14} /></div>
@@ -465,8 +540,8 @@ function StripeModal({ profile, onClose, onSuccess }) {
             <button key={p.key} onClick={() => setSelected(p.key)}
               style={{
                 padding: "14px 12px", borderRadius: 14, cursor: "pointer", textAlign: "center",
-                border: selected === p.key ? "2px solid var(--terra)" : "1.5px solid rgba(255,255,255,0.12)",
-                background: selected === p.key ? "rgba(185,106,75,.14)" : "rgba(255,255,255,0.05)",
+                border: selected === p.key ? "2px solid var(--terra)" : "1.5px solid var(--b-s)",
+                background: selected === p.key ? "rgba(185,106,75,.14)" : "var(--glass-s)",
                 transition: "all .18s", position: "relative",
               }}>
               {p.sub && <div style={{ position: "absolute", top: -8, left: "50%", transform: "translateX(-50%)", background: "var(--sage)", color: "#fff", fontSize: 10, padding: "2px 8px", borderRadius: 50, whiteSpace: "nowrap", fontWeight: 500 }}>{p.sub}</div>}
@@ -648,13 +723,13 @@ function Onboarding({ onDone }) {
         {/* Progress bar – full width, top, segments */}
         <div style={{ display: "flex", gap: 6, paddingTop: 52, marginBottom: 40 }}>
           {Array.from({ length: STEPS }).map((_, i) => (
-            <div key={i} style={{ flex: 1, height: 2, borderRadius: 2, background: i <= step ? "var(--terra)" : "rgba(255,255,255,0.08)", transition: "background .4s" }} />
+            <div key={i} style={{ flex: 1, height: 2, borderRadius: 2, background: i <= step ? "var(--terra)" : "var(--b-s)", transition: "background .4s" }} />
           ))}
         </div>
 
         {/* Logo – wordmark only */}
         <div style={{ textAlign: "center", marginBottom: 44 }}>
-          <span className="serif" style={{ fontStyle: "italic", fontSize: 18, fontWeight: 400, color: "#E8CABB", letterSpacing: ".04em" }}>Parentelïa</span>
+          <span className="serif" style={{ fontStyle: "italic", fontSize: 18, fontWeight: 400, color: "var(--brand)", letterSpacing: ".04em" }}>Parentelïa</span>
         </div>
 
         <AnimatePresence mode="wait">
@@ -670,7 +745,7 @@ function Onboarding({ onDone }) {
                 style={{ marginTop: 48 }}>
                 <label style={{ fontSize: 11, fontWeight: 500, color: "var(--brown-l)", textTransform: "uppercase", letterSpacing: ".08em", display: "block", marginBottom: 12 }}>Ton prénom</label>
                 <input className="field" placeholder="ex. Sophie…" value={d.parentName} onChange={e => upd({ parentName: e.target.value })}
-                  style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)" }} />
+                  style={{ background: "var(--glass)", border: "1px solid var(--b-s)" }} />
               </motion.div>
 
               <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .12, duration: .38 }}
@@ -688,7 +763,7 @@ function Onboarding({ onDone }) {
               <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .18, duration: .38 }}
                 style={{ marginTop: 56 }}>
                 <button className="btn btn-t" onClick={() => setStep(1)} disabled={!d.parentName.trim()}
-                  style={{ color: "#F9F5EF", fontWeight: 500 }}>
+                  style={{ fontWeight: 500 }}>
                   Continuer →
                 </button>
               </motion.div>
@@ -706,7 +781,7 @@ function Onboarding({ onDone }) {
               )}
               <div style={{ maxHeight: 300, overflowY: "auto", paddingRight: 4 }}>
                 {d.children.map((c, i) => (
-                  <div key={c.id} style={{ background: "rgba(255,255,255,0.05)", borderRadius: 18, padding: 16, marginBottom: 12, border: "1px solid rgba(255,255,255,0.10)", position: "relative" }}>
+                  <div key={c.id} style={{ background: "var(--glass-s)", borderRadius: 18, padding: 16, marginBottom: 12, border: "1px solid rgba(255,255,255,0.10)", position: "relative" }}>
                     {d.children.length > 1 && (
                       <button onClick={() => upd({ children: d.children.filter((_, idx) => idx !== i) })}
                         style={{ position: "absolute", top: 10, right: 10, background: "none", border: "none", cursor: "pointer", color: "var(--brown-l)" }}>
@@ -741,12 +816,12 @@ function Onboarding({ onDone }) {
                 </div>
               </div>
               <button onClick={() => upd({ children: [...d.children, newChild()] })}
-                style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "1px dashed rgba(255,255,255,0.18)", borderRadius: 12, padding: "9px 16px", color: "var(--brown-m)", cursor: "pointer", fontSize: 13, marginBottom: 22, marginTop: 8, width: "100%", justifyContent: "center" }}>
+                style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "1px dashed var(--b-m)", borderRadius: 12, padding: "9px 16px", color: "var(--brown-m)", cursor: "pointer", fontSize: 13, marginBottom: 22, marginTop: 8, width: "100%", justifyContent: "center" }}>
                 <Plus /> Ajouter un enfant
               </button>
               <div style={{ display: "flex", gap: 10 }}>
                 <button className="btn btn-g" onClick={() => setStep(0)} style={{ width: "auto", padding: "14px 18px" }}><Back /></button>
-                <button className="btn btn-t" onClick={() => setStep(2)} style={{ color: "#F9F5EF", fontWeight: 500 }}>Continuer →</button>
+                <button className="btn btn-t" onClick={() => setStep(2)} style={{ fontWeight: 500 }}>Continuer →</button>
               </div>
             </motion.div>
           )}
@@ -765,7 +840,7 @@ function Onboarding({ onDone }) {
               </div>
               <div style={{ display: "flex", gap: 10 }}>
                 <button className="btn btn-g" onClick={() => setStep(1)} style={{ width: "auto", padding: "14px 18px" }}><Back /></button>
-                <button className="btn btn-t" onClick={() => setStep(3)} style={{ color: "#F9F5EF", fontWeight: 500 }}>Continuer →</button>
+                <button className="btn btn-t" onClick={() => setStep(3)} style={{ fontWeight: 500 }}>Continuer →</button>
               </div>
             </motion.div>
           )}
@@ -781,7 +856,7 @@ function Onboarding({ onDone }) {
               />
               <div style={{ display: "flex", gap: 10, marginTop: 24 }}>
                 <button className="btn btn-g" onClick={() => setStep(2)} style={{ width: "auto", padding: "14px 18px" }}><Back /></button>
-                <button className="btn btn-t" onClick={finish} style={{ color: "#F9F5EF", fontWeight: 500 }}>Commencer avec Elïa</button>
+                <button className="btn btn-t" onClick={finish} style={{ fontWeight: 500 }}>Commencer avec Elïa</button>
               </div>
             </motion.div>
           )}
@@ -858,12 +933,12 @@ function Home({ profile, onStart, onPremium }) {
 
         {/* Wordmark */}
         <motion.div {...fd(0)} style={{ textAlign: "center", paddingTop: 52, marginBottom: 48 }}>
-          <span className="serif" style={{ fontStyle: "italic", fontSize: 18, fontWeight: 400, color: "#E8CABB", letterSpacing: ".04em" }}>Parentelïa</span>
+          <span className="serif" style={{ fontStyle: "italic", fontSize: 18, fontWeight: 400, color: "var(--brand)", letterSpacing: ".04em" }}>Parentelïa</span>
         </motion.div>
 
         {/* Greeting */}
         <motion.div {...fd(.06)} style={{ textAlign: "center", marginBottom: subtitle ? 10 : 40 }}>
-          <h1 className="serif" style={{ fontSize: 52, fontWeight: 400, lineHeight: 1.1, color: "#F9F5EF", margin: 0 }}>
+          <h1 className="serif" style={{ fontSize: 52, fontWeight: 400, lineHeight: 1.1, color: "var(--brown)", margin: 0 }}>
             {greet},<br /><em>{profile.parentName}</em>
           </h1>
         </motion.div>
@@ -871,7 +946,7 @@ function Home({ profile, onStart, onPremium }) {
         {/* Subtitle */}
         {subtitle && (
           <motion.div {...fd(.12)} style={{ textAlign: "center", marginBottom: 40 }}>
-            <p style={{ fontSize: 14, color: "rgba(249,245,239,0.55)", fontWeight: 400 }}>{subtitle}</p>
+            <p style={{ fontSize: 14, color: "var(--brown-m)", fontWeight: 400 }}>{subtitle}</p>
           </motion.div>
         )}
 
@@ -879,7 +954,7 @@ function Home({ profile, onStart, onPremium }) {
         <AnimatePresence>
           {sosBanner && (
             <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-              style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 18, padding: "16px 18px", marginBottom: 16, backdropFilter: "blur(20px)" }}>
+              style={{ background: "var(--glass)", border: "1px solid var(--b-s)", borderRadius: 18, padding: "16px 18px", marginBottom: 16, backdropFilter: "blur(20px)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div style={{ flex: 1 }}>
                   <p style={{ fontSize: 13, fontWeight: 500, color: "var(--terra-d)", marginBottom: 4 }}>Comment ça va depuis hier ?</p>
@@ -897,20 +972,20 @@ function Home({ profile, onStart, onPremium }) {
 
         {/* Card – Pour toi aujourd'hui */}
         <motion.div {...fd(.18)}
-          style={{ background: "rgba(255,255,255,0.06)", borderRadius: 22, padding: 28, marginBottom: 16, border: "1px solid rgba(255,255,255,0.10)", backdropFilter: "blur(20px)", position: "relative", overflow: "hidden" }}>
-          <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(249,245,239,0.45)", textTransform: "uppercase", letterSpacing: ".22em", marginBottom: 18 }}>Pour toi aujourd'hui</p>
+          style={{ background: "var(--glass)", borderRadius: 22, padding: 28, marginBottom: 16, border: "1px solid rgba(255,255,255,0.10)", backdropFilter: "blur(20px)", position: "relative", overflow: "hidden" }}>
+          <p style={{ fontSize: 11, fontWeight: 500, color: "var(--brown-sm)", textTransform: "uppercase", letterSpacing: ".22em", marginBottom: 18 }}>Pour toi aujourd'hui</p>
           <div style={{ position: "relative", paddingLeft: 10 }}>
             <span className="serif" style={{ position: "absolute", top: -22, left: -6, fontSize: 56, lineHeight: 1, color: "var(--terra)", opacity: 0.4, fontWeight: 400, userSelect: "none" }}>«</span>
-            <p className="serif" style={{ fontStyle: "italic", fontSize: 22, lineHeight: 1.4, color: "#F9F5EF", paddingTop: 10 }}>{tip}</p>
+            <p className="serif" style={{ fontStyle: "italic", fontSize: 22, lineHeight: 1.4, color: "var(--brown)", paddingTop: 10 }}>{tip}</p>
           </div>
           <p style={{ fontSize: 12, fontStyle: "italic", color: "var(--brown-m)", textAlign: "right", marginTop: 18 }}>{sig}</p>
         </motion.div>
 
         {/* Card – Check-in du soir */}
         <motion.div {...fd(.24)}
-          style={{ background: "rgba(255,255,255,0.06)", borderRadius: 22, padding: 28, marginBottom: 16, border: "1px solid rgba(255,255,255,0.10)", backdropFilter: "blur(20px)" }}>
-          <p style={{ fontSize: 11, fontWeight: 500, color: "rgba(249,245,239,0.45)", textTransform: "uppercase", letterSpacing: ".22em", marginBottom: 14 }}>Check-in du soir</p>
-          <p className="serif" style={{ fontSize: 26, fontWeight: 400, color: "#F9F5EF", marginBottom: 20, lineHeight: 1.2 }}>Comment s'est passée ta journée ?</p>
+          style={{ background: "var(--glass)", borderRadius: 22, padding: 28, marginBottom: 16, border: "1px solid rgba(255,255,255,0.10)", backdropFilter: "blur(20px)" }}>
+          <p style={{ fontSize: 11, fontWeight: 500, color: "var(--brown-sm)", textTransform: "uppercase", letterSpacing: ".22em", marginBottom: 14 }}>Check-in du soir</p>
+          <p className="serif" style={{ fontSize: 26, fontWeight: 400, color: "var(--brown)", marginBottom: 20, lineHeight: 1.2 }}>Comment s'est passée ta journée ?</p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
             {CHECKIN_MOODS.map(m => (
               <button key={m} className={`chip ${tracking?.checkin === m ? "on" : ""}`}
@@ -926,11 +1001,11 @@ function Home({ profile, onStart, onPremium }) {
         <motion.div {...fd(.30)} style={{ marginTop: 32 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
             <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#7A9178", boxShadow: "0 0 8px rgba(122,145,120,0.65)", flexShrink: 0, display: "inline-block" }} />
-            <span style={{ fontSize: 13, color: "rgba(249,245,239,0.6)", fontWeight: 400 }}>Elia est là, disponible</span>
+            <span style={{ fontSize: 13, color: "var(--brown-m)", fontWeight: 400 }}>Elia est là, disponible</span>
           </div>
 
           <button className="btn btn-t" onClick={() => onStart(false)}
-            style={{ height: 56, color: "#F9F5EF", fontWeight: 500, marginBottom: 12 }}>
+            style={{ height: 56, fontWeight: 500, marginBottom: 12 }}>
             Parler avec Elia →
           </button>
 
@@ -1081,7 +1156,7 @@ function Chat({ profile, isSos, onBack, onPremium }) {
     <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
 
       {/* Header */}
-      <div style={{ background: "rgba(26,15,10,0.80)", borderBottom: "1px solid rgba(255,255,255,0.10)", padding: "14px 20px", display: "flex", alignItems: "center", gap: 12, boxShadow: "var(--shadow-s)", flexShrink: 0, backdropFilter: "blur(20px)" }}>
+      <div style={{ background: "var(--surface)", borderBottom: "1px solid rgba(255,255,255,0.10)", padding: "14px 20px", display: "flex", alignItems: "center", gap: 12, boxShadow: "var(--shadow-s)", flexShrink: 0, backdropFilter: "blur(20px)" }}>
         <button onClick={onBack} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--brown-m)", display: "flex", padding: 4 }}><Back s={19} /></button>
         <div className="av">E</div>
         <div>
@@ -1171,7 +1246,7 @@ function Chat({ profile, isSos, onBack, onPremium }) {
       )}
 
       {/* Input */}
-      <div style={{ background: "rgba(26,15,10,0.80)", borderTop: "1px solid rgba(255,255,255,0.10)", padding: "14px 16px", flexShrink: 0, backdropFilter: "blur(20px)" }}>
+      <div style={{ background: "var(--surface)", borderTop: "1px solid rgba(255,255,255,0.10)", padding: "14px 16px", flexShrink: 0, backdropFilter: "blur(20px)" }}>
         {!profile.isPremium && dailyCount >= FREE_DAILY_LIMIT ? (
           <div style={{ maxWidth: 640, margin: "0 auto", textAlign: "center" }}>
             <p style={{ fontSize: 14, fontWeight: 500, color: "var(--terra-d)", marginBottom: 12 }}>
@@ -1206,7 +1281,7 @@ function Chat({ profile, isSos, onBack, onPremium }) {
                 disabled={!input.trim() || loading}
                 style={{
                   width: 44, height: 44, borderRadius: "50%",
-                  background: input.trim() && !loading ? "linear-gradient(135deg,var(--terra),var(--terra-d))" : "rgba(255,255,255,0.10)",
+                  background: input.trim() && !loading ? "linear-gradient(135deg,var(--terra),var(--terra-d))" : "var(--b)",
                   border: "none",
                   cursor: input.trim() && !loading ? "pointer" : "default",
                   display: "flex", alignItems: "center", justifyContent: "center",
@@ -1248,7 +1323,7 @@ function BottomNav({ screen, onNavigate }) {
   return (
     <div style={{
       position: "fixed", bottom: 0, left: 0, right: 0,
-      background: "rgba(18,8,4,0.82)", borderTop: "1px solid rgba(255,255,255,0.09)",
+      background: "var(--surface-d)", borderTop: "1px solid rgba(255,255,255,0.06)",
       display: "flex", zIndex: 100, boxShadow: "0 -4px 32px rgba(0,0,0,.45)",
       backdropFilter: "blur(20px)"
     }}>
@@ -1273,7 +1348,7 @@ function BottomNav({ screen, onNavigate }) {
 }
 
 // ─── PROFILE SCREEN ───────────────────────────────────────────────────────────
-function ProfileScreen({ profile, onSave, onPremium }) {
+function ProfileScreen({ profile, onSave, onPremium, theme, onToggleTheme }) {
   const [d, setD] = useState({ ...profile, children: profile.children.map(c => ({ ...c })), birthTypes: profile.birthTypes || [] });
   const [saved, setSaved] = useState(false);
 
@@ -1294,10 +1369,9 @@ function ProfileScreen({ profile, onSave, onPremium }) {
 
   return (
     <div style={{ minHeight: "100vh", paddingBottom: 80 }}>
-      <div style={{ background: "rgba(26,15,10,0.80)", borderBottom: "1px solid rgba(255,255,255,0.10)", padding: "20px 24px", boxShadow: "var(--shadow-s)", backdropFilter: "blur(20px)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--terra)", marginBottom: 4 }}>
-          <Leaf s={18} />
-          <span className="serif" style={{ fontSize: 15, fontWeight: 600, letterSpacing: ".04em", color: "var(--terra-d)" }}>Parentelïa</span>
+      <div style={{ background: "var(--surface)", borderBottom: "1px solid rgba(255,255,255,0.10)", padding: "20px 24px", boxShadow: "var(--shadow-s)", backdropFilter: "blur(20px)" }}>
+        <div style={{ marginBottom: 4 }}>
+          <span className="serif" style={{ fontStyle: "italic", fontSize: 18, fontWeight: 400, color: "var(--brand)", letterSpacing: ".04em" }}>Parentelïa</span>
         </div>
         <h1 className="serif" style={{ fontSize: 26, fontWeight: 600 }}>Mon profil</h1>
       </div>
@@ -1325,7 +1399,7 @@ function ProfileScreen({ profile, onSave, onPremium }) {
         )}
 
         {/* Identité */}
-        <div style={{ background: "rgba(255,255,255,0.06)", borderRadius: 20, padding: "20px", border: "1px solid rgba(255,255,255,0.10)", boxShadow: "var(--shadow-s)", backdropFilter: "blur(20px)" }}>
+        <div style={{ background: "var(--glass)", borderRadius: 20, padding: "20px", border: "1px solid rgba(255,255,255,0.10)", boxShadow: "var(--shadow-s)", backdropFilter: "blur(20px)" }}>
           <p style={{ fontSize: 11, fontWeight: 500, color: "var(--brown-l)", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 14 }}>Identité</p>
           <div style={{ marginBottom: 14 }}>
             <label style={{ fontSize: 11, color: "var(--brown-l)", display: "block", marginBottom: 6 }}>Prénom</label>
@@ -1342,10 +1416,10 @@ function ProfileScreen({ profile, onSave, onPremium }) {
         </div>
 
         {/* Enfants */}
-        <div style={{ background: "rgba(255,255,255,0.06)", borderRadius: 20, padding: "20px", border: "1px solid rgba(255,255,255,0.10)", boxShadow: "var(--shadow-s)", backdropFilter: "blur(20px)" }}>
+        <div style={{ background: "var(--glass)", borderRadius: 20, padding: "20px", border: "1px solid rgba(255,255,255,0.10)", boxShadow: "var(--shadow-s)", backdropFilter: "blur(20px)" }}>
           <p style={{ fontSize: 11, fontWeight: 500, color: "var(--brown-l)", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 14 }}>Mes enfants</p>
           {d.children.map((c, i) => (
-            <div key={c.id} style={{ background: "rgba(255,255,255,0.05)", borderRadius: 14, padding: 14, marginBottom: 10, border: "1px solid rgba(255,255,255,0.09)", position: "relative" }}>
+            <div key={c.id} style={{ background: "var(--glass-s)", borderRadius: 14, padding: 14, marginBottom: 10, border: "1px solid var(--b-xs)", position: "relative" }}>
               {d.children.length > 1 && (
                 <button onClick={() => upd({ children: d.children.filter((_, idx) => idx !== i) })}
                   style={{ position: "absolute", top: 10, right: 10, background: "none", border: "none", cursor: "pointer", color: "var(--brown-l)" }}>
@@ -1367,7 +1441,7 @@ function ProfileScreen({ profile, onSave, onPremium }) {
             </div>
           ))}
           <button onClick={() => upd({ children: [...d.children, newChild()] })}
-            style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "1px dashed rgba(255,255,255,0.18)", borderRadius: 12, padding: "9px 16px", color: "var(--brown-m)", cursor: "pointer", fontSize: 13, width: "100%", justifyContent: "center" }}>
+            style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "1px dashed var(--b-m)", borderRadius: 12, padding: "9px 16px", color: "var(--brown-m)", cursor: "pointer", fontSize: 13, width: "100%", justifyContent: "center" }}>
             <Plus /> Ajouter un enfant
           </button>
           {detectMultiple(d.children) && (
@@ -1378,7 +1452,7 @@ function ProfileScreen({ profile, onSave, onPremium }) {
         </div>
 
         {/* Type de naissance */}
-        <div style={{ background: "rgba(255,255,255,0.06)", borderRadius: 20, padding: "20px", border: "1px solid rgba(255,255,255,0.10)", boxShadow: "var(--shadow-s)", backdropFilter: "blur(20px)" }}>
+        <div style={{ background: "var(--glass)", borderRadius: 20, padding: "20px", border: "1px solid rgba(255,255,255,0.10)", boxShadow: "var(--shadow-s)", backdropFilter: "blur(20px)" }}>
           <p style={{ fontSize: 11, fontWeight: 500, color: "var(--brown-l)", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 14 }}>Type de naissance</p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {BIRTH_TYPES.map(t => (
@@ -1391,7 +1465,7 @@ function ProfileScreen({ profile, onSave, onPremium }) {
         </div>
 
         {/* Défis */}
-        <div style={{ background: "rgba(255,255,255,0.06)", borderRadius: 20, padding: "20px", border: "1px solid rgba(255,255,255,0.10)", boxShadow: "var(--shadow-s)", backdropFilter: "blur(20px)" }}>
+        <div style={{ background: "var(--glass)", borderRadius: 20, padding: "20px", border: "1px solid rgba(255,255,255,0.10)", boxShadow: "var(--shadow-s)", backdropFilter: "blur(20px)" }}>
           <p style={{ fontSize: 11, fontWeight: 500, color: "var(--brown-l)", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 14 }}>Ce qui me touche</p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {CHALS.map(c => (
@@ -1404,9 +1478,20 @@ function ProfileScreen({ profile, onSave, onPremium }) {
         </div>
 
         {/* Contexte */}
-        <div style={{ background: "rgba(255,255,255,0.06)", borderRadius: 20, padding: "20px", border: "1px solid rgba(255,255,255,0.10)", boxShadow: "var(--shadow-s)", backdropFilter: "blur(20px)" }}>
+        <div style={{ background: "var(--glass)", borderRadius: 20, padding: "20px", border: "1px solid rgba(255,255,255,0.10)", boxShadow: "var(--shadow-s)", backdropFilter: "blur(20px)" }}>
           <p style={{ fontSize: 11, fontWeight: 500, color: "var(--brown-l)", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 14 }}>Mon contexte</p>
           <textarea className="field" placeholder="ex. Je suis séparée, je gère tout seul…" value={d.freeText} onChange={e => upd({ freeText: e.target.value })} rows={4} style={{ resize: "none", lineHeight: 1.6 }} />
+        </div>
+
+        {/* Apparence */}
+        <div style={{ background: "var(--glass)", borderRadius: 20, padding: "20px", border: "1px solid var(--b)", boxShadow: "var(--shadow-s)", backdropFilter: "blur(20px)" }}>
+          <p style={{ fontSize: 11, fontWeight: 500, color: "var(--brown-l)", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 14 }}>Apparence</p>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <span style={{ fontSize: 14, color: "var(--brown)", fontWeight: 300 }}>Thème de l'application</span>
+            <button onClick={onToggleTheme} style={{ display: "flex", alignItems: "center", gap: 7, background: "var(--glass-s)", border: "1px solid var(--b-s)", borderRadius: 10, padding: "8px 14px", color: "var(--brown-m)", cursor: "pointer", fontSize: 13, transition: "all .15s", fontWeight: 400 }}>
+              {theme === "dark" ? <><Moon s={15} /> Sombre</> : <><Sun s={15} /> Clair</>}
+            </button>
+          </div>
         </div>
 
         {/* Save */}
@@ -1443,7 +1528,7 @@ function MentionsLegales() {
       <AnimatePresence>
         {open && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-            style={{ overflow: "hidden", background: "rgba(255,255,255,0.05)", borderRadius: 16, padding: "16px 18px", marginTop: 8, fontSize: 11, color: "var(--brown-m)", lineHeight: 1.8, border: "1px solid rgba(255,255,255,0.10)", backdropFilter: "blur(16px)" }}>
+            style={{ overflow: "hidden", background: "var(--glass-s)", borderRadius: 16, padding: "16px 18px", marginTop: 8, fontSize: 11, color: "var(--brown-m)", lineHeight: 1.8, border: "1px solid rgba(255,255,255,0.10)", backdropFilter: "blur(16px)" }}>
             <strong style={{ display: "block", marginBottom: 8 }}>Mentions légales — Parentelïa</strong>
             <strong>Éditeur :</strong> [Nom / Raison sociale à renseigner]<br />
             <strong>Siège social :</strong> [Adresse à renseigner]<br />
@@ -1466,8 +1551,21 @@ export default function App() {
   const [screen, setScreen] = useState("loading");
   const [sos, setSos] = useState(false);
   const [showPremium, setShowPremium] = useState(false);
+  const [theme, setTheme] = useState("dark");
+
+  const toggleTheme = async () => {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    document.documentElement.setAttribute("data-theme", next);
+    await S.set("elia_theme", next);
+  };
 
   useEffect(() => {
+    S.get("elia_theme").then(t => {
+      const saved = t || "dark";
+      setTheme(saved);
+      document.documentElement.setAttribute("data-theme", saved);
+    });
     Promise.all([S.get("elia_profile"), S.get("elia_legal")]).then(([p, legal]) => {
       setProfile(p);
       if (!legal) setScreen("legal");
@@ -1516,8 +1614,8 @@ export default function App() {
     <ErrorBoundary>
       <GlobalStyles />
       <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <motion.div animate={{ opacity: [.4, 1, .4] }} transition={{ duration: 2, repeat: Infinity }} style={{ color: "var(--terra)" }}>
-          <Leaf s={32} />
+        <motion.div animate={{ opacity: [.25, .9, .25] }} transition={{ duration: 2.5, repeat: Infinity }}>
+          <span className="serif" style={{ fontStyle: "italic", fontSize: 22, fontWeight: 400, color: "var(--brand)", letterSpacing: ".04em" }}>Parentelïa</span>
         </motion.div>
       </div>
     </ErrorBoundary>
@@ -1557,7 +1655,7 @@ export default function App() {
         )}
         {screen === "profile" && profile && (
           <motion.div key="profile" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="has-nav">
-            <ProfileScreen profile={profile} onSave={updateProfile} onPremium={() => setShowPremium(true)} />
+            <ProfileScreen profile={profile} onSave={updateProfile} onPremium={() => setShowPremium(true)} theme={theme} onToggleTheme={toggleTheme} />
           </motion.div>
         )}
       </AnimatePresence>

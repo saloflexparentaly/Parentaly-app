@@ -5,6 +5,15 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Parentelïa</title>
+    <script>
+      try {
+        var t = JSON.parse(localStorage.getItem("elia_theme")) || "dark";
+        document.documentElement.setAttribute("data-theme", t);
+        document.documentElement.style.background = t === "light" ? "#FAF5EF" : "#1A0F0A";
+      } catch(e) {
+        document.documentElement.setAttribute("data-theme", "dark");
+      }
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
