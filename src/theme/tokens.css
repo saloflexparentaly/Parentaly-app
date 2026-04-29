@@ -1,0 +1,79 @@
+/* ─── PARENTELÏA — DESIGN TOKENS ─────────────────────────────────────────── */
+
+[data-theme="light"] {
+  --bg-base-1: #FBEAE0;
+  --bg-base-2: #F8E0DA;
+  --bg-base-3: #F4D8DC;
+  --bg-base-4: #F8DDD0;
+  --bg-base-5: #FBE8DC;
+
+  --halo-1: rgba(232, 168, 180, 0.55);
+  --halo-2: rgba(196, 168, 196, 0.45);
+  --halo-3: rgba(244, 200, 180, 0.40);
+  --halo-4: rgba(248, 196, 176, 0.50);
+  --halo-5: rgba(216, 168, 200, 0.40);
+
+  --surface: #FFFAF3;
+  --surface-tint: rgba(251, 233, 221, 0.85);
+  --surface-border: rgba(61, 40, 32, 0.06);
+  --surface-border-s: rgba(61, 40, 32, 0.10);
+  --surface-header: rgba(255, 250, 243, 0.92);
+  --surface-modal: rgba(255, 250, 243, 0.98);
+
+  --accent: #C97560;
+  --accent-deep: #A8553F;
+  --accent-light: #E8A89A;
+  --sage: #8AA89A;
+  --sage-l: #A8C0B0;
+
+  --ink: #3D2820;
+  --ink-soft: #6E4A3C;
+  --ink-faint: rgba(61, 40, 32, 0.45);
+  --ink-xfaint: rgba(61, 40, 32, 0.32);
+  --brand: #A8553F;
+
+  --shadow-card: 0 1px 2px rgba(120,60,40,0.04), 0 4px 8px rgba(120,60,40,0.06), 0 16px 32px rgba(120,60,40,0.08);
+  --shadow-cta: 0 1px 2px rgba(168,85,63,0.2), 0 4px 12px rgba(201,117,96,0.35), 0 12px 32px rgba(201,117,96,0.3), inset 0 1px 0 rgba(255,255,255,0.25);
+  --shadow-s: 0 2px 8px rgba(120,60,40,0.06);
+  --shadow-m: 0 4px 16px rgba(120,60,40,0.10);
+  --shadow-l: 0 12px 40px rgba(120,60,40,0.14);
+}
+
+[data-theme="dark"] {
+  --bg-base-1: #1F1418;
+  --bg-base-2: #1C1218;
+  --bg-base-3: #221620;
+  --bg-base-4: #1E1318;
+  --bg-base-5: #1F1414;
+
+  --halo-1: rgba(201, 117, 96, 0.45);
+  --halo-2: rgba(120, 80, 110, 0.50);
+  --halo-3: rgba(180, 100, 110, 0.35);
+  --halo-4: rgba(168, 85, 75, 0.45);
+  --halo-5: rgba(90, 60, 90, 0.50);
+
+  --surface: rgba(255, 255, 255, 0.05);
+  --surface-tint: rgba(232, 168, 154, 0.08);
+  --surface-border: rgba(255, 255, 255, 0.08);
+  --surface-border-s: rgba(255, 255, 255, 0.12);
+  --surface-header: rgba(31, 20, 24, 0.88);
+  --surface-modal: rgba(28, 18, 24, 0.96);
+
+  --accent: #C97560;
+  --accent-deep: #A8553F;
+  --accent-light: #E8A89A;
+  --sage: #8AA89A;
+  --sage-l: #A8C0B0;
+
+  --ink: #FAF2EA;
+  --ink-soft: rgba(250, 242, 234, 0.62);
+  --ink-faint: rgba(250, 242, 234, 0.38);
+  --ink-xfaint: rgba(250, 242, 234, 0.25);
+  --brand: #E8CABB;
+
+  --shadow-card: 0 1px 2px rgba(0,0,0,0.2), 0 8px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06);
+  --shadow-cta: 0 1px 2px rgba(0,0,0,0.3), 0 4px 14px rgba(201,117,96,0.4), 0 12px 36px rgba(201,117,96,0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+  --shadow-s: 0 2px 8px rgba(0,0,0,0.22);
+  --shadow-m: 0 4px 20px rgba(0,0,0,0.32);
+  --shadow-l: 0 12px 48px rgba(0,0,0,0.48);
+}
