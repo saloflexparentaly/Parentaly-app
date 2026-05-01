@@ -20,8 +20,6 @@ class ErrorBoundary extends Component {
   }
 }
 
-// ─── SANITIZE ─────────────────────────────────────────────────────────────────
-const sanitize = str => (str || "").slice(0, 500).replace(/\[INST\]|\[\/INST\]|<\|system\|>|<\|user\|>/gi, "").replace(/\n{4,}/g, "\n\n");
 
 // ─── GLOBAL STYLES ────────────────────────────────────────────────────────────
 const GlobalStyles = () => (
@@ -136,12 +134,13 @@ const GlobalStyles = () => (
 
     .btn-sos {
       height: 52px; width: 100%; border-radius: 10px;
-      background: var(--surface-tint); border: 1px solid var(--surface-border);
-      color: var(--ink-soft); font-family: 'Jost', system-ui, sans-serif;
+      background: rgba(201,117,96,0.18); border: 1.5px solid rgba(201,117,96,0.55);
+      color: var(--ink); font-family: 'Jost', system-ui, sans-serif;
       font-size: 14px; font-weight: 500; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
+      transition: background-color 300ms ease, color 300ms ease, border-color 300ms ease, box-shadow 300ms ease;
     }
-    .btn-sos:hover { border-color: var(--accent-light); color: var(--accent); }
+    .btn-sos:hover { background: rgba(201,117,96,0.28); border-color: rgba(201,117,96,0.75); }
   `}</style>
 );
 
@@ -201,20 +200,6 @@ const UserIcon = ({ s = 22 }) => (
   <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
     <circle cx="12" cy="7" r="4"/>
-  </svg>
-);
-const Sun = ({ s = 16 }) => (
-  <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="4"/>
-    <line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/>
-    <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/>
-    <line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/>
-    <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/>
-  </svg>
-);
-const Moon = ({ s = 16 }) => (
-  <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
   </svg>
 );
 
@@ -318,8 +303,8 @@ function LegalConsent({ onAccept }) {
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
               style={{ overflow: "hidden", background: "var(--surface-tint)", borderRadius: 12, padding: "14px 16px", marginBottom: 16, fontSize: 12, color: "var(--ink-soft)", lineHeight: 1.7, fontWeight: 300 }}>
               <strong style={{ display: "block", marginBottom: 6 }}>Politique de confidentialité — RGPD</strong>
-              <strong>Données collectées :</strong> prénom, rôle parental, informations sur les enfants, défis déclarés et échanges avec Elia. Ces données sont stockées <em>uniquement sur votre appareil</em> (localStorage) et ne sont pas transmises à nos serveurs.<br /><br />
-              <strong>Traitement IA :</strong> les messages envoyés à Elia sont traités par l'API d'Anthropic (Claude) de manière anonyme. Aucune donnée identifiante n'est conservée par Anthropic au-delà du traitement de la requête.<br /><br />
+              <strong>Données collectées :</strong> prénom, rôle parental, informations sur les enfants et défis déclarés — stockés <em>uniquement sur votre appareil</em> (localStorage). Les messages envoyés à Elia transitent par nos serveurs pour le traitement IA en temps réel ; ils ne sont pas conservés côté serveur après traitement.<br /><br />
+              <strong>Traitement IA :</strong> vos messages sont transmis à l'API Anthropic (Claude). Anthropic s'engage à ne pas utiliser ces données pour l'entraînement de ses modèles (API commerciale). Ce transfert hors UE est encadré par les clauses contractuelles types de la Commission européenne.<br /><br />
               <strong>Vos droits (RGPD) :</strong> vous pouvez à tout moment supprimer l'intégralité de vos données via "Réinitialiser mon profil" dans les paramètres. Droit d'accès, de rectification et d'opposition garantis.<br /><br />
               <strong>Responsable de traitement :</strong> Parentelïa — contact : privacy@parentelia.com
             </motion.div>
@@ -347,7 +332,7 @@ const CRISIS_KEYWORDS = ["me faire du mal", "me tuer", "suicide", "mourir", "en 
 
 function CrisisModal({ onClose }) {
   return (
-    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+    <div className="modal-overlay">
       <motion.div className="modal-box" initial={{ opacity: 0, scale: .95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: .95 }}>
         <div style={{ textAlign: "center", marginBottom: 20 }}>
           <h2 className="serif" style={{ fontSize: 22, fontWeight: 600, marginBottom: 8 }}>Je suis là avec toi</h2>
@@ -389,7 +374,7 @@ function StripeModal({ profile, onClose, onSuccess }) {
   const [error, setError] = useState("");
 
   const handleCheckout = async () => {
-    if (!email.trim() || !email.includes("@")) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) {
       setError("Merci d'entrer une adresse email valide.");
       return;
     }
@@ -488,81 +473,29 @@ function StripeModal({ profile, onClose, onSuccess }) {
 }
 
 // ─── CLAUDE API ───────────────────────────────────────────────────────────────
-async function askElia({ profile, messages, isSos, memory }) {
-  const isPremium = profile.isPremium;
-
-  const children = profile.children
-    .filter(c => c.firstName)
-    .map(c => {
-      const age = calcAge(c.birthDate) || c.age || "âge non précisé";
-      const extras = [c.temperament, c.notes].filter(Boolean).join(", ");
-      return `${c.firstName} (${age}${extras ? ", " + extras : ""})`;
-    }).join(", ") || "non renseigné";
-
-  const multipleLabel = detectMultiple(profile.children);
-  const birthCtx = profile.birthTypes?.length
-    ? `Naissance : ${profile.birthTypes.join(", ")}.` : "";
-
-  const memLimit = isPremium ? 20 : 3;
-  const memBlock = memory?.length
-    ? "\n\nMÉMOIRE :\n" + memory.slice(-memLimit).map(m => "- " + m).join("\n")
-    : "";
-
-  const premiumBlock = isPremium ? `
-NIVEAU PREMIUM — réponses approfondies :
-- Analyse les patterns et tendances dans ce que vit ${profile.parentName}
-- Personnalise chaque réponse selon l'historique partagé
-- Quand pertinent, propose doucement une orientation vers un professionnel :
-  • Pédiatre : santé physique, développement, courbe de croissance
-  • Ostéopathe : tensions posturales, coliques, sommeil agité
-  • Kinésithérapeute : motricité, tonus, retard moteur
-  • Psychologue/psy périnatal : anxiété parentale, baby blues, dépression
-  • Sage-femme : suivi postnatal, allaitement, périnée
-  Toujours avec une phrase d'explication douce sur POURQUOI ce professionnel peut aider.
-- Réponses structurées : validation → analyse → pistes concrètes → question d'approfondissement` : `
-NIVEAU GRATUIT :
-- Réponses courtes et bienveillantes (4-6 phrases max)
-- Validation émotionnelle prioritaire
-- 1 piste concrète maximum`;
-
-  const system = `Tu es Elia, une assistante parentale émotionnelle et bienveillante.
-Tu accompagnes ${sanitize(profile.parentName)} (${sanitize(profile.parentRole)}).
-Enfants : ${children}.${multipleLabel ? ` (${multipleLabel})` : ""}
-${birthCtx}
-${profile.challenges?.length ? "Défis déclarés : " + profile.challenges.join(", ") + "." : ""}
-${profile.freeText ? "Contexte personnel : " + sanitize(profile.freeText) : ""}
-${memBlock}
-${premiumBlock}
-
-TON TOUJOURS :
-- Chaleureux, humain, jamais jugeant, jamais culpabilisant
-- Phrases naturelles et fluides, comme une amie bienveillante et experte
-- 1 emoji maximum par réponse
-- Jamais de diagnostic médical
-${isSos ? `
-MODE SOS — PRIORITÉ ABSOLUE :
-- Réponse très courte (3-5 phrases max)
-- Présence émotionnelle avant tout
-- Propose une technique de respiration simple si pertinent
-- 1 question ouverte douce maximum` : ""}
-
-Si tu te souviens d'un échange : utilise "Tu me parlais de…" naturellement.`;
-
-  const msgLimit = isPremium ? messages.length : Math.min(messages.length, 10);
-  const resp = await fetch("/api/chat", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      tier: isPremium ? "premium" : "free",
-      max_tokens: isPremium ? 1200 : 600,
-      system,
-      messages: messages.slice(-msgLimit).map(m => ({ role: m.role, content: m.content }))
-    })
-  });
-
-  if (!resp.ok) throw new Error("API " + resp.status);
-  const data = await resp.json();
-  return data.content.map(b => b.text || "").join("");
+async function askElia({ profile, messages, isSos, memory, premiumToken }) {
+  const controller = new AbortController();
+  const timeoutId  = setTimeout(() => controller.abort(), 35000);
+  try {
+    const resp = await fetch("/api/chat", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ profile, messages, isSos, memory, premiumToken }),
+      signal:  controller.signal,
+    });
+    clearTimeout(timeoutId);
+    if (resp.status === 429) {
+      const data = await resp.json();
+      if (data.dailyLimit) throw Object.assign(new Error("Limite journalière"), { dailyLimit: true });
+      throw new Error("Trop de requêtes. Réessaie dans un instant.");
+    }
+    if (!resp.ok) throw new Error("API " + resp.status);
+    const data = await resp.json();
+    return data.content.map(b => b.text || "").join("");
+  } catch (err) {
+    clearTimeout(timeoutId);
+    throw err;
+  }
 }
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
@@ -893,10 +826,7 @@ function Home({ profile, onStart, onPremium }) {
         <motion.div {...fd(.18)}
           style={{ background: "var(--surface)", borderRadius: 22, padding: 28, marginBottom: 16, border: "1px solid var(--surface-border-s)", backdropFilter: "blur(20px)", position: "relative", overflow: "hidden" }}>
           <p style={{ fontSize: 11, fontWeight: 500, color: "var(--ink-xfaint)", textTransform: "uppercase", letterSpacing: ".22em", marginBottom: 18 }}>Pour toi aujourd'hui</p>
-          <div style={{ position: "relative", paddingLeft: 10 }}>
-            <span className="serif" style={{ position: "absolute", top: -22, left: -6, fontSize: 56, lineHeight: 1, color: "var(--accent)", opacity: 0.4, fontWeight: 400, userSelect: "none" }}>«</span>
-            <p className="serif" style={{ fontStyle: "italic", fontSize: 22, lineHeight: 1.4, color: "var(--ink)", paddingTop: 10 }}>{tip}</p>
-          </div>
+          <p className="serif" style={{ fontStyle: "italic", fontSize: 22, lineHeight: 1.4, color: "var(--ink)" }}>{tip}</p>
           <p style={{ fontSize: 12, fontStyle: "italic", color: "var(--ink-soft)", textAlign: "right", marginTop: 18 }}>{sig}</p>
         </motion.div>
 
@@ -941,7 +871,7 @@ function Home({ profile, onStart, onPremium }) {
 // ─── CHAT ─────────────────────────────────────────────────────────────────────
 const SOS_SHORTS = ["Je suis épuisée(é)", "Mon enfant ne dort pas", "Je me sens seul(e)", "J'ai besoin de souffler"];
 
-function Chat({ profile, isSos, onBack, onPremium }) {
+function Chat({ profile, isSos, onBack, onPremium, premiumToken }) {
   const [msgs, setMsgs] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -1030,7 +960,8 @@ function Chat({ profile, isSos, onBack, onPremium }) {
         profile,
         messages: allMsgs.map(m => ({ role: m.role, content: m.content })),
         isSos,
-        memory
+        memory,
+        premiumToken,
       });
       const am = { role: "assistant", content: reply, id: "a" + Date.now() };
       setMsgs(prev => {
@@ -1054,15 +985,29 @@ function Chat({ profile, isSos, onBack, onPremium }) {
         }
       }
     } catch (err) {
-      console.error(err);
-      setMsgs(prev => [...prev, {
-        role: "assistant",
-        content: "Je suis là, mais j'ai une petite difficulté technique. Respire un grand coup… 🌿 Réessaie dans un instant.",
-        id: "err" + Date.now()
-      }]);
+      if (err.dailyLimit) {
+        setMsgs(prev => {
+          if (prev.some(m => m.id === "limit-msg")) return prev;
+          return [...prev, {
+            role: "assistant",
+            content: `Tu as atteint ta limite de ${FREE_DAILY_LIMIT} messages pour aujourd'hui 🌿\n\nPasse à Premium pour continuer sans limite, ou reviens demain.`,
+            id: "limit-msg",
+          }];
+        });
+        setNudge(true);
+      } else {
+        console.error(err);
+        setMsgs(prev => [...prev, {
+          role: "assistant",
+          content: err.message?.includes("Délai")
+            ? "Je mets un peu de temps à répondre… 🌿 Réessaie dans un instant."
+            : "Je suis là, mais j'ai une petite difficulté technique. Respire un grand coup… 🌿 Réessaie dans un instant.",
+          id: "err" + Date.now(),
+        }]);
+      }
     }
     setLoading(false);
-  }, [msgs, loading, profile, isSos, memory, userMsgCount]);
+  }, [msgs, loading, profile, isSos, memory, premiumToken, userMsgCount]);
 
   const handleKey = e => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -1072,7 +1017,7 @@ function Chat({ profile, isSos, onBack, onPremium }) {
   };
 
   return (
-    <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
+    <div style={{ height: "calc(100vh - 68px)", display: "flex", flexDirection: "column" }}>
 
       {/* Header */}
       <div style={{ background: "var(--surface-header)", borderBottom: "1px solid var(--surface-border-s)", padding: "14px 20px", display: "flex", alignItems: "center", gap: 12, boxShadow: "var(--shadow-card)", flexShrink: 0, backdropFilter: "blur(20px)" }}>
@@ -1420,9 +1365,11 @@ function ProfileScreen({ profile, onSave, onPremium }) {
         <button onClick={async () => {
           const isPremium = profile.isPremium || false;
           await S.set("elia_profile", isPremium ? { isPremium: true } : null);
-          await S.set("elia_memory", null); await S.set("elia_sessions", null);
-          await S.set("elia_tracking", null); await S.set("elia_last_sos", null);
-          await S.set("elia_chat_history", null); await S.set("elia_daily", null);
+          await Promise.all([
+            S.set("elia_memory", null), S.set("elia_sessions", null),
+            S.set("elia_tracking", null), S.set("elia_last_sos", null),
+            S.set("elia_chat_history", null), S.set("elia_daily", null),
+          ]);
           window.location.reload();
         }}
           style={{ background: "none", border: "none", cursor: "pointer", color: "var(--ink-faint)", fontSize: 12, textAlign: "center", padding: "8px", fontStyle: "italic" }}>
@@ -1468,6 +1415,9 @@ function AppInner() {
   const [screen, setScreen] = useState("loading");
   const [sos, setSos] = useState(false);
   const [showPremium, setShowPremium] = useState(false);
+  const [premiumToken, setPremiumToken] = useState(() => {
+    try { return localStorage.getItem("elia_premium_token") || null; } catch { return null; }
+  });
 
   useEffect(() => {
     Promise.all([S.get("elia_profile"), S.get("elia_legal")]).then(([p, legal]) => {
@@ -1482,8 +1432,12 @@ function AppInner() {
       window.history.replaceState({}, "", window.location.pathname);
       fetch(`/api/verify-session?id=${encodeURIComponent(sessionId)}`)
         .then(r => r.json())
-        .then(({ paid }) => {
+        .then(({ paid, token }) => {
           if (paid) {
+            if (token) {
+              try { localStorage.setItem("elia_premium_token", token); } catch {}
+              setPremiumToken(token);
+            }
             S.get("elia_profile").then(p => {
               if (p) {
                 const updated = { ...p, isPremium: true };
@@ -1553,8 +1507,8 @@ function AppInner() {
           </motion.div>
         )}
         {screen === "chat" && profile && (
-          <motion.div key="chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ height: "100vh" }}>
-            <Chat profile={profile} isSos={sos} onBack={() => setScreen("home")} onPremium={() => setShowPremium(true)} />
+          <motion.div key="chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ height: "calc(100vh - 68px)" }}>
+            <Chat profile={profile} isSos={sos} onBack={() => setScreen("home")} onPremium={() => setShowPremium(true)} premiumToken={premiumToken} />
           </motion.div>
         )}
         {screen === "profile" && profile && (

@@ -12,6 +12,17 @@ html {
 
 body, .screen-bg {
   min-height: 100%;
+  background: transparent;
+  position: relative;
+}
+
+/* Fond dégradé — position: fixed pour couvrir le viewport sur tous appareils (iOS inclus) */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
   background:
     radial-gradient(ellipse 70% 50% at 15% 5%,   var(--halo-1) 0%, transparent 60%),
     radial-gradient(ellipse 60% 45% at 90% 15%,   var(--halo-2) 0%, transparent 65%),
@@ -25,7 +36,6 @@ body, .screen-bg {
       var(--bg-base-4) 80%,
       var(--bg-base-5) 100%
     );
-  position: relative;
 }
 
 /* Grain papier */
@@ -34,7 +44,7 @@ body::before {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 0;
+  z-index: 1;
   opacity: 0.55;
   mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='280' height='280'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.25 0 0 0 0 0.18 0 0 0 0.08 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
@@ -42,9 +52,13 @@ body::before {
   background-size: 280px 280px;
 }
 
+html {
+  background: var(--bg-base-1);
+}
+
 #root {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   min-height: 100vh;
 }
 

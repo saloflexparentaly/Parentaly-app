@@ -5,16 +5,11 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Parentelïa</title>
-    <script>
-      try {
-        var m = JSON.parse(localStorage.getItem("parentelia-theme")) || "auto";
-        var h = new Date().getHours();
-        var t = m === "auto" ? (h >= 7 && h < 19 ? "light" : "dark") : m;
-        document.documentElement.setAttribute("data-theme", t);
-      } catch(e) {
-        document.documentElement.setAttribute("data-theme", "dark");
-      }
-    </script>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#C97560">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <script src="/theme-init.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
