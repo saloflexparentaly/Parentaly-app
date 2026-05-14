@@ -7,7 +7,15 @@ import rateLimit from "express-rate-limit";
 import crypto from "crypto";
 import { fileURLToPath } from "url";
 import path from "path";
+import { createClient } from "@supabase/supabase-js";
 import { ELIA_SYSTEM_PROMPT } from "./eliaPrompt.js";
+
+// ─── Supabase (service role — serveur uniquement) ─────────────────────────────
+const supabaseAdmin = process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
+  ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    })
+  : null;
 
 const app = express();
 app.set("trust proxy", 1);
@@ -104,7 +112,9 @@ function detectMultiple(children) {
       if (Math.abs(ms[i] - ms[j]) / 86400000 <= 90) { groups.add(i); groups.add(j); }
     }
   }
-  if (groups.size >= 3) return "Triplés";
+  if (groups.size >= 5) return "Quintuplés";
+  if (groups.size === 4) return "Quadruplés";
+  if (groups.size === 3) return "Triplés";
   if (groups.size === 2) return "Jumeaux";
   return null;
 }

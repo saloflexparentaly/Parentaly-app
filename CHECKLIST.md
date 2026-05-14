@@ -35,11 +35,11 @@
 
 ### 0.4 · Conformité technique RGPD
 
-- [ ] Créer projet Supabase région Frankfurt (impossible de migrer après)
+- [x] Créer projet Supabase région Frankfurt (impossible de migrer après)
 - [ ] Signer le DPA Supabase (Data Processing Agreement) dans les paramètres
 - [ ] Signer le DPA Anthropic (API Claude)
 - [ ] Signer le DPA Stripe
-- [ ] Configurer Row-Level Security sur toutes les tables Supabase
+- [x] Configurer Row-Level Security sur toutes les tables Supabase
 - [ ] Mettre en place le chiffrement au repos des conversations sensibles
 - [ ] Mettre en place les logs d'accès (qui accède à quoi, quand)
 - [ ] Décider la politique de rétention des données (suggestion : conversations 12 mois, profil tant que compte actif, suppression 30j après désinscription)
@@ -104,9 +104,10 @@
 
 ### 1.4 · Beta technique
 
-- [ ] Stack technique stable (React/JSX + Supabase + API Anthropic + Stripe)
+- [x] Stack technique stable (React/JSX + Supabase + API Anthropic + Stripe)
 - [x] Bug motion/react → remplacé par framer-motion
 - [x] Intégrer le prompt Elïa V2 dans le code (eliaPrompt.js)
+- [x] Profil : ROLES, CHALS, BIRTH_TYPES enrichis pour la niche multiples
 - [ ] Intégrer le système de quotas (10 msg/j + Présence SOS 10 msg/24h + cap 500/j)
 - [ ] Intégrer la mémoire courte (free) et mémoire longue (premium)
 - [ ] Tester le passage gratuit → premium (essai, conversion, downgrade, résiliation)

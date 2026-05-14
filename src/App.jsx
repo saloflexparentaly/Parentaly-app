@@ -6,6 +6,7 @@ import MentionsLegalesScreen from "./MentionsLegalesScreen";
 import ConfidentialiteScreen from "./ConfidentialiteScreen";
 import CguScreen from "./CguScreen";
 import CgvScreen from "./CgvScreen";
+import { supabase, getOrCreateSession } from "./supabase.js";
 
 // ─── ERROR BOUNDARY ───────────────────────────────────────────────────────────
 class ErrorBoundary extends Component {
@@ -224,21 +225,54 @@ async function incrementDailyUsage() {
   return count;
 }
 
-// ─── STORAGE ──────────────────────────────────────────────────────────────────
+// ─── STORAGE (Supabase + localStorage fallback) ───────────────────────────────
+const LS_KEYS = ["elia_profile","elia_legal","elia_memory","elia_sessions",
+                 "elia_tracking","elia_last_sos","elia_chat_history","elia_daily","elia_premium_token"];
+
+async function migrateLocalStorageToSupabase(userId) {
+  if (localStorage.getItem("elia_sb_migrated")) return;
+  const rows = LS_KEYS
+    .map(key => { try { const v = localStorage.getItem(key); return v ? { user_id: userId, key, value: JSON.parse(v) } : null; } catch { return null; } })
+    .filter(Boolean);
+  if (rows.length) await supabase.from("user_data").upsert(rows, { onConflict: "user_id,key", ignoreDuplicates: true });
+  localStorage.setItem("elia_sb_migrated", "1");
+}
+
 const S = {
   async get(k) {
     try {
-      const v = localStorage.getItem(k);
-      return v ? JSON.parse(v) : null;
+      const session = await getOrCreateSession();
+      if (!session) throw new Error("no session");
+      const { data, error } = await supabase
+        .from("user_data")
+        .select("value")
+        .eq("user_id", session.user.id)
+        .eq("key", k)
+        .maybeSingle();
+      if (error) throw error;
+      return data?.value ?? null;
     } catch {
-      return null;
+      try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch { return null; }
     }
   },
   async set(k, v) {
     try {
-      localStorage.setItem(k, JSON.stringify(v));
-    } catch (e) {
-      console.error("Storage error:", e);
+      const session = await getOrCreateSession();
+      if (!session) throw new Error("no session");
+      if (v === null || v === undefined) {
+        await supabase.from("user_data").delete().eq("user_id", session.user.id).eq("key", k);
+      } else {
+        const { error } = await supabase.from("user_data").upsert(
+          { user_id: session.user.id, key: k, value: v, updated_at: new Date().toISOString() },
+          { onConflict: "user_id,key" }
+        );
+        if (error) throw error;
+      }
+    } catch {
+      try {
+        if (v === null || v === undefined) localStorage.removeItem(k);
+        else localStorage.setItem(k, JSON.stringify(v));
+      } catch {}
     }
   }
 };
@@ -655,16 +689,32 @@ function detectMultiple(children) {
       }
     }
   }
-  if (groups.size >= 3) return "Triplés";
+  if (groups.size >= 5) return "Quintuplés";
+  if (groups.size === 4) return "Quadruplés";
+  if (groups.size === 3) return "Triplés";
   if (groups.size === 2) return "Jumeaux";
   return null;
 }
 
 // ─── ONBOARDING ───────────────────────────────────────────────────────────────
-const ROLES = ["Maman", "Papa", "Co-parent", "Autre"];
+const ROLES = ["Maman", "Papa", "Co-parent", "Grand-parent", "Beau-parent", "Autre"];
 const TEMPS = ["Calme & facile", "Actif & énergique", "Sensible & émotif", "Curieux & éveillé", "Timide & réservé"];
-const CHALS = ["Sommeil difficile", "Pleurs & coliques", "Alimentation", "Gestion des émotions", "Fatigue & épuisement", "Anxiété parentale", "Fratrie & jalousie", "Développement", "Solitude & isolement"];
-const BIRTH_TYPES = ["Voie basse", "Césarienne", "Déclenchement", "Prématuré", "Forceps / ventouse"];
+const CHALS = [
+  "Fatigue & épuisement",
+  "Sommeil difficile",
+  "Pleurs simultanés",
+  "Alimentation",
+  "Allaitement multiple",
+  "Prématurité / NICU",
+  "Gestion des émotions",
+  "Anxiété parentale",
+  "Solitude & isolement",
+  "Dynamique fraternelle",
+  "Identité individuelle",
+  "Culpabilité d'inégalité",
+  "Développement",
+];
+const BIRTH_TYPES = ["Voie basse", "Césarienne", "Déclenchement", "Naissance prématurée", "Forceps / ventouse", "Grossesse à risque"];
 
 function Onboarding({ onDone }) {
   const [step, setStep] = useState(0);
@@ -845,16 +895,20 @@ function Onboarding({ onDone }) {
 const TIPS = [
   "Un parent imparfait présent vaut mille parents parfaits absents.",
   "Ce que tu traverses est difficile. Ce que tu fais est précieux.",
-  "Prendre soin de soi, c'est aussi prendre soin de son enfant.",
+  "Prendre soin de soi, c'est aussi prendre soin de ses enfants.",
   "Toutes les émotions que tu ressens sont valides. Même la culpabilité.",
   "Tu n'as pas à tout réussir. Tu as juste à essayer.",
+  "Avec des multiples, survivre les premières semaines, c'est déjà réussir.",
+  "Il n'existe pas de manuel pour élever des jumeaux. Tu inventes chaque jour.",
 ];
 const SIGNATURES = [
-  "— pour les nuits courtes",
+  "— pour les nuits à moitié dormies",
   "— pour les moments difficiles",
-  "— pour les parents épuisés",
+  "— pour les parents de multiples épuisés",
   "— pour quand c'est trop lourd",
   "— pour les jours sans lumière",
+  "— pour les débuts difficiles",
+  "— pour les pionniers du quotidien double",
 ];
 const CHECKIN_MOODS = ["Difficile", "Mitigée", "Douce", "Lumineuse"];
 
@@ -866,13 +920,18 @@ function Home({ profile, onStart, onPremium }) {
   const tip = TIPS[tipIdx];
   const sig = SIGNATURES[tipIdx];
 
-  const firstChild = profile.children.filter(c => c.firstName)[0];
+  const namedChildren = profile.children.filter(c => c.firstName);
+  const firstChild = namedChildren[0];
+  const multipleLabel = detectMultiple(profile.children);
   const childAge = firstChild ? (calcAge(firstChild.birthDate) || firstChild.age) : null;
   const dayNum = firstChild?.birthDate
     ? Math.max(1, Math.floor((new Date() - new Date(firstChild.birthDate)) / 86400000) + 1)
     : null;
+  const childNames = namedChildren.length > 1
+    ? namedChildren.map(c => c.firstName).join(" & ")
+    : firstChild?.firstName;
   const subtitle = firstChild
-    ? [firstChild.firstName, childAge, dayNum ? `jour ${dayNum}` : null].filter(Boolean).join(" · ")
+    ? [childNames, childAge, dayNum ? `jour ${dayNum}` : null].filter(Boolean).join(" · ")
     : null;
 
   const [tracking, setTracking] = useState(null);
@@ -940,7 +999,7 @@ function Home({ profile, onStart, onPremium }) {
               </div>
               <button onClick={() => { setSosBanner(false); onStart(false); }}
                 style={{ marginTop: 10, background: "var(--accent)", color: "#fff", border: "none", borderRadius: 10, padding: "8px 16px", fontSize: 12, cursor: "pointer", fontWeight: 500 }}>
-                En parler avec Elia →
+                En parler avec Elïa →
               </button>
             </motion.div>
           )}
@@ -958,7 +1017,7 @@ function Home({ profile, onStart, onPremium }) {
         <motion.div {...fd(.24)}
           style={{ background: "var(--surface)", borderRadius: 22, padding: 28, marginBottom: 16, border: "1px solid var(--surface-border-s)", backdropFilter: "blur(20px)" }}>
           <p style={{ fontSize: 11, fontWeight: 500, color: "var(--ink-xfaint)", textTransform: "uppercase", letterSpacing: ".22em", marginBottom: 14 }}>Check-in du soir</p>
-          <p className="serif" style={{ fontSize: 26, fontWeight: 400, color: "var(--ink)", marginBottom: 20, lineHeight: 1.2 }}>Comment s'est passée ta journée ?</p>
+          <p className="serif" style={{ fontSize: 26, fontWeight: 400, color: "var(--ink)", marginBottom: 20, lineHeight: 1.2 }}>Comment ça s'est passé aujourd'hui avec eux ?</p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
             {CHECKIN_MOODS.map(m => (
               <button key={m} className={`chip ${tracking?.checkin === m ? "on" : ""}`}
@@ -974,12 +1033,12 @@ function Home({ profile, onStart, onPremium }) {
         <motion.div {...fd(.30)} style={{ marginTop: 32 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
             <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--sage)", boxShadow: "0 0 8px rgba(138,168,154,0.65)", flexShrink: 0, display: "inline-block" }} />
-            <span style={{ fontSize: 13, color: "var(--ink-soft)", fontWeight: 400 }}>Elia est là, disponible</span>
+            <span style={{ fontSize: 13, color: "var(--ink-soft)", fontWeight: 400 }}>Elïa est là, disponible</span>
           </div>
 
           <button className="btn btn-t" onClick={() => onStart(false)}
             style={{ height: 56, fontWeight: 500, marginBottom: 12 }}>
-            Parler avec Elia →
+            Parler avec Elïa →
           </button>
 
           <button className="btn-sos sos-ring" onClick={() => onStart(true)}>
@@ -993,7 +1052,7 @@ function Home({ profile, onStart, onPremium }) {
 }
 
 // ─── CHAT ─────────────────────────────────────────────────────────────────────
-const SOS_SHORTS = ["Je suis épuisée(é)", "Mon enfant ne dort pas", "Je me sens seul(e)", "J'ai besoin de souffler"];
+const SOS_SHORTS = ["Je suis épuisée", "Mes enfants ne dorment pas", "Je me sens seul(e)", "J'ai besoin de souffler", "Je n'en peux plus", "Je culpabilise"];
 
 function Chat({ profile, isSos, onBack, onPremium, premiumToken }) {
   const [msgs, setMsgs] = useState([]);
@@ -1035,6 +1094,7 @@ function Chat({ profile, isSos, onBack, onPremium, premiumToken }) {
         welcome = `Bonjour ${profile.parentName} 🌸 Je pensais à toi… comment ça va depuis notre dernier échange ?`;
       } else {
         welcome = `Bonjour ${profile.parentName} 🌸\n\nJe suis Elïa. Je suis là pour t'écouter, sans jugement, à ton rythme.\n\nDe quoi as-tu besoin aujourd'hui ?`;
+
       }
       setMsgs([{ role: "assistant", content: welcome, id: "welcome" }]);
     };
@@ -1577,16 +1637,29 @@ function AppInner() {
   const [screen, setScreen] = useState("loading");
   const [sos, setSos] = useState(false);
   const [showPremium, setShowPremium] = useState(false);
-  const [premiumToken, setPremiumToken] = useState(() => {
-    try { return localStorage.getItem("elia_premium_token") || null; } catch { return null; }
-  });
+  const [premiumToken, setPremiumToken] = useState(null);
 
   useEffect(() => {
-    Promise.all([S.get("elia_profile"), S.get("elia_legal")]).then(([p, legal]) => {
+    const init = async () => {
+      // 1. S'assurer qu'on a une session Supabase (anonymous si première visite)
+      let session = null;
+      try {
+        session = await getOrCreateSession();
+        if (session) await migrateLocalStorageToSupabase(session.user.id);
+      } catch {}
+
+      // 2. Charger profil, consentement légal et token premium en parallèle
+      const [p, legal, token] = await Promise.all([
+        S.get("elia_profile"),
+        S.get("elia_legal"),
+        S.get("elia_premium_token"),
+      ]);
       setProfile(p);
+      if (token) setPremiumToken(token);
       if (!legal) setScreen("legal");
       else setScreen(p?.parentName ? "home" : "onboarding");
-    });
+    };
+    init();
 
     const params = new URLSearchParams(window.location.search);
     const sessionId = params.get("session_id");
@@ -1597,7 +1670,7 @@ function AppInner() {
         .then(({ paid, token }) => {
           if (paid) {
             if (token) {
-              try { localStorage.setItem("elia_premium_token", token); } catch {}
+              S.set("elia_premium_token", token);
               setPremiumToken(token);
             }
             S.get("elia_profile").then(p => {
