@@ -1,5 +1,5 @@
 {
-  "name": "parentelia-app",
+  "name": "nera-app",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -17,6 +17,7 @@
     "express-rate-limit": "^8.3.2",
     "framer-motion": "^12.38.0",
     "helmet": "^8.1.0",
+    "lucide-react": "^1.16.0",
     "motion": "^11.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

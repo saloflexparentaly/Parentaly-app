@@ -2,6 +2,10 @@ import { useState, useEffect, useRef, useCallback, Component } from "react";
 import { ThemeProvider } from "./theme/ThemeProvider";
 import { ThemeToggle } from "./theme/ThemeToggle";
 import { motion, AnimatePresence } from "framer-motion";
+import MentionsLegalesScreen from "./MentionsLegalesScreen";
+import ConfidentialiteScreen from "./ConfidentialiteScreen";
+import CguScreen from "./CguScreen";
+import CgvScreen from "./CgvScreen";
 
 // ─── ERROR BOUNDARY ───────────────────────────────────────────────────────────
 class ErrorBoundary extends Component {
@@ -241,75 +245,176 @@ const S = {
 
 // ─── LEGAL CONSENT ────────────────────────────────────────────────────────────
 function LegalConsent({ onAccept }) {
-  const [age, setAge] = useState(false);
-  const [cgu, setCgu] = useState(false);
-  const [rgpd, setRgpd] = useState(false);
-  const [showCgu, setShowCgu] = useState(false);
-  const [showRgpd, setShowRgpd] = useState(false);
-  const canContinue = age && cgu && rgpd;
+  const [age,        setAge]        = useState(false);
+  const [disclaimer, setDisclaimer] = useState(false);
+  const [cgu,        setCgu]        = useState(false);
+  const [rgpd,       setRgpd]       = useState(false);
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
+  const [showCgu,        setShowCgu]        = useState(false);
+  const [showRgpd,       setRgpd2]          = useState(false);
+  const canContinue = age && disclaimer && cgu && rgpd;
+
+  const checkboxStyle = (val) => ({
+    width: 20, height: 20, borderRadius: 6,
+    border: `2px solid ${val ? "var(--accent)" : "var(--surface-border-s)"}`,
+    background: val ? "var(--accent)" : "var(--surface-border-s)",
+    flexShrink: 0, display: "flex", alignItems: "center",
+    justifyContent: "center", transition: "all .15s", marginTop: 1,
+  });
+
+  const expandStyle = {
+    overflow: "hidden", background: "var(--surface-tint)", borderRadius: 12,
+    padding: "14px 16px", marginBottom: 16, fontSize: 12,
+    color: "var(--ink-soft)", lineHeight: 1.75, fontWeight: 300,
+  };
+
+  const linkBtn = (onClick, label) => (
+    <button onClick={onClick} style={{
+      background: "none", border: "none", color: "var(--accent)",
+      cursor: "pointer", fontSize: 13, textDecoration: "underline", padding: 0,
+    }}>{label}</button>
+  );
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, overflowY: "auto" }}>
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
         style={{ background: "var(--surface-modal)", borderRadius: 28, padding: "36px 32px", maxWidth: 440, width: "100%", boxShadow: "var(--shadow-l)", border: "1px solid var(--surface-border-s)", backdropFilter: "blur(24px)" }}>
 
+        {/* En-tête */}
         <div style={{ textAlign: "center", marginBottom: 28 }}>
           <div style={{ marginBottom: 16 }}>
-            <span className="serif" style={{ fontStyle: "italic", fontSize: 18, fontWeight: 400, color: "var(--brand)", letterSpacing: ".04em" }}>Parentelïa</span>
+            <span className="serif" style={{ fontStyle: "italic", fontSize: 18, fontWeight: 400, color: "var(--brand)", letterSpacing: ".04em" }}>NERA</span>
           </div>
           <h2 className="serif" style={{ fontSize: 28, fontWeight: 600, marginBottom: 8 }}>Avant de commencer</h2>
           <p style={{ fontSize: 13, color: "var(--ink-soft)", fontWeight: 300, lineHeight: 1.6 }}>
-            Elia est une assistante bienveillante, <strong>pas un professionnel de santé</strong>. En cas d'urgence médicale, contacte le <strong>15</strong> (SAMU) ou le <strong>3114</strong> (numéro national de prévention du suicide).
+            Elïa est une présence bienveillante, <strong>pas un professionnel de santé</strong>.
+            En cas d'urgence, contacte le <strong>15</strong> (SAMU) ou le <strong>3114</strong> (prévention du suicide).
           </p>
         </div>
 
+        {/* Cases à cocher */}
         <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 24 }}>
-          {[
-            { val: age, set: setAge, label: "J'ai 18 ans ou plus" },
-            { val: cgu, set: setCgu, label: null, cguLabel: true },
-            { val: rgpd, set: setRgpd, label: null, rgpdLabel: true },
-          ].map((item, i) => (
-            <label key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12, cursor: "pointer" }}>
-              <div onClick={() => item.set(!item.val)}
-                style={{ width: 20, height: 20, borderRadius: 6, border: `2px solid ${item.val ? "var(--accent)" : "var(--surface-border-s)"}`, background: item.val ? "var(--accent)" : "var(--surface-border-s)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", transition: "all .15s", marginTop: 1 }}>
-                {item.val && <Check s={12} />}
-              </div>
-              <span style={{ fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.5, fontWeight: 300 }}>
-                {item.label}
-                {item.cguLabel && <>J'accepte les <button onClick={() => setShowCgu(!showCgu)} style={{ background: "none", border: "none", color: "var(--accent)", cursor: "pointer", fontSize: 13, textDecoration: "underline", padding: 0 }}>Conditions Générales d'Utilisation</button></>}
-                {item.rgpdLabel && <>J'ai lu la <button onClick={() => setShowRgpd(!showRgpd)} style={{ background: "none", border: "none", color: "var(--accent)", cursor: "pointer", fontSize: 13, textDecoration: "underline", padding: 0 }}>Politique de confidentialité</button> (RGPD)</>}
-              </span>
-            </label>
-          ))}
+
+          {/* Âge */}
+          <label style={{ display: "flex", alignItems: "flex-start", gap: 12, cursor: "pointer" }}>
+            <div onClick={() => setAge(!age)} style={checkboxStyle(age)}>
+              {age && <Check s={12} />}
+            </div>
+            <span style={{ fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.5, fontWeight: 300 }}>
+              J'ai <strong>16 ans</strong> ou plus
+            </span>
+          </label>
+
+          {/* Disclaimer non-médical */}
+          <label style={{ display: "flex", alignItems: "flex-start", gap: 12, cursor: "pointer" }}>
+            <div onClick={() => setDisclaimer(!disclaimer)} style={checkboxStyle(disclaimer)}>
+              {disclaimer && <Check s={12} />}
+            </div>
+            <span style={{ fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.5, fontWeight: 300 }}>
+              J'ai lu et j'accepte la{" "}
+              {linkBtn(() => setShowDisclaimer(!showDisclaimer), "Déclaration de non-substitution médicale")}
+            </span>
+          </label>
+
+          {/* Disclaimer expandable */}
+          <AnimatePresence>
+            {showDisclaimer && (
+              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+                style={expandStyle}>
+                <strong style={{ display: "block", marginBottom: 8, fontSize: 13 }}>
+                  Déclaration de non-substitution médicale — NERA · Mai 2026
+                </strong>
+
+                <strong>Ce que NERA est</strong><br />
+                NERA est une application de soutien émotionnel et parental destinée aux parents de jumeaux et de multiples. Elle propose un accompagnement émotionnel, des informations générales sur la parentalité des multiples, et un soutien dans la gestion de la charge mentale et de l'épuisement du quotidien.<br /><br />
+
+                <strong>Ce que NERA n'est pas</strong><br />
+                NERA n'est pas : un service médical · un service de santé mentale ou de psychothérapie · un substitut à un suivi médical ou psychiatrique · un substitut à une consultation chez un médecin, sage-femme, pédiatre, psychologue ou tout autre professionnel de santé · un dispositif médical au sens de la réglementation européenne · un service d'urgence.<br /><br />
+
+                <strong>Limites importantes</strong><br />
+                Elïa ne peut pas : poser un diagnostic médical ou psychologique · prescrire un traitement, un médicament ou une posologie · remplacer une évaluation professionnelle de votre état de santé ou de celui de vos enfants · fournir une assistance d'urgence.<br /><br />
+
+                <strong>En cas d'urgence, contactez immédiatement :</strong><br />
+                • <strong>15</strong> — SAMU (urgence médicale)<br />
+                • <strong>17</strong> — Police secours<br />
+                • <strong>18</strong> — Pompiers<br />
+                • <strong>112</strong> — Numéro d'urgence européen<br />
+                • <strong>3114</strong> — Prévention du suicide (gratuit, 24h/24)<br />
+                • <strong>119</strong> — Enfance en danger (gratuit, 24h/24)<br />
+                • <strong>3919</strong> — Violences femmes info (gratuit, anonyme)<br /><br />
+
+                Ces numéros sont accessibles à tout moment depuis l'application, y compris sans abonnement actif.<br /><br />
+
+                <strong>Déclaration de consentement</strong><br />
+                En cochant cette case, vous reconnaissez et acceptez expressément :<br />
+                1. Avoir pris connaissance des présentes informations<br />
+                2. Comprendre que NERA est un service de soutien émotionnel, non médical ou thérapeutique<br />
+                3. Comprendre qu'Elïa est une intelligence artificielle et non un professionnel de santé<br />
+                4. Vous engager à consulter un professionnel de santé qualifié pour toute question médicale, psychologique ou psychiatrique<br />
+                5. Avoir 16 ans révolus ou plus<br /><br />
+
+                <em>Ce document est soumis au droit français.</em>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* CGU */}
+          <label style={{ display: "flex", alignItems: "flex-start", gap: 12, cursor: "pointer" }}>
+            <div onClick={() => setCgu(!cgu)} style={checkboxStyle(cgu)}>
+              {cgu && <Check s={12} />}
+            </div>
+            <span style={{ fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.5, fontWeight: 300 }}>
+              J'accepte les{" "}
+              {linkBtn(() => setShowCgu(!showCgu), "Conditions Générales d'Utilisation")}
+            </span>
+          </label>
+
+          <AnimatePresence>
+            {showCgu && (
+              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+                style={expandStyle}>
+                <strong style={{ display: "block", marginBottom: 6 }}>CGU — NERA · Version 1.0 · Mai 2026</strong>
+                L'application NERA fournit un soutien émotionnel et des informations générales à titre indicatif uniquement. Elle ne remplace en aucun cas un avis médical, psychologique ou thérapeutique professionnel.<br /><br />
+                <strong>Limites de responsabilité :</strong> NERA et son assistante Elïa ne constituent pas un service d'urgence. En situation de danger immédiat, contactez le 15 (SAMU), le 17 (Police), le 18 (Pompiers) ou le 112. NERA décline toute responsabilité en cas de préjudice résultant d'un usage du service en lieu et place d'un service d'urgence ou d'un professionnel de santé.<br /><br />
+                L'utilisateur s'engage à utiliser le service de bonne foi, à ne pas tenter d'en détourner le fonctionnement, et à ne pas transmettre de données personnelles de tiers sans leur consentement.<br /><br />
+                <strong>Abonnement :</strong> L'abonnement Premium est résiliable à tout moment depuis l'app (Réglages → Abonnement) ou via le portail Stripe. Aucun remboursement partiel n'est accordé pour la période en cours sauf disposition légale contraire.<br /><br />
+                NERA se réserve le droit de modifier les présentes CGU avec un préavis de 30 jours par email. L'utilisation continue du service après ce délai vaut acceptation des modifications.
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* RGPD */}
+          <label style={{ display: "flex", alignItems: "flex-start", gap: 12, cursor: "pointer" }}>
+            <div onClick={() => setRgpd(!rgpd)} style={checkboxStyle(rgpd)}>
+              {rgpd && <Check s={12} />}
+            </div>
+            <span style={{ fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.5, fontWeight: 300 }}>
+              J'ai lu la{" "}
+              {linkBtn(() => setRgpd2(!showRgpd), "Politique de confidentialité")}{" "}(RGPD)
+            </span>
+          </label>
+
+          <AnimatePresence>
+            {showRgpd && (
+              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+                style={expandStyle}>
+                <strong style={{ display: "block", marginBottom: 6 }}>Politique de confidentialité — RGPD</strong>
+                <strong>Responsable de traitement :</strong> De Angeli Salomé — 17 avenue de Naugeat, 87000 Limoges<br /><br />
+                <strong>Données collectées :</strong> prénom du parent, rôle parental, prénoms et dates de naissance des enfants, défis déclarés, contexte libre — stockés <em>uniquement sur votre appareil</em> (localStorage). Les messages envoyés à Elïa transitent par nos serveurs pour le traitement IA en temps réel ; ils ne sont pas conservés côté serveur après traitement. Votre consentement (date, heure, version CGU) est enregistré côté serveur à des fins de preuve (art. 7 RGPD).<br /><br />
+                <strong>Données relatives aux enfants :</strong> en renseignant des informations sur vos enfants, vous agissez en tant que représentant légal et consentez en leur nom (art. 8 RGPD).<br /><br />
+                <strong>Durée de conservation :</strong> données conservées sur votre appareil jusqu'à suppression via "Réinitialiser mon profil" ou désinstallation. Logs de consentement serveur conservés 3 ans.<br /><br />
+                <strong>Sous-traitants :</strong><br />
+                • <em>Anthropic</em> (IA) — San Francisco, USA. Transfert hors UE encadré par les SCC de la Commission européenne.<br />
+                • <em>Stripe</em> (paiement) — San Francisco, USA. Transfert hors UE encadré par les SCC.<br />
+                • <em>Railway</em> (hébergement) — Railway Corp., USA. Serveur d'application et logs.<br /><br />
+                <strong>Vos droits (art. 15 à 22 RGPD) :</strong><br />
+                • Accès, rectification, effacement, portabilité, opposition, limitation — via "Mon profil" ou sur demande<br />
+                • Réclamation — auprès de la CNIL : cnil.fr
+              </motion.div>
+            )}
+          </AnimatePresence>
+
         </div>
-
-        {/* CGU */}
-        <AnimatePresence>
-          {showCgu && (
-            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-              style={{ overflow: "hidden", background: "var(--surface-tint)", borderRadius: 12, padding: "14px 16px", marginBottom: 16, fontSize: 12, color: "var(--ink-soft)", lineHeight: 1.7, fontWeight: 300 }}>
-              <strong style={{ display: "block", marginBottom: 6 }}>CGU — Parentelïa</strong>
-              L'application Parentelïa fournit un soutien émotionnel et des informations générales à titre indicatif uniquement. Elle ne remplace en aucun cas un avis médical, psychologique ou thérapeutique professionnel.<br /><br />
-              L'utilisateur s'engage à utiliser le service de bonne foi, à ne pas tenter d'en détourner le fonctionnement, et à ne pas transmettre de données personnelles de tiers sans leur consentement.<br /><br />
-              En cas de situation d'urgence médicale ou de danger pour vous ou autrui, contactez immédiatement les services d'urgence (15, 17, 18 ou 112).<br /><br />
-              Parentelïa se réserve le droit de modifier les présentes CGU. L'utilisation continue du service vaut acceptation des modifications.
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* RGPD */}
-        <AnimatePresence>
-          {showRgpd && (
-            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-              style={{ overflow: "hidden", background: "var(--surface-tint)", borderRadius: 12, padding: "14px 16px", marginBottom: 16, fontSize: 12, color: "var(--ink-soft)", lineHeight: 1.7, fontWeight: 300 }}>
-              <strong style={{ display: "block", marginBottom: 6 }}>Politique de confidentialité — RGPD</strong>
-              <strong>Données collectées :</strong> prénom, rôle parental, informations sur les enfants et défis déclarés — stockés <em>uniquement sur votre appareil</em> (localStorage). Les messages envoyés à Elia transitent par nos serveurs pour le traitement IA en temps réel ; ils ne sont pas conservés côté serveur après traitement.<br /><br />
-              <strong>Traitement IA :</strong> vos messages sont transmis à l'API Anthropic (Claude). Anthropic s'engage à ne pas utiliser ces données pour l'entraînement de ses modèles (API commerciale). Ce transfert hors UE est encadré par les clauses contractuelles types de la Commission européenne.<br /><br />
-              <strong>Vos droits (RGPD) :</strong> vous pouvez à tout moment supprimer l'intégralité de vos données via "Réinitialiser mon profil" dans les paramètres. Droit d'accès, de rectification et d'opposition garantis.<br /><br />
-              <strong>Responsable de traitement :</strong> Parentelïa — contact : privacy@parentelia.com
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         <button className="btn btn-t" onClick={onAccept} disabled={!canContinue}
           style={{ opacity: canContinue ? 1 : .45 }}>
@@ -372,10 +477,15 @@ function StripeModal({ profile, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
+  const [retractWaiver, setRetractWaiver] = useState(false);
 
   const handleCheckout = async () => {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) {
       setError("Merci d'entrer une adresse email valide.");
+      return;
+    }
+    if (!retractWaiver) {
+      setError("Merci d'accepter les conditions de démarrage immédiat du service.");
       return;
     }
     setLoading(true);
@@ -416,7 +526,7 @@ function StripeModal({ profile, onClose, onSuccess }) {
 
         <div style={{ textAlign: "center", marginBottom: 28 }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "linear-gradient(135deg,var(--accent),var(--accent-deep))", borderRadius: 50, padding: "6px 14px", color: "#fff", fontSize: 12, fontWeight: 500, marginBottom: 16 }}>
-            <Star s={12} /> Parentelïa Premium
+            <Star s={12} /> NERA Premium
           </div>
           <h2 className="serif" style={{ fontSize: 28, fontWeight: 600, marginBottom: 8 }}>Accompagnement complet</h2>
           <p style={{ color: "var(--ink-soft)", fontSize: 14, fontWeight: 300, lineHeight: 1.5 }}>
@@ -459,13 +569,27 @@ function StripeModal({ profile, onClose, onSuccess }) {
           <input className="field" type="email" placeholder="Ton adresse email" value={email} onChange={e => setEmail(e.target.value)} style={{ fontSize: 14 }} />
         </div>
 
+        {/* Waiver rétractation — obligatoire légalement (art. L221-28 C. conso.) */}
+        <label style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 16, cursor: "pointer" }}>
+          <div onClick={() => setRetractWaiver(v => !v)}
+            style={{ width: 18, height: 18, borderRadius: 5, flexShrink: 0, marginTop: 1,
+              border: `2px solid ${retractWaiver ? "var(--accent)" : "var(--surface-border-s)"}`,
+              background: retractWaiver ? "var(--accent)" : "transparent",
+              display: "flex", alignItems: "center", justifyContent: "center", transition: "all .15s" }}>
+            {retractWaiver && <Check s={11} />}
+          </div>
+          <span style={{ fontSize: 11, color: "var(--ink-soft)", lineHeight: 1.55, fontWeight: 300 }}>
+            Je demande le démarrage immédiat du service et je reconnais expressément renoncer à mon droit de rétractation de 14 jours dès le début de l'exécution (art. L221-28 du Code de la consommation).
+          </span>
+        </label>
+
         {error && <p style={{ color: "var(--accent-deep)", fontSize: 13, marginBottom: 12, textAlign: "center" }}>{error}</p>}
 
-        <button className="btn btn-t" onClick={handleCheckout} disabled={loading}>
+        <button className="btn btn-t" onClick={handleCheckout} disabled={loading || !retractWaiver}>
           {loading ? "Chargement…" : "Commencer · Paiement sécurisé"}
         </button>
         <p style={{ fontSize: 11, color: "var(--ink-faint)", textAlign: "center", marginTop: 10, fontStyle: "italic" }}>
-          Résiliable à tout moment · Droit de rétractation 14j · Paiement via Stripe
+          Résiliable à tout moment · Paiement via Stripe
         </p>
       </motion.div>
     </div>
@@ -580,7 +704,7 @@ function Onboarding({ onDone }) {
 
         {/* Logo – wordmark only */}
         <div style={{ textAlign: "center", marginBottom: 44 }}>
-          <span className="serif" style={{ fontStyle: "italic", fontSize: 18, fontWeight: 400, color: "var(--brand)", letterSpacing: ".04em" }}>Parentelïa</span>
+          <span className="serif" style={{ fontStyle: "italic", fontSize: 18, fontWeight: 400, color: "var(--brand)", letterSpacing: ".04em" }}>NERA</span>
         </div>
 
         <AnimatePresence mode="wait">
@@ -784,7 +908,7 @@ function Home({ profile, onStart, onPremium }) {
 
         {/* Wordmark + Theme toggle */}
         <motion.div {...fd(0)} style={{ paddingTop: 48, marginBottom: 44, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <span className="serif" style={{ fontStyle: "italic", fontSize: 18, fontWeight: 400, color: "var(--brand)", letterSpacing: ".04em" }}>Parentelïa</span>
+          <span className="serif" style={{ fontStyle: "italic", fontSize: 18, fontWeight: 400, color: "var(--brand)", letterSpacing: ".04em" }}>NERA</span>
           <ThemeToggle />
         </motion.div>
 
@@ -1212,7 +1336,7 @@ function BottomNav({ screen, onNavigate }) {
 }
 
 // ─── PROFILE SCREEN ───────────────────────────────────────────────────────────
-function ProfileScreen({ profile, onSave, onPremium }) {
+function ProfileScreen({ profile, onSave, onPremium, onLegal, onConfidentialite, onCgu, onCgv }) {
   const [d, setD] = useState({ ...profile, children: profile.children.map(c => ({ ...c })), birthTypes: profile.birthTypes || [] });
   const [saved, setSaved] = useState(false);
 
@@ -1235,7 +1359,7 @@ function ProfileScreen({ profile, onSave, onPremium }) {
     <div style={{ minHeight: "100vh", paddingBottom: 80 }}>
       <div style={{ background: "var(--surface-header)", borderBottom: "1px solid var(--surface-border-s)", padding: "20px 24px", boxShadow: "var(--shadow-card)", backdropFilter: "blur(20px)" }}>
         <div style={{ marginBottom: 4 }}>
-          <span className="serif" style={{ fontStyle: "italic", fontSize: 18, fontWeight: 400, color: "var(--brand)", letterSpacing: ".04em" }}>Parentelïa</span>
+          <span className="serif" style={{ fontStyle: "italic", fontSize: 18, fontWeight: 400, color: "var(--brand)", letterSpacing: ".04em" }}>NERA</span>
         </div>
         <h1 className="serif" style={{ fontSize: 26, fontWeight: 600 }}>Mon profil</h1>
       </div>
@@ -1376,36 +1500,74 @@ function ProfileScreen({ profile, onSave, onPremium }) {
           Réinitialiser mon profil
         </button>
 
-        <MentionsLegales />
+        <div style={{ display: "flex", justifyContent: "center", gap: 20, flexWrap: "wrap" }}>
+          <MentionsLegalesLink onOpen={onLegal} />
+          <ConfidentialiteLink onOpen={onConfidentialite} />
+          <CguLink onOpen={onCgu} />
+          <CgvLink onOpen={onCgv} />
+        </div>
       </div>
     </div>
   );
 }
 
-function MentionsLegales() {
-  const [open, setOpen] = useState(false);
+function MentionsLegalesLink({ onOpen }) {
   return (
-    <div style={{ marginTop: 8 }}>
-      <button onClick={() => setOpen(!open)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--ink-faint)", fontSize: 11, textAlign: "center", width: "100%", textDecoration: "underline" }}>
-        Mentions légales
-      </button>
-      <AnimatePresence>
-        {open && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-            style={{ overflow: "hidden", background: "var(--surface-tint)", borderRadius: 16, padding: "16px 18px", marginTop: 8, fontSize: 11, color: "var(--ink-soft)", lineHeight: 1.8, border: "1px solid var(--surface-border-s)", backdropFilter: "blur(16px)" }}>
-            <strong style={{ display: "block", marginBottom: 8 }}>Mentions légales — Parentelïa</strong>
-            <strong>Éditeur :</strong> [Nom / Raison sociale à renseigner]<br />
-            <strong>Siège social :</strong> [Adresse à renseigner]<br />
-            <strong>SIRET :</strong> [Numéro à renseigner]<br />
-            <strong>Directeur de publication :</strong> [Nom à renseigner]<br /><br />
-            <strong>Hébergement :</strong> Railway (Railway Corp, 340 S Lemon Ave #4133, Walnut, CA 91789, USA)<br /><br />
-            <strong>Contact :</strong> privacy@parentelia.com<br /><br />
-            <strong>Droit de rétractation :</strong> Conformément à l'article L221-18 du Code de la consommation, vous disposez de 14 jours à compter de la souscription pour exercer votre droit de rétractation, sauf si vous avez expressément renoncé à ce droit après début d'exécution du service. Pour exercer ce droit : privacy@parentelia.com<br /><br />
-            <strong>Traitement des données :</strong> Les messages sont traités par l'API Anthropic (Claude), entreprise américaine. Ce transfert hors UE est encadré par les clauses contractuelles types de la Commission européenne.
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+    <button
+      onClick={onOpen}
+      style={{
+        background: "none", border: "none", cursor: "pointer",
+        color: "var(--ink-faint)", fontSize: 11,
+        textDecoration: "underline", marginTop: 8,
+      }}
+    >
+      Mentions légales
+    </button>
+  );
+}
+
+function ConfidentialiteLink({ onOpen }) {
+  return (
+    <button
+      onClick={onOpen}
+      style={{
+        background: "none", border: "none", cursor: "pointer",
+        color: "var(--ink-faint)", fontSize: 11,
+        textDecoration: "underline", marginTop: 8,
+      }}
+    >
+      Confidentialité
+    </button>
+  );
+}
+
+function CguLink({ onOpen }) {
+  return (
+    <button
+      onClick={onOpen}
+      style={{
+        background: "none", border: "none", cursor: "pointer",
+        color: "var(--ink-faint)", fontSize: 11,
+        textDecoration: "underline", marginTop: 8,
+      }}
+    >
+      CGU
+    </button>
+  );
+}
+
+function CgvLink({ onOpen }) {
+  return (
+    <button
+      onClick={onOpen}
+      style={{
+        background: "none", border: "none", cursor: "pointer",
+        color: "var(--ink-faint)", fontSize: 11,
+        textDecoration: "underline", marginTop: 8,
+      }}
+    >
+      CGV
+    </button>
   );
 }
 
@@ -1491,6 +1653,11 @@ function AppInner() {
           <motion.div key="legal" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <LegalConsent onAccept={async () => {
               await S.set("elia_legal", true);
+              fetch("/api/consent", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ version: "1.0" }),
+              }).catch(() => {});
               const p = await S.get("elia_profile");
               setScreen(p ? "home" : "onboarding");
             }} />
@@ -1513,7 +1680,27 @@ function AppInner() {
         )}
         {screen === "profile" && profile && (
           <motion.div key="profile" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="has-nav">
-            <ProfileScreen profile={profile} onSave={updateProfile} onPremium={() => setShowPremium(true)} />
+            <ProfileScreen profile={profile} onSave={updateProfile} onPremium={() => setShowPremium(true)} onLegal={() => setScreen("mentions-legales")} onConfidentialite={() => setScreen("confidentialite")} onCgu={() => setScreen("cgu")} onCgv={() => setScreen("cgv")} />
+          </motion.div>
+        )}
+        {screen === "mentions-legales" && (
+          <motion.div key="mentions-legales" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <MentionsLegalesScreen onBack={() => setScreen("profile")} />
+          </motion.div>
+        )}
+        {screen === "confidentialite" && (
+          <motion.div key="confidentialite" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <ConfidentialiteScreen onBack={() => setScreen("profile")} />
+          </motion.div>
+        )}
+        {screen === "cgu" && (
+          <motion.div key="cgu" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <CguScreen onBack={() => setScreen("profile")} />
+          </motion.div>
+        )}
+        {screen === "cgv" && (
+          <motion.div key="cgv" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <CgvScreen onBack={() => setScreen("profile")} />
           </motion.div>
         )}
       </AnimatePresence>

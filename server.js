@@ -7,8 +7,10 @@ import rateLimit from "express-rate-limit";
 import crypto from "crypto";
 import { fileURLToPath } from "url";
 import path from "path";
+import { ELIA_SYSTEM_PROMPT } from "./eliaPrompt.js";
 
 const app = express();
+app.set("trust proxy", 1);
 
 // ─── Token signing ────────────────────────────────────────────────────────────
 const TOKEN_SECRET = process.env.TOKEN_SECRET || (() => {
@@ -110,100 +112,62 @@ function detectMultiple(children) {
 function buildSystemPrompt(profile, isSos, memory, isPremium) {
   const parentName = sanitize(profile.parentName, 50);
   const parentRole = sanitize(profile.parentRole, 30);
-  const freeText    = sanitize(profile.freeText, 400);
+  const freeText   = sanitize(profile.freeText, 400);
 
   const children = (profile.children || [])
+    .slice(0, 15)
     .filter(c => c.firstName)
     .map(c => {
-      const name  = sanitize(c.firstName, 30);
-      const age   = calcAge(c.birthDate) || "âge non précisé";
-      const temp  = sanitize(c.temperament, 50);
-      const notes = sanitize(c.notes, 100);
+      const name   = sanitize(c.firstName, 30);
+      const age    = calcAge(c.birthDate) || "âge non précisé";
+      const temp   = sanitize(c.temperament, 50);
+      const notes  = sanitize(c.notes, 100);
       const extras = [temp, notes].filter(Boolean).join(", ");
       return `${name} (${age}${extras ? ", " + extras : ""})`;
     }).join(", ") || "non renseigné";
 
   const multipleLabel = detectMultiple(profile.children);
-  const birthTypes = (profile.birthTypes || []).map(t => sanitize(t, 30)).filter(Boolean);
+  const birthTypes = (profile.birthTypes || []).slice(0, 10).map(t => sanitize(t, 30)).filter(Boolean);
   const birthCtx   = birthTypes.length ? `Naissance : ${birthTypes.join(", ")}.` : "";
-  const challenges = (profile.challenges || []).map(c => sanitize(c, 50)).filter(Boolean);
+  const challenges = (profile.challenges || []).slice(0, 15).map(c => sanitize(c, 50)).filter(Boolean);
 
   const memLimit = isPremium ? 20 : 3;
   const memBlock = (memory || []).length
-    ? "\n\nMÉMOIRE :\n" + memory.slice(-memLimit).map(m => "- " + sanitize(m, 120)).join("\n")
+    ? "\nMÉMOIRE LONGUE :\n" + memory.slice(-memLimit).map(m => "- " + sanitize(m, 120)).join("\n")
     : "";
 
-  const premiumBlock = isPremium ? `
-NIVEAU PREMIUM :
-- Analyse les patterns et tendances dans ce que vit ${parentName} sur la durée
-- Personnalise chaque réponse selon l'historique et le contexte partagé
-- Oriente doucement vers le bon professionnel quand pertinent, avec une phrase d'explication sur POURQUOI il peut aider (pédiatre, ostéopathe, kiné, psy périnatal, sage-femme selon le sujet)
-- Structure : validation émotionnelle → analyse → 2-3 pistes concrètes → question d'approfondissement` : `
-NIVEAU GRATUIT :
-- Réponses courtes et bienveillantes (4-6 phrases max)
-- Validation émotionnelle prioritaire
-- 1 piste concrète maximum`;
+  const tierBlock = isPremium
+    ? `NIVEAU : Premium — mémoire longue active, analyse des patterns sur la durée, 2-3 pistes concrètes + question d'approfondissement.`
+    : `NIVEAU : Gratuit — réponses courtes et bienveillantes (4-6 phrases max), validation émotionnelle prioritaire, 1 piste maximum.`;
 
-  return `Tu es Elia, l'assistante parentale de Parentelïa.
-Tu accompagnes ${parentName} (${parentRole}).
-Enfants : ${children}.${multipleLabel ? ` (${multipleLabel})` : ""}
-${birthCtx}
-${challenges.length ? "Défis déclarés : " + challenges.join(", ") + "." : ""}
-${freeText ? "Contexte personnel : " + freeText : ""}
+  const sosBlock = isSos
+    ? `\nMODE SOS ACTIF — présence resserrée, 2-4 phrases max, aucune mention du premium.`
+    : "";
+
+  const profileBlock = `
+━━━ PROFIL FAMILLE ━━━
+Parent : ${parentName || "non renseigné"}${parentRole ? ` (${parentRole})` : ""}
+Enfants : ${children}${multipleLabel ? ` — ${multipleLabel}` : ""}
+${birthCtx}${challenges.length ? `\nDéfis déclarés : ${challenges.join(", ")}.` : ""}${freeText ? `\nContexte personnel : ${freeText}` : ""}
 ${memBlock}
+${tierBlock}${sosBlock}`;
 
-━━━ CADRE ÉDITORIAL ━━━
-
-PHILOSOPHIE :
-Approche bienveillante ET structurante — ni enfant-roi, ni enfant soumis. Un enfant accompagné.
-Inspirée de Montessori, Pikler, Juul (compétence de l'enfant, rythme, intégrité).
-Pour les émotions : Filliozat, Gueguen (neurosciences affectives), Faber & Mazlish.
-Pour le cadre et l'autorité : Goldman (autorité structurante), équilibre chaleur + limites claires.
-Périnatalité : OMS/UNICEF, Santé Publique France, Bayot, Anna Roy.
-Sommeil : Junier, Becquart (accompagnement sans méthodes traumatisantes).
-
-DOMAINES COUVERTS :
-Périnatalité & post-partum · Sommeil (nourrisson à enfant) · Alimentation & allaitement · Émotions de l'enfant · Développement & étapes · Fratrie · Charge mentale parentale · Vie quotidienne & routines.
-
-DOMAINES HORS PÉRIMÈTRE (ne pas traiter) :
-Conseils de couple / coparentalité conflictuelle · Scolarité approfondie · Diagnostic médical · Avis vaccination · Nutrition thérapeutique · Questions juridiques.
-
-NEUTRALITÉ ABSOLUE sur les choix clivants (pas d'avis, accompagner le choix du parent) :
-Allaitement vs biberon · Cododo vs lit séparé · Tétine · Portage · DME vs diversification classique · Mode de garde · Couches lavables · Retour au travail.
-
-LIGNES ROUGES — redirection immédiate vers un professionnel :
-Côté enfant : pleurs prolongés inexpliqués · suspicion retard développement · symptômes physiques inquiétants · comportement violent répété · régression brutale · questionnement TSA/TDAH/DYS.
-Côté parent : idées noires ou suicidaires · dépression post-partum · pensées intrusives sur l'enfant · burn-out sévère · violences subies ou exercées · addictions.
-Formulation type : "Ce que tu décris mérite vraiment d'être écouté par quelqu'un de formé pour ça. [professionnel adapté] pourra t'accompagner bien mieux que moi sur ce point. Tu veux qu'on en parle un peu en attendant ?"
-
-━━━ COMPORTEMENT ━━━
-
-TON TOUJOURS :
-- Chaleureux, humain, jamais jugeant, jamais culpabilisant
-- Phrases naturelles et fluides, comme une amie bienveillante et experte
-- 1 emoji maximum par réponse
-- Jamais de diagnostic médical ni psychologique
-- Jamais de "bonne façon unique" de faire
-- Si tu te souviens d'un échange : "Tu me parlais de…" naturellement
-${isSos ? `
-MODE SOS — PRIORITÉ ABSOLUE :
-- Réponse très courte (3-5 phrases max)
-- Présence émotionnelle avant tout
-- Respiration guidée si pertinent (4 sec inspire · 4 sec retiens · 6 sec expire)
-- 1 question ouverte douce maximum
-- Si mots-clés de crise détectés → orienter vers 15 (SAMU) ou 3114 (prévention suicide)` : ""}
-
-${premiumBlock}`;
+  return ELIA_SYSTEM_PROMPT + profileBlock;
 }
 
 // ─── Sécurité headers ────────────────────────────────────────────────────────
 app.use(helmet({
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true,
+  },
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
       styleSrc:   ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc:    ["'self'", "https://fonts.gstatic.com"],
-      scriptSrc:  ["'self'"],       // theme-init.js servi comme fichier externe
+      scriptSrc:  ["'self'"],
       connectSrc: ["'self'"],
       imgSrc:     ["'self'", "data:"],
       frameSrc:   ["https://js.stripe.com"],
@@ -230,6 +194,11 @@ const checkoutLimiter = rateLimit({
   max: 5,
   message: { error: "Trop de tentatives. Merci de patienter." },
 });
+const verifyLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: "Trop de tentatives." },
+});
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -249,6 +218,16 @@ app.post("/api/webhook", express.raw({ type: "application/json" }), (req, res) =
 });
 
 app.use(express.json({ limit: "50kb" }));
+
+// ─── Log consentement RGPD (preuve serveur, art. 7 RGPD) ─────────────────────
+app.post("/api/consent", (req, res) => {
+  const ip      = getClientId(req);
+  const ts      = new Date().toISOString();
+  const version = typeof req.body?.version === "string" ? req.body.version.slice(0, 20) : "1.0";
+  const ua      = (req.headers["user-agent"] || "").slice(0, 200);
+  console.log(JSON.stringify({ event: "consent_accepted", ip, ts, cgu_version: version, ua }));
+  res.json({ ok: true });
+});
 
 // ─── Chat API ─────────────────────────────────────────────────────────────────
 app.post("/api/chat", chatLimiter, async (req, res) => {
@@ -282,7 +261,7 @@ app.post("/api/chat", chatLimiter, async (req, res) => {
   }
 
   // Prompt construit côté serveur — le client ne peut pas l'injecter
-  const system     = buildSystemPrompt(profile || {}, Boolean(isSos), memory, isPremium);
+  const system     = buildSystemPrompt(profile || {}, Boolean(isSos), Array.isArray(memory) ? memory.slice(0, 100) : [], isPremium);
   const model      = isPremium ? "claude-sonnet-4-6" : "claude-haiku-4-5-20251001";
   const max_tokens = isPremium ? 1200 : 600;
   const msgLimit   = isPremium ? messages.length : Math.min(messages.length, 10);
@@ -360,7 +339,7 @@ app.post("/api/create-checkout-session", checkoutLimiter, async (req, res) => {
 });
 
 // ─── Vérification session Stripe → retourne token signé ──────────────────────
-app.get("/api/verify-session", async (req, res) => {
+app.get("/api/verify-session", verifyLimiter, async (req, res) => {
   const { id } = req.query;
   if (!id || typeof id !== "string" || !id.startsWith("cs_")) {
     return res.status(400).json({ paid: false });

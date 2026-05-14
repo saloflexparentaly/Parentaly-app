@@ -15,6 +15,9 @@ dist-ssr
 # Environment variables
 .env
 
+# Documents internes — ne pas versionner publiquement
+REGISTRE_TRAITEMENTS_RGPD.md
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

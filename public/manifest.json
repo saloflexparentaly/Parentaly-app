@@ -1,7 +1,7 @@
 {
-  "name": "Parentelïa",
-  "short_name": "Parentelïa",
-  "description": "Ton assistante parentale bienveillante",
+  "name": "NERA",
+  "short_name": "NERA",
+  "description": "Soutien émotionnel pour parents de jumeaux et de multiples",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#1F1418",
