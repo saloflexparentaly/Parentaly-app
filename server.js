@@ -55,7 +55,12 @@ const usedSessions = new Set();
 
 // ─── Daily limits (free tier, in-memory par IP) ───────────────────────────────
 const FREE_DAILY_LIMIT = 10;
+const SOS_DAILY_LIMIT  = 10;
+const GLOBAL_DAILY_CAP = 500;
+
 const dailyUsage = new Map();
+const sosUsage   = new Map();
+let   globalDaily = { date: "", count: 0 };
 
 function getClientId(req) {
   return (req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || req.ip || "unknown");
@@ -67,13 +72,35 @@ function checkFreeLimit(clientId) {
   const count = dailyUsage.get(key) || 0;
   if (count >= FREE_DAILY_LIMIT) return false;
   dailyUsage.set(key, count + 1);
-  // Nettoyage entrées > 2 jours
   if (dailyUsage.size > 50000) {
     const cutoff = new Date(Date.now() - 2 * 86400000).toISOString().slice(0, 10);
     for (const k of dailyUsage.keys()) {
       if (k.split(":")[1] < cutoff) dailyUsage.delete(k);
     }
   }
+  return true;
+}
+
+function checkSosLimit(clientId) {
+  const now    = Date.now();
+  const cutoff = now - 24 * 60 * 60 * 1000;
+  const times  = (sosUsage.get(clientId) || []).filter(ts => ts > cutoff);
+  if (times.length >= SOS_DAILY_LIMIT) return false;
+  times.push(now);
+  sosUsage.set(clientId, times);
+  if (sosUsage.size > 10000) {
+    for (const [k, v] of sosUsage.entries()) {
+      if (!v.some(ts => ts > cutoff)) sosUsage.delete(k);
+    }
+  }
+  return true;
+}
+
+function checkGlobalCap() {
+  const today = new Date().toISOString().slice(0, 10);
+  if (globalDaily.date !== today) globalDaily = { date: today, count: 0 };
+  if (globalDaily.count >= GLOBAL_DAILY_CAP) return false;
+  globalDaily.count++;
   return true;
 }
 
@@ -258,15 +285,26 @@ app.post("/api/chat", chatLimiter, async (req, res) => {
     }
   }
 
+  // Cap global — protège les coûts API
+  if (!checkGlobalCap()) {
+    return res.status(503).json({ error: "Service momentanément indisponible. Réessaie dans quelques heures.", globalCap: true });
+  }
+
   // Vérification premium côté serveur — le client ne peut pas falsifier ceci
   const tokenPayload = verifyToken(premiumToken);
   const isPremium    = tokenPayload?.premium === true;
 
-  // Limite journalière pour les utilisateurs gratuits
+  // Quotas pour utilisateurs gratuits
   if (!isPremium) {
     const clientId = getClientId(req);
-    if (!checkFreeLimit(clientId)) {
-      return res.status(429).json({ error: "Limite journalière atteinte.", dailyLimit: true });
+    if (isSos) {
+      if (!checkSosLimit(clientId)) {
+        return res.status(429).json({ error: "Limite SOS atteinte.", sosLimit: true });
+      }
+    } else {
+      if (!checkFreeLimit(clientId)) {
+        return res.status(429).json({ error: "Limite journalière atteinte.", dailyLimit: true });
+      }
     }
   }
 
@@ -375,4 +413,4 @@ app.use(express.static(path.join(__dirname, "dist")));
 app.get("*", (req, res) => res.sendFile(path.join(__dirname, "dist", "index.html")));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🌿 Parentelïa server on port ${PORT}`));
+app.listen(PORT, () => console.log(`🌿 NERA server on port ${PORT}`));

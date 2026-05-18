@@ -30,7 +30,7 @@
 - [x] Politique de Confidentialité / RGPD
 - [x] Mentions Légales
 - [x] Disclaimer non-médical (case à cocher à l'inscription)
-- [ ] Politique cookies (si tracking, même léger)
+- [x] Politique cookies (si tracking, même léger)
 - [ ] ⚠️ Faire relire par un avocat IT/RGPD avant lancement (200–500€) — fortement recommandé sur santé mentale périnatale
 
 ### 0.4 · Conformité technique RGPD
@@ -108,7 +108,7 @@
 - [x] Bug motion/react → remplacé par framer-motion
 - [x] Intégrer le prompt Elïa V2 dans le code (eliaPrompt.js)
 - [x] Profil : ROLES, CHALS, BIRTH_TYPES enrichis pour la niche multiples
-- [ ] Intégrer le système de quotas (10 msg/j + Présence SOS 10 msg/24h + cap 500/j)
+- [x] Intégrer le système de quotas (10 msg/j + Présence SOS 10 msg/24h + cap 500/j)
 - [ ] Intégrer la mémoire courte (free) et mémoire longue (premium)
 - [ ] Tester le passage gratuit → premium (essai, conversion, downgrade, résiliation)
 - [ ] Tests utilisateurs internes avant ouverture beta

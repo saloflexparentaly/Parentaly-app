@@ -6,6 +6,7 @@ import MentionsLegalesScreen from "./MentionsLegalesScreen";
 import ConfidentialiteScreen from "./ConfidentialiteScreen";
 import CguScreen from "./CguScreen";
 import CgvScreen from "./CgvScreen";
+import CookiesScreen from "./CookiesScreen";
 import { supabase, getOrCreateSession } from "./supabase.js";
 
 // ─── ERROR BOUNDARY ───────────────────────────────────────────────────────────
@@ -110,6 +111,41 @@ const GlobalStyles = () => (
       0%,100% { box-shadow: 0 0 0 0 rgba(201,117,96,.35); }
       50% { box-shadow: 0 0 0 12px rgba(201,117,96,0); }
     }
+    @keyframes sweepGlow {
+      0%   { transform: translateX(-160%); }
+      100% { transform: translateX(320%); }
+    }
+    .sweep-glow { animation: sweepGlow 4.8s linear infinite; }
+
+    @keyframes wispDrift {
+      0%   { transform: rotate(var(--r)) translateX(0px); }
+      50%  { transform: rotate(var(--r)) translateX(18px); }
+      100% { transform: rotate(var(--r)) translateX(0px); }
+    }
+    @keyframes orbPulse {
+      0%,100% { box-shadow: 0 0 60px 20px rgba(201,117,96,0.45), 0 0 120px 50px rgba(180,90,60,0.22), 0 0 200px 90px rgba(130,55,40,0.12); }
+      50%      { box-shadow: 0 0 80px 30px rgba(220,130,100,0.55), 0 0 160px 70px rgba(190,100,65,0.28), 0 0 260px 110px rgba(140,60,45,0.16); }
+    }
+    @keyframes ringPulse {
+      0%,100% { opacity: 0.18; transform: scale(1); }
+      50%      { opacity: 0.36; transform: scale(1.06); }
+    }
+    @keyframes particle1 {
+      0%   { transform: rotate(0deg)   translateX(90px) rotate(0deg);   opacity: 0.7; }
+      100% { transform: rotate(360deg) translateX(90px) rotate(-360deg); opacity: 0.7; }
+    }
+    @keyframes particle2 {
+      0%   { transform: rotate(120deg)  translateX(75px) rotate(-120deg);  opacity: 0.4; }
+      100% { transform: rotate(480deg)  translateX(75px) rotate(-480deg);  opacity: 0.4; }
+    }
+    @keyframes particle3 {
+      0%   { transform: rotate(240deg)  translateX(110px) rotate(-240deg);  opacity: 0.25; }
+      100% { transform: rotate(600deg)  translateX(110px) rotate(-600deg);  opacity: 0.25; }
+    }
+    .orb-particle { position: absolute; top: 50%; left: 50%; width: 4px; height: 4px; margin: -2px 0 0 -2px; border-radius: 50%; background: #FFE8D8; box-shadow: 0 0 8px 3px rgba(255,220,190,0.80); }
+    .orb-p1 { animation: particle1 8s linear infinite; }
+    .orb-p2 { animation: particle2 12s linear infinite; }
+    .orb-p3 { animation: particle3 18s linear infinite; }
 
     .step-bar { display: flex; gap: 4px; justify-content: center; margin-bottom: 36px; }
     .step-bar span { height: 2px; border-radius: 2px; background: var(--surface-border-s); }
@@ -207,9 +243,24 @@ const UserIcon = ({ s = 22 }) => (
     <circle cx="12" cy="7" r="4"/>
   </svg>
 );
+const Sparkles = ({ s = 15, style }) => (
+  <svg width={s} height={s} viewBox="0 0 24 24" fill="currentColor" style={style}>
+    <path d="M12 2L10.2 9.2 3 11l7.2 1.8L12 20l1.8-7.2L21 11l-7.2-1.8Z" opacity="0.9"/>
+    <path d="M5 3.5L4 7l-3.5 1L4 9.5 5 13l1-3.5 3.5-1L6 7Z" opacity="0.65"/>
+    <path d="M19 12.5l-.8 3-3 .8 3 .8.8 3 .8-3 3-.8-3-.8Z" opacity="0.65"/>
+  </svg>
+);
+const AlertCircle = ({ s = 15, style }) => (
+  <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={style}>
+    <circle cx="12" cy="12" r="10"/>
+    <line x1="12" y1="8" x2="12" y2="12"/>
+    <line x1="12" y1="16" x2="12.01" y2="16"/>
+  </svg>
+);
 
 // ─── DAILY LIMIT ─────────────────────────────────────────────────────────────
 const FREE_DAILY_LIMIT = 10;
+const SOS_DAILY_LIMIT  = 10;
 
 async function getDailyUsage() {
   const today = new Date().toLocaleDateString("fr-FR");
@@ -225,9 +276,23 @@ async function incrementDailyUsage() {
   return count;
 }
 
+async function getSosUsage() {
+  const data = await S.get("elia_sos_usage") || { timestamps: [] };
+  const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+  return data.timestamps.filter(ts => ts > cutoff).length;
+}
+
+async function incrementSosUsage() {
+  const data = await S.get("elia_sos_usage") || { timestamps: [] };
+  const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+  const timestamps = [...data.timestamps.filter(ts => ts > cutoff), Date.now()];
+  await S.set("elia_sos_usage", { timestamps });
+  return timestamps.length;
+}
+
 // ─── STORAGE (Supabase + localStorage fallback) ───────────────────────────────
 const LS_KEYS = ["elia_profile","elia_legal","elia_memory","elia_sessions",
-                 "elia_tracking","elia_last_sos","elia_chat_history","elia_daily","elia_premium_token"];
+                 "elia_tracking","elia_last_sos","elia_chat_history","elia_daily","elia_sos_usage","elia_premium_token"];
 
 async function migrateLocalStorageToSupabase(userId) {
   if (localStorage.getItem("elia_sb_migrated")) return;
@@ -642,8 +707,9 @@ async function askElia({ profile, messages, isSos, memory, premiumToken }) {
       signal:  controller.signal,
     });
     clearTimeout(timeoutId);
-    if (resp.status === 429) {
+    if (resp.status === 429 || resp.status === 503) {
       const data = await resp.json();
+      if (data.sosLimit)   throw Object.assign(new Error("Limite SOS"),         { sosLimit: true });
       if (data.dailyLimit) throw Object.assign(new Error("Limite journalière"), { dailyLimit: true });
       throw new Error("Trop de requêtes. Réessaie dans un instant.");
     }
@@ -902,149 +968,369 @@ const TIPS = [
   "Il n'existe pas de manuel pour élever des jumeaux. Tu inventes chaque jour.",
 ];
 const SIGNATURES = [
-  "— pour les nuits à moitié dormies",
-  "— pour les moments difficiles",
-  "— pour les parents de multiples épuisés",
-  "— pour quand c'est trop lourd",
-  "— pour les jours sans lumière",
-  "— pour les débuts difficiles",
-  "— pour les pionniers du quotidien double",
+  "pour les nuits à moitié dormies",
+  "pour les moments difficiles",
+  "pour les parents de multiples épuisés",
+  "pour quand c'est trop lourd",
+  "pour les jours sans lumière",
+  "pour les débuts difficiles",
+  "pour les pionniers du quotidien double",
 ];
-const CHECKIN_MOODS = ["Difficile", "Mitigée", "Douce", "Lumineuse"];
+const CHECKIN_MOODS = ["Épuisée", "Débordée", "Douce", "Lumineuse"];
+
+const NOISE_SVG = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`;
 
 function Home({ profile, onStart, onPremium }) {
-  const TODAY = new Date().toLocaleDateString("fr-FR");
-  const hour = new Date().getHours();
-  const greet = hour < 12 ? "Bonjour" : hour < 18 ? "Bon après-midi" : "Bonsoir";
-  const tipIdx = new Date().getDate() % TIPS.length;
-  const tip = TIPS[tipIdx];
-  const sig = SIGNATURES[tipIdx];
+  const TODAY   = new Date().toLocaleDateString("fr-FR");
+  const tipIdx  = new Date().getDate() % TIPS.length;
+  const tip     = TIPS[tipIdx];
+  const sig     = SIGNATURES[tipIdx];
 
   const namedChildren = profile.children.filter(c => c.firstName);
-  const firstChild = namedChildren[0];
-  const multipleLabel = detectMultiple(profile.children);
-  const childAge = firstChild ? (calcAge(firstChild.birthDate) || firstChild.age) : null;
-  const dayNum = firstChild?.birthDate
+  const firstChild    = namedChildren[0];
+  const childAge      = firstChild ? (calcAge(firstChild.birthDate) || firstChild.age) : null;
+  const dayNum        = firstChild?.birthDate
     ? Math.max(1, Math.floor((new Date() - new Date(firstChild.birthDate)) / 86400000) + 1)
     : null;
-  const childNames = namedChildren.length > 1
-    ? namedChildren.map(c => c.firstName).join(" & ")
-    : firstChild?.firstName;
-  const subtitle = firstChild
-    ? [childNames, childAge, dayNum ? `jour ${dayNum}` : null].filter(Boolean).join(" · ")
-    : null;
 
-  const [tracking, setTracking] = useState(null);
+  const [tracking,  setTracking]  = useState(null);
   const [sosBanner, setSosBanner] = useState(false);
+  const [mouse, setMouse]         = useState({ x: 0.5, y: 0.5 });
+  const [hovered, setHovered]     = useState(false);
+  const orbRef = useRef(null);
+  const rafRef = useRef(null);
+  const targetRef = useRef({ x: 0.5, y: 0.5 });
+  const currentRef = useRef({ x: 0.5, y: 0.5 });
 
   useEffect(() => {
-    S.get("elia_tracking").then(t => {
-      const today = t?.find(d => d.date === TODAY);
-      setTracking(today || null);
-    });
+    S.get("elia_tracking").then(t => setTracking(t?.find(d => d.date === TODAY) || null));
     if (profile.isPremium) {
       S.get("elia_last_sos").then(ts => {
         if (!ts) return;
-        const hours = (Date.now() - ts) / 3600000;
-        if (hours >= 4 && hours <= 36) setSosBanner(true);
+        const h = (Date.now() - ts) / 3600000;
+        if (h >= 4 && h <= 36) setSosBanner(true);
       });
     }
   }, []);
 
-  const saveCheckin = async (checkin) => {
+  // Smooth mouse tracking with lerp
+  useEffect(() => {
+    const lerp = (a, b, t) => a + (b - a) * t;
+    const tick = () => {
+      currentRef.current.x = lerp(currentRef.current.x, targetRef.current.x, 0.06);
+      currentRef.current.y = lerp(currentRef.current.y, targetRef.current.y, 0.06);
+      setMouse({ x: currentRef.current.x, y: currentRef.current.y });
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, []);
+
+  const handleMouseMove = useCallback((e) => {
+    if (!orbRef.current) return;
+    const rect = orbRef.current.getBoundingClientRect();
+    targetRef.current = {
+      x: Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)),
+      y: Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height)),
+    };
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    targetRef.current = { x: 0.5, y: 0.5 };
+    setHovered(false);
+  }, []);
+
+  const saveCheckin = async (mood) => {
     const t = await S.get("elia_tracking") || [];
     const existing = t.find(d => d.date === TODAY) || {};
-    const updated = [...t.filter(d => d.date !== TODAY), { ...existing, date: TODAY, checkin }];
-    await S.set("elia_tracking", updated);
-    setTracking(prev => ({ ...prev, date: TODAY, checkin }));
+    const checkin  = existing.checkin === mood ? null : mood;
+    await S.set("elia_tracking", [...t.filter(d => d.date !== TODAY), { ...existing, date: TODAY, checkin }]);
+    setTracking(prev => ({ ...prev, checkin }));
   };
 
-  const fd = (delay) => ({ initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 }, transition: { delay, duration: .4 } });
+  // Specular highlight position based on mouse
+  const specX = 18 + mouse.x * 44;  // 18% → 62%
+  const specY = 14 + mouse.y * 32;  // 14% → 46%
+  const tiltX = (mouse.y - 0.5) * 12;
+  const tiltY = (mouse.x - 0.5) * -12;
 
   return (
-    <div style={{ minHeight: "100vh", padding: "0 24px 24px" }}>
-      <div style={{ maxWidth: 420, margin: "0 auto" }}>
+    <div style={{ position: "relative", overflow: "hidden", background: "#080608", minHeight: "calc(100vh - 68px)" }}>
 
-        {/* Wordmark + Theme toggle */}
-        <motion.div {...fd(0)} style={{ paddingTop: 48, marginBottom: 44, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <span className="serif" style={{ fontStyle: "italic", fontSize: 18, fontWeight: 400, color: "var(--brand)", letterSpacing: ".04em" }}>NERA</span>
-          <ThemeToggle />
-        </motion.div>
+      {/* ── FOND ATMOSPHÉRIQUE ─────────────────────────────── */}
+      <div style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none" }}>
+        {/* Gradient de fond profond */}
+        <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 80% 60% at 50% 30%, rgba(90,42,32,0.55) 0%, transparent 65%), radial-gradient(ellipse 100% 50% at 50% 0%, rgba(60,28,48,0.45) 0%, transparent 55%), linear-gradient(180deg, #100A10 0%, #060406 100%)" }} />
+        {/* Lueur centrale pulsante — grande, douce */}
+        <motion.div
+          animate={{ opacity: [0.28, 0.42, 0.28], scale: [1, 1.12, 1] }}
+          transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
+          style={{ position: "absolute", left: "50%", top: "34%", height: 600, width: 600, transform: "translate(-50%, -50%)", borderRadius: "50%", background: "radial-gradient(circle, rgba(185,90,55,0.22) 0%, rgba(140,55,35,0.12) 40%, transparent 70%)", filter: "blur(60px)" }} />
+        {/* Lueur violette secondaire */}
+        <motion.div
+          animate={{ opacity: [0.10, 0.18, 0.10], x: [-15, 15, -15] }}
+          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+          style={{ position: "absolute", right: -80, top: "20%", height: 350, width: 350, borderRadius: "50%", background: "rgba(100,45,80,0.25)", filter: "blur(100px)" }} />
+        {/* Grain texture */}
+        <div style={{ position: "absolute", inset: 0, opacity: 0.038, mixBlendMode: "soft-light", backgroundImage: NOISE_SVG, backgroundSize: "220px 220px" }} />
+      </div>
 
-        {/* Greeting */}
-        <motion.div {...fd(.06)} style={{ textAlign: "center", marginBottom: subtitle ? 10 : 40 }}>
-          <h1 className="serif" style={{ fontSize: 52, fontWeight: 400, lineHeight: 1.1, color: "var(--ink)", margin: 0 }}>
-            {greet},<br /><em>{profile.parentName}</em>
-          </h1>
-        </motion.div>
+      {/* ── CONTENU ────────────────────────────────────────── */}
+      <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", minHeight: "calc(100vh - 68px)", padding: "0 24px 28px" }}>
 
-        {/* Subtitle */}
-        {subtitle && (
-          <motion.div {...fd(.12)} style={{ textAlign: "center", marginBottom: 40 }}>
-            <p style={{ fontSize: 14, color: "var(--ink-soft)", fontWeight: 400 }}>{subtitle}</p>
-          </motion.div>
-        )}
+        {/* HEADER */}
+        <header style={{ paddingTop: 44, paddingBottom: 0 }}>
+          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+            <ThemeToggle />
+          </div>
+          <div style={{ textAlign: "center" }}>
+            <h1 className="serif" style={{ fontSize: 48, letterSpacing: "0.36em", color: "rgba(245,237,230,0.92)", fontStyle: "normal", fontWeight: 400, lineHeight: 1, margin: 0 }}>
+              NERA
+            </h1>
+            <p style={{ marginTop: 10, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.32em", color: "rgba(245,237,230,0.22)", fontWeight: 400 }}>
+              présence émotionnelle
+            </p>
+          </div>
+        </header>
 
-        {/* SOS follow-up banner (premium only) */}
+        {/* SOS FOLLOW-UP BANNER */}
         <AnimatePresence>
           {sosBanner && (
             <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-              style={{ background: "var(--surface)", border: "1px solid var(--surface-border-s)", borderRadius: 18, padding: "16px 18px", marginBottom: 16, backdropFilter: "blur(20px)" }}>
+              style={{ marginTop: 18, background: "rgba(201,117,96,0.10)", border: "1px solid rgba(201,117,96,0.22)", borderRadius: 18, padding: "14px 16px", backdropFilter: "blur(20px)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: 13, fontWeight: 500, color: "var(--accent-deep)", marginBottom: 4 }}>Comment ça va depuis hier ?</p>
-                  <p style={{ fontSize: 12, color: "var(--ink-soft)", fontWeight: 300, lineHeight: 1.5 }}>Tu avais besoin d'aide. Je voulais prendre de tes nouvelles.</p>
+                  <p style={{ fontSize: 13, fontWeight: 500, color: "rgba(245,237,230,0.90)", marginBottom: 3 }}>Comment ça va depuis hier ?</p>
+                  <p style={{ fontSize: 12, color: "rgba(245,237,230,0.48)", fontWeight: 300, lineHeight: 1.5 }}>Tu avais besoin d'aide. Je voulais prendre de tes nouvelles.</p>
                 </div>
-                <button onClick={() => setSosBanner(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--ink-faint)", flexShrink: 0 }}><Xmark /></button>
+                <button onClick={() => setSosBanner(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(245,237,230,0.35)", padding: "0 0 0 8px" }}><Xmark /></button>
               </div>
               <button onClick={() => { setSosBanner(false); onStart(false); }}
-                style={{ marginTop: 10, background: "var(--accent)", color: "#fff", border: "none", borderRadius: 10, padding: "8px 16px", fontSize: 12, cursor: "pointer", fontWeight: 500 }}>
+                style={{ marginTop: 10, background: "rgba(201,117,96,0.28)", color: "rgba(245,237,230,0.90)", border: "1px solid rgba(201,117,96,0.35)", borderRadius: 10, padding: "7px 14px", fontSize: 12, cursor: "pointer", fontWeight: 500, fontFamily: "'Jost', system-ui, sans-serif" }}>
                 En parler avec Elïa →
               </button>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Card – Pour toi aujourd'hui */}
-        <motion.div {...fd(.18)}
-          style={{ background: "var(--surface)", borderRadius: 22, padding: 28, marginBottom: 16, border: "1px solid var(--surface-border-s)", backdropFilter: "blur(20px)", position: "relative", overflow: "hidden" }}>
-          <p style={{ fontSize: 11, fontWeight: 500, color: "var(--ink-xfaint)", textTransform: "uppercase", letterSpacing: ".22em", marginBottom: 18 }}>Pour toi aujourd'hui</p>
-          <p className="serif" style={{ fontStyle: "italic", fontSize: 22, lineHeight: 1.4, color: "var(--ink)" }}>{tip}</p>
-          <p style={{ fontSize: 12, fontStyle: "italic", color: "var(--ink-soft)", textAlign: "right", marginTop: 18 }}>{sig}</p>
-        </motion.div>
+        {/* ── HÉRO ─────────────────────────────────────────── */}
+        <section style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
 
-        {/* Card – Check-in du soir */}
-        <motion.div {...fd(.24)}
-          style={{ background: "var(--surface)", borderRadius: 22, padding: 28, marginBottom: 16, border: "1px solid var(--surface-border-s)", backdropFilter: "blur(20px)" }}>
-          <p style={{ fontSize: 11, fontWeight: 500, color: "var(--ink-xfaint)", textTransform: "uppercase", letterSpacing: ".22em", marginBottom: 14 }}>Check-in du soir</p>
-          <p className="serif" style={{ fontSize: 26, fontWeight: 400, color: "var(--ink)", marginBottom: 20, lineHeight: 1.2 }}>Comment ça s'est passé aujourd'hui avec eux ?</p>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-            {CHECKIN_MOODS.map(m => (
-              <button key={m} className={`chip ${tracking?.checkin === m ? "on" : ""}`}
-                style={{ borderRadius: 999 }}
-                onClick={() => saveCheckin(tracking?.checkin === m ? null : m)}>
-                {m}
-              </button>
-            ))}
+          {/* ── ORB ZONE interactive ────────────────────────── */}
+          <div
+            ref={orbRef}
+            onMouseMove={handleMouseMove}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={handleMouseLeave}
+            style={{ position: "relative", width: 340, height: 340, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20, flexShrink: 0, cursor: "none" }}
+          >
+
+            {/* ── WISPS DERRIÈRE L'ORBE ────────────────────── */}
+
+            {/* Halo de fond très large — aurora */}
+            <motion.div
+              animate={{ opacity: [0.35, 0.55, 0.35], scale: [1, 1.08, 1] }}
+              transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+              style={{ position: "absolute", width: 420, height: 420, borderRadius: "50%", background: "radial-gradient(circle, rgba(180,80,45,0.30) 0%, rgba(150,60,35,0.15) 40%, transparent 70%)", filter: "blur(40px)", zIndex: 0 }}
+            />
+
+            {/* Wisp 1 — grand diagonal haut-gauche → bas-droite, diffus */}
+            <motion.div
+              animate={{ opacity: [0.5, 0.85, 0.5], scaleX: [1, 1.04, 1] }}
+              transition={{ duration: 11, repeat: Infinity, ease: "easeInOut", delay: 0 }}
+              style={{ position: "absolute", width: 420, height: 55, top: "50%", left: "50%", marginTop: -120, marginLeft: -210, borderRadius: 999, background: "linear-gradient(90deg, transparent 0%, rgba(160,68,38,0.22) 18%, rgba(210,100,58,0.52) 38%, rgba(235,140,90,0.65) 50%, rgba(210,100,58,0.48) 62%, rgba(160,68,38,0.20) 82%, transparent 100%)", filter: "blur(18px)", transform: "rotate(-22deg)", transformOrigin: "center", zIndex: 1 }}
+            />
+            {/* Wisp 1 ligne lumineuse fine */}
+            <motion.div
+              animate={{ opacity: [0.55, 1, 0.55] }}
+              transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 0.4 }}
+              style={{ position: "absolute", width: 440, height: 2.5, top: "50%", left: "50%", marginTop: -107, marginLeft: -220, background: "linear-gradient(90deg, transparent 5%, rgba(195,105,65,0.6) 22%, rgba(248,175,130,1) 48%, rgba(195,105,65,0.6) 74%, transparent 95%)", filter: "blur(1px)", transform: "rotate(-22deg)", transformOrigin: "center", zIndex: 2 }}
+            />
+            {/* Wisp 1b — ligne lumineuse secondaire parallèle */}
+            <motion.div
+              animate={{ opacity: [0.25, 0.55, 0.25] }}
+              transition={{ duration: 13, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+              style={{ position: "absolute", width: 300, height: 1.5, top: "50%", left: "50%", marginTop: -90, marginLeft: -80, background: "linear-gradient(90deg, transparent 0%, rgba(220,140,95,0.70) 30%, rgba(252,185,148,0.90) 55%, rgba(220,140,95,0.55) 80%, transparent 100%)", filter: "blur(0.5px)", transform: "rotate(-19deg)", transformOrigin: "center", zIndex: 2 }}
+            />
+
+            {/* ANNEAUX atmosphériques — concentriques */}
+            <motion.div
+              style={{ position: "absolute", width: 290, height: 290, borderRadius: "50%", border: "1px solid rgba(210,120,80,0.12)", zIndex: 3 }}
+              animate={{ opacity: [0.12, 0.22, 0.12], scale: [1, 1.04, 1] }}
+              transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+            />
+            <motion.div
+              style={{ position: "absolute", width: 230, height: 230, borderRadius: "50%", border: "1px solid rgba(220,135,90,0.18)", background: "rgba(180,80,45,0.04)", backdropFilter: "blur(8px)", zIndex: 3 }}
+              animate={{ opacity: [0.20, 0.38, 0.20], scale: [1, 1.03, 1] }}
+              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+            />
+            <motion.div
+              style={{ position: "absolute", width: 185, height: 185, borderRadius: "50%", border: "1px solid rgba(240,160,115,0.22)", background: "rgba(200,100,60,0.05)", backdropFilter: "blur(16px)", zIndex: 3 }}
+              animate={{ opacity: [0.28, 0.50, 0.28], scale: [1, 1.025, 1] }}
+              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+            />
+
+            {/* ── NOYAU — SPHÈRE 3D INTERACTIVE ────────────── */}
+            <motion.div
+              style={{
+                position: "relative", width: 148, height: 148, borderRadius: "50%",
+                zIndex: 5, flexShrink: 0,
+                transform: `perspective(600px) rotateX(${tiltX}deg) rotateY(${tiltY}deg)`,
+                transition: "transform 0.05s linear",
+                animation: "orbPulse 5s ease-in-out infinite",
+              }}
+            >
+              {/* Lueur extérieure diffuse — réagit à la position souris */}
+              <div style={{
+                position: "absolute", inset: -28, borderRadius: "50%",
+                background: `radial-gradient(circle at ${specX}% ${specY}%, rgba(240,160,110,0.55) 0%, rgba(200,105,60,0.35) 35%, rgba(140,58,30,0.20) 60%, transparent 80%)`,
+                filter: "blur(22px)",
+              }} />
+              {/* Corps principal — gradient 3D multi-couches */}
+              <div style={{
+                position: "absolute", inset: 0, borderRadius: "50%",
+                background: `radial-gradient(circle at ${specX}% ${specY}%, #FFDCC8 0%, #F0A878 14%, #D47550 30%, #A8512E 52%, #6E2E1A 72%, #3A1510 88%, #1E0B09 100%)`,
+                boxShadow: "inset 0 -18px 40px rgba(0,0,0,0.60), inset 0 8px 20px rgba(255,200,160,0.12)",
+              }} />
+              {/* Couche de subsurface scattering — chaleur interne */}
+              <div style={{
+                position: "absolute", inset: 0, borderRadius: "50%",
+                background: `radial-gradient(circle at ${60 - mouse.x * 20}% ${70 - mouse.y * 20}%, rgba(220,100,50,0.45) 0%, transparent 55%)`,
+                mixBlendMode: "screen",
+              }} />
+              {/* Reflet spéculaire principal — se déplace avec la souris */}
+              <div style={{
+                position: "absolute",
+                top: `${specY - 8}%`, left: `${specX - 8}%`,
+                width: "36%", height: "22%",
+                borderRadius: "50%",
+                background: "radial-gradient(ellipse, rgba(255,245,235,0.55) 0%, rgba(255,230,210,0.25) 50%, transparent 100%)",
+                filter: "blur(4px)",
+                transform: "rotate(-18deg)",
+                transition: "top 0.05s, left 0.05s",
+              }} />
+              {/* Reflet secondaire, plus petit */}
+              <div style={{
+                position: "absolute",
+                top: `${specY + 14}%`, left: `${specX + 10}%`,
+                width: "14%", height: "8%",
+                borderRadius: "50%",
+                background: "rgba(255,235,210,0.28)",
+                filter: "blur(2px)",
+                transition: "top 0.05s, left 0.05s",
+              }} />
+              {/* Bord lumineux — rim light chaud */}
+              <div style={{
+                position: "absolute", inset: 0, borderRadius: "50%",
+                background: "radial-gradient(circle at 85% 80%, rgba(220,120,70,0.40) 0%, transparent 40%)",
+                mixBlendMode: "screen",
+              }} />
+            </motion.div>
+
+            {/* Particules orbitales */}
+            <div className="orb-particle orb-p1" style={{ zIndex: 6 }} />
+            <div className="orb-particle orb-p2" style={{ width: 3, height: 3, margin: "-1.5px 0 0 -1.5px", opacity: 0.5, zIndex: 6 }} />
+            <div className="orb-particle orb-p3" style={{ width: 2.5, height: 2.5, margin: "-1.25px 0 0 -1.25px", opacity: 0.3, background: "#F0D0B8", zIndex: 6 }} />
+
+            {/* ── WISPS DEVANT L'ORBE ──────────────────────── */}
+
+            {/* Wisp 2 — diagonal bas, diffus */}
+            <motion.div
+              animate={{ opacity: [0.45, 0.75, 0.45], scaleX: [1, 1.05, 1] }}
+              transition={{ duration: 13, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
+              style={{ position: "absolute", width: 380, height: 48, top: "50%", left: "50%", marginTop: 95, marginLeft: -190, borderRadius: 999, background: "linear-gradient(90deg, transparent 0%, rgba(145,58,30,0.22) 20%, rgba(195,92,50,0.48) 42%, rgba(218,125,78,0.58) 52%, rgba(195,92,50,0.42) 64%, rgba(145,58,30,0.18) 82%, transparent 100%)", filter: "blur(16px)", transform: "rotate(16deg)", transformOrigin: "center", zIndex: 7 }}
+            />
+            {/* Wisp 2 ligne lumineuse */}
+            <motion.div
+              animate={{ opacity: [0.50, 0.92, 0.50] }}
+              transition={{ duration: 9, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+              style={{ position: "absolute", width: 360, height: 2, top: "50%", left: "50%", marginTop: 108, marginLeft: -180, background: "linear-gradient(90deg, transparent 8%, rgba(185,90,52,0.65) 28%, rgba(240,152,100,0.98) 50%, rgba(185,90,52,0.58) 72%, transparent 92%)", filter: "blur(0.8px)", transform: "rotate(16deg)", transformOrigin: "center", zIndex: 8 }}
+            />
+            {/* Wisp 2b — fragment flottant à gauche */}
+            <motion.div
+              animate={{ opacity: [0.18, 0.45, 0.18], x: [-6, 6, -6] }}
+              transition={{ duration: 15, repeat: Infinity, ease: "easeInOut", delay: 5 }}
+              style={{ position: "absolute", width: 160, height: 1.5, top: "50%", left: "50%", marginTop: 78, marginLeft: -195, background: "linear-gradient(90deg, transparent 0%, rgba(200,105,65,0.55) 40%, rgba(228,148,100,0.72) 60%, transparent 100%)", filter: "blur(0.5px)", transform: "rotate(10deg)", transformOrigin: "center", zIndex: 8 }}
+            />
+
           </div>
-        </motion.div>
 
-        {/* Presence indicator + CTAs */}
-        <motion.div {...fd(.30)} style={{ marginTop: 32 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--sage)", boxShadow: "0 0 8px rgba(138,168,154,0.65)", flexShrink: 0, display: "inline-block" }} />
-            <span style={{ fontSize: 13, color: "var(--ink-soft)", fontWeight: 400 }}>Elïa est là, disponible</span>
+          {/* TEXTE + SIGNATURE */}
+          <motion.div
+            initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1.6, ease: "easeOut" }}
+            style={{ maxWidth: 320, textAlign: "center", marginBottom: 36 }}
+          >
+            <p className="serif" style={{ fontSize: 30, lineHeight: 1.22, letterSpacing: "-0.01em", color: "rgba(245,237,230,0.90)", fontStyle: "italic", fontWeight: 400 }}>
+              {tip}
+            </p>
+            <p style={{ marginTop: 12, fontSize: 11.5, color: "rgba(245,237,230,0.32)", letterSpacing: "0.06em", fontStyle: "italic" }}>
+              — {sig}
+            </p>
+            {firstChild && (
+              <p style={{ marginTop: 6, fontSize: 11, color: "rgba(245,237,230,0.18)", letterSpacing: "0.05em" }}>
+                {firstChild.firstName}{childAge ? ` · ${childAge}` : ""}{dayNum ? ` · jour ${dayNum}` : ""}
+              </p>
+            )}
+          </motion.div>
+
+          {/* ── CTAs ─────────────────────────────────────────── */}
+          <div style={{ width: "100%", maxWidth: 320, display: "flex", flexDirection: "column", gap: 12 }}>
+
+            {/* Parler avec Elïa — glassmorphism pill avec sweep */}
+            <motion.button
+              whileTap={{ scale: 0.975 }}
+              whileHover={{ scale: 1.02 }}
+              onClick={() => onStart(false)}
+              style={{ position: "relative", overflow: "hidden", borderRadius: 999, border: "1px solid rgba(242,175,148,0.22)", background: "rgba(255,255,255,0.045)", padding: "17px 28px", backdropFilter: "blur(32px)", cursor: "pointer", width: "100%" }}
+            >
+              <div className="sweep-glow" style={{ position: "absolute", top: 0, bottom: 0, left: 0, width: "45%", background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent)", filter: "blur(20px)" }} />
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(201,117,96,0.32) 0%, rgba(160,80,55,0.08) 60%, rgba(255,255,255,0.02) 100%)" }} />
+              <div style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+                <Sparkles s={14} style={{ color: "rgba(255,218,195,0.88)" }} />
+                <span style={{ fontSize: 15, fontWeight: 500, letterSpacing: "0.02em", color: "#FFF0E8", fontFamily: "'Jost', system-ui, sans-serif" }}>Parler avec Elïa</span>
+              </div>
+            </motion.button>
+
+            {/* Mode SOS */}
+            <motion.button
+              whileTap={{ scale: 0.975 }}
+              whileHover={{ scale: 1.02 }}
+              onClick={() => onStart(true)}
+              className="sos-ring"
+              style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 9, borderRadius: 999, border: "1px solid rgba(201,117,96,0.22)", background: "rgba(201,117,96,0.06)", padding: "13px", color: "rgba(245,237,230,0.55)", backdropFilter: "blur(20px)", cursor: "pointer", fontSize: 13.5, fontFamily: "'Jost', system-ui, sans-serif", letterSpacing: "0.02em", width: "100%" }}
+            >
+              <AlertCircle s={14} />
+              Mode SOS
+            </motion.button>
+
+            {/* Respirer */}
+            <button style={{ background: "none", border: "none", cursor: "pointer", textAlign: "center", fontSize: 12.5, letterSpacing: "0.04em", color: "rgba(245,237,230,0.24)", fontFamily: "'Jost', system-ui, sans-serif", padding: "6px 0" }}>
+              🌿 Respirer 2 minutes
+            </button>
           </div>
 
-          <button className="btn btn-t" onClick={() => onStart(false)}
-            style={{ height: 56, fontWeight: 500, marginBottom: 12 }}>
-            Parler avec Elïa →
-          </button>
+          {/* ÉTAT DU SOIR */}
+          <div style={{ marginTop: 24, textAlign: "center" }}>
+            <p style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.22em", color: "rgba(245,237,230,0.18)", marginBottom: 10 }}>État du moment</p>
+            <div style={{ display: "flex", gap: 7, justifyContent: "center", flexWrap: "wrap" }}>
+              {CHECKIN_MOODS.map(m => (
+                <button key={m} onClick={() => saveCheckin(m)} style={{ padding: "5px 14px", borderRadius: 999, border: tracking?.checkin === m ? "1px solid rgba(201,117,96,0.60)" : "1px solid rgba(245,237,230,0.08)", background: tracking?.checkin === m ? "rgba(201,117,96,0.20)" : "rgba(255,255,255,0.02)", color: tracking?.checkin === m ? "rgba(245,237,230,0.90)" : "rgba(245,237,230,0.30)", fontSize: 12, cursor: "pointer", fontFamily: "'Jost', system-ui, sans-serif", transition: "all 0.22s ease" }}>{m}</button>
+              ))}
+            </div>
+          </div>
+        </section>
 
-          <button className="btn-sos sos-ring" onClick={() => onStart(true)}>
-            Besoin d'aide maintenant
-          </button>
-        </motion.div>
+        {/* FOOTER */}
+        <footer style={{ display: "flex", alignItems: "center", justifyContent: "center", paddingTop: 12 }}>
+          <motion.div
+            animate={{ opacity: [0.55, 0.85, 0.55] }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            style={{ borderRadius: 999, border: "1px solid rgba(201,117,96,0.12)", background: "rgba(201,117,96,0.04)", padding: "5px 16px", backdropFilter: "blur(20px)", display: "flex", alignItems: "center", gap: 6 }}
+          >
+            <div style={{ width: 5, height: 5, borderRadius: "50%", background: "rgba(201,117,96,0.80)", boxShadow: "0 0 6px rgba(201,117,96,0.70)" }} />
+            <p style={{ fontSize: 10, letterSpacing: "0.20em", color: "rgba(245,237,230,0.30)", textTransform: "uppercase", fontFamily: "'Jost', system-ui, sans-serif" }}>Elïa présente</p>
+          </motion.div>
+        </footer>
 
       </div>
     </div>
@@ -1062,6 +1348,7 @@ function Chat({ profile, isSos, onBack, onPremium, premiumToken }) {
   const [nudge, setNudge] = useState(false);
   const [crisis, setCrisis] = useState(false);
   const [dailyCount, setDailyCount] = useState(0);
+  const [sosCount, setSosCount] = useState(0);
   const bottomRef = useRef(null);
   const taRef = useRef(null);
   const initialized = useRef(false);
@@ -1073,9 +1360,10 @@ function Chat({ profile, isSos, onBack, onPremium, premiumToken }) {
     const init = async () => {
       const mem = await S.get("elia_memory") || [];
       const cnt = await S.get("elia_sessions") || 0;
-      const daily = await getDailyUsage();
+      const [daily, sos] = await Promise.all([getDailyUsage(), getSosUsage()]);
       setMemory(mem);
       setDailyCount(daily);
+      setSosCount(sos);
       await S.set("elia_sessions", cnt + 1);
       if (isSos) await S.set("elia_last_sos", Date.now());
 
@@ -1116,18 +1404,29 @@ function Chat({ profile, isSos, onBack, onPremium, premiumToken }) {
       setCrisis(true);
     }
 
-    // Limite journalière gratuit
-    if (!profile.isPremium && dailyCount >= FREE_DAILY_LIMIT) {
-      const alreadyBlocked = msgs.some(m => m.id === "limit-msg");
-      if (!alreadyBlocked) {
-        setMsgs(prev => [...prev, {
-          role: "assistant",
-          content: `Tu as atteint ta limite de ${FREE_DAILY_LIMIT} messages pour aujourd'hui 🌿\n\nPasse à Premium pour continuer à me parler sans limite, avec des analyses approfondies et ma mémoire longue. Ou reviens demain pour de nouveaux messages gratuits.`,
-          id: "limit-msg"
-        }]);
+    // Quotas gratuit
+    if (!profile.isPremium) {
+      if (isSos && sosCount >= SOS_DAILY_LIMIT) {
+        if (!msgs.some(m => m.id === "limit-msg")) {
+          setMsgs(prev => [...prev, {
+            role: "assistant",
+            content: `Tu as utilisé tes ${SOS_DAILY_LIMIT} messages SOS pour les dernières 24h 🌿\n\nReviens dans quelques heures, ou passe à Premium pour un accès illimité au Mode SOS.`,
+            id: "limit-msg",
+          }]);
+        }
+        return;
       }
-      setNudge(true);
-      return;
+      if (!isSos && dailyCount >= FREE_DAILY_LIMIT) {
+        if (!msgs.some(m => m.id === "limit-msg")) {
+          setMsgs(prev => [...prev, {
+            role: "assistant",
+            content: `Tu as atteint ta limite de ${FREE_DAILY_LIMIT} messages pour aujourd'hui 🌿\n\nPasse à Premium pour continuer sans limite, avec des analyses approfondies et ma mémoire longue. Ou reviens demain.`,
+            id: "limit-msg",
+          }]);
+        }
+        setNudge(true);
+        return;
+      }
     }
 
     const um = { role: "user", content: txt, id: "u" + Date.now() };
@@ -1162,14 +1461,29 @@ function Chat({ profile, isSos, onBack, onPremium, premiumToken }) {
       });
 
       if (!profile.isPremium) {
-        const newCount = await incrementDailyUsage();
-        setDailyCount(newCount);
-        if (newCount >= FREE_DAILY_LIMIT - 2) {
-          setTimeout(() => setNudge(true), 800);
+        if (isSos) {
+          const newSos = await incrementSosUsage();
+          setSosCount(newSos);
+        } else {
+          const newCount = await incrementDailyUsage();
+          setDailyCount(newCount);
+          if (newCount >= FREE_DAILY_LIMIT - 1) {
+            setTimeout(() => setNudge(true), 800);
+          }
         }
       }
     } catch (err) {
-      if (err.dailyLimit) {
+      if (err.sosLimit) {
+        setSosCount(SOS_DAILY_LIMIT);
+        setMsgs(prev => {
+          if (prev.some(m => m.id === "limit-msg")) return prev;
+          return [...prev, {
+            role: "assistant",
+            content: `Tu as utilisé tes ${SOS_DAILY_LIMIT} messages SOS pour les dernières 24h 🌿\n\nReviens dans quelques heures, ou passe à Premium pour un accès illimité.`,
+            id: "limit-msg",
+          }];
+        });
+      } else if (err.dailyLimit) {
         setMsgs(prev => {
           if (prev.some(m => m.id === "limit-msg")) return prev;
           return [...prev, {
@@ -1295,16 +1609,18 @@ function Chat({ profile, isSos, onBack, onPremium, premiumToken }) {
 
       {/* Input */}
       <div style={{ background: "var(--surface-header)", borderTop: "1px solid var(--surface-border-s)", padding: "14px 16px", flexShrink: 0, backdropFilter: "blur(20px)" }}>
-        {!profile.isPremium && dailyCount >= FREE_DAILY_LIMIT ? (
+        {!profile.isPremium && (isSos ? sosCount >= SOS_DAILY_LIMIT : dailyCount >= FREE_DAILY_LIMIT) ? (
           <div style={{ maxWidth: 640, margin: "0 auto", textAlign: "center" }}>
             <p style={{ fontSize: 14, fontWeight: 500, color: "var(--accent-deep)", marginBottom: 12 }}>
-              Limite de {FREE_DAILY_LIMIT} messages atteinte pour aujourd'hui
+              {isSos
+                ? `Limite de ${SOS_DAILY_LIMIT} messages SOS atteinte (24h)`
+                : `Limite de ${FREE_DAILY_LIMIT} messages atteinte pour aujourd'hui`}
             </p>
             <button className="btn btn-t" onClick={onPremium} style={{ marginBottom: 8 }}>
               Passer à Premium — illimité
             </button>
             <p style={{ fontSize: 11, color: "var(--ink-faint)", fontStyle: "italic" }}>
-              Ou reviens demain pour de nouveaux messages gratuits
+              {isSos ? "Ou reviens dans quelques heures" : "Ou reviens demain pour de nouveaux messages gratuits"}
             </p>
           </div>
         ) : (
@@ -1342,13 +1658,17 @@ function Chat({ profile, isSos, onBack, onPremium, premiumToken }) {
             <p style={{ fontSize: 11, color: "var(--ink-faint)", textAlign: "center", marginTop: 8, fontStyle: "italic" }}>
               Elia ne remplace pas un professionnel de santé · Urgences : <a href="tel:15" style={{ color: "var(--accent)", textDecoration: "none" }}>15</a> · <a href="tel:3114" style={{ color: "var(--accent)", textDecoration: "none" }}>3114</a>
             </p>
-            {!profile.isPremium && (
-              <p style={{ fontSize: 11, color: FREE_DAILY_LIMIT - dailyCount <= 2 ? "var(--accent)" : "var(--ink-faint)", textAlign: "center", marginTop: 2 }}>
-                {FREE_DAILY_LIMIT - dailyCount > 0
-                  ? `${FREE_DAILY_LIMIT - dailyCount} message${FREE_DAILY_LIMIT - dailyCount > 1 ? "s" : ""} restant${FREE_DAILY_LIMIT - dailyCount > 1 ? "s" : ""} aujourd'hui`
-                  : ""}
-              </p>
-            )}
+            {!profile.isPremium && (() => {
+              const remaining = isSos ? SOS_DAILY_LIMIT - sosCount : FREE_DAILY_LIMIT - dailyCount;
+              const total     = isSos ? SOS_DAILY_LIMIT : FREE_DAILY_LIMIT;
+              const label     = isSos ? "SOS" : "aujourd'hui";
+              if (remaining <= 0) return null;
+              return (
+                <p style={{ fontSize: 11, color: remaining <= Math.round(total * 0.3) ? "var(--accent)" : "var(--ink-faint)", textAlign: "center", marginTop: 2 }}>
+                  {remaining} message{remaining > 1 ? "s" : ""} restant{remaining > 1 ? "s" : ""} {label}
+                </p>
+              );
+            })()}
           </>
         )}
       </div>
@@ -1396,7 +1716,7 @@ function BottomNav({ screen, onNavigate }) {
 }
 
 // ─── PROFILE SCREEN ───────────────────────────────────────────────────────────
-function ProfileScreen({ profile, onSave, onPremium, onLegal, onConfidentialite, onCgu, onCgv }) {
+function ProfileScreen({ profile, onSave, onPremium, onLegal, onConfidentialite, onCgu, onCgv, onCookies }) {
   const [d, setD] = useState({ ...profile, children: profile.children.map(c => ({ ...c })), birthTypes: profile.birthTypes || [] });
   const [saved, setSaved] = useState(false);
 
@@ -1553,6 +1873,7 @@ function ProfileScreen({ profile, onSave, onPremium, onLegal, onConfidentialite,
             S.set("elia_memory", null), S.set("elia_sessions", null),
             S.set("elia_tracking", null), S.set("elia_last_sos", null),
             S.set("elia_chat_history", null), S.set("elia_daily", null),
+            S.set("elia_sos_usage", null),
           ]);
           window.location.reload();
         }}
@@ -1565,6 +1886,7 @@ function ProfileScreen({ profile, onSave, onPremium, onLegal, onConfidentialite,
           <ConfidentialiteLink onOpen={onConfidentialite} />
           <CguLink onOpen={onCgu} />
           <CgvLink onOpen={onCgv} />
+          <CookiesLink onOpen={onCookies} />
         </div>
       </div>
     </div>
@@ -1627,6 +1949,21 @@ function CgvLink({ onOpen }) {
       }}
     >
       CGV
+    </button>
+  );
+}
+
+function CookiesLink({ onOpen }) {
+  return (
+    <button
+      onClick={onOpen}
+      style={{
+        background: "none", border: "none", cursor: "pointer",
+        color: "var(--ink-faint)", fontSize: 11,
+        textDecoration: "underline", marginTop: 8,
+      }}
+    >
+      Cookies
     </button>
   );
 }
@@ -1708,7 +2045,7 @@ function AppInner() {
       <GlobalStyles />
       <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <motion.div animate={{ opacity: [.25, .9, .25] }} transition={{ duration: 2.5, repeat: Infinity }}>
-          <span className="serif" style={{ fontStyle: "italic", fontSize: 22, fontWeight: 400, color: "var(--brand)", letterSpacing: ".04em" }}>Parentelïa</span>
+          <span className="serif" style={{ fontStyle: "normal", fontSize: 28, fontWeight: 400, color: "rgba(245,237,230,0.80)", letterSpacing: ".32em" }}>NERA</span>
         </motion.div>
       </div>
     </ErrorBoundary>
@@ -1753,7 +2090,7 @@ function AppInner() {
         )}
         {screen === "profile" && profile && (
           <motion.div key="profile" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="has-nav">
-            <ProfileScreen profile={profile} onSave={updateProfile} onPremium={() => setShowPremium(true)} onLegal={() => setScreen("mentions-legales")} onConfidentialite={() => setScreen("confidentialite")} onCgu={() => setScreen("cgu")} onCgv={() => setScreen("cgv")} />
+            <ProfileScreen profile={profile} onSave={updateProfile} onPremium={() => setShowPremium(true)} onLegal={() => setScreen("mentions-legales")} onConfidentialite={() => setScreen("confidentialite")} onCgu={() => setScreen("cgu")} onCgv={() => setScreen("cgv")} onCookies={() => setScreen("cookies")} />
           </motion.div>
         )}
         {screen === "mentions-legales" && (
@@ -1774,6 +2111,11 @@ function AppInner() {
         {screen === "cgv" && (
           <motion.div key="cgv" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <CgvScreen onBack={() => setScreen("profile")} />
+          </motion.div>
+        )}
+        {screen === "cookies" && (
+          <motion.div key="cookies" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <CookiesScreen onBack={() => setScreen("profile")} />
           </motion.div>
         )}
       </AnimatePresence>
