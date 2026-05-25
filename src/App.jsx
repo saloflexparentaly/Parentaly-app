@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useCallback, Component } from "react";
 import { ThemeProvider } from "./theme/ThemeProvider";
-import { ThemeToggle } from "./theme/ThemeToggle";
 import { motion, AnimatePresence } from "framer-motion";
 import MentionsLegalesScreen from "./MentionsLegalesScreen";
 import ConfidentialiteScreen from "./ConfidentialiteScreen";
@@ -36,6 +35,7 @@ const GlobalStyles = () => (
       height: 100%;
       font-family: 'Jost', system-ui, sans-serif;
       color: var(--ink);
+      background: var(--bg-base-1);
       -webkit-font-smoothing: antialiased;
     }
 
@@ -50,7 +50,7 @@ const GlobalStyles = () => (
 
     .field {
       width: 100%; padding: 13px 16px; border-radius: 10px;
-      border: 1px solid var(--surface-border-s); background: var(--surface-header);
+      border: 1px solid var(--surface-border-s); background: rgba(245,237,230,0.07);
       color: var(--ink); font-size: 15px; font-weight: 300; outline: none;
     }
     .field:focus { border-color: var(--accent-light); box-shadow: 0 0 0 3px rgba(201,117,96,.15); }
@@ -182,6 +182,11 @@ const GlobalStyles = () => (
       transition: background-color 300ms ease, color 300ms ease, border-color 300ms ease, box-shadow 300ms ease;
     }
     .btn-sos:hover { background: rgba(201,117,96,0.28); border-color: rgba(201,117,96,0.75); }
+
+    /* ── DESKTOP : orbe réduite ── */
+    @media (min-width: 800px) {
+      .orb-zone { width: 200px !important; height: 200px !important; }
+    }
   `}</style>
 );
 
@@ -808,8 +813,10 @@ function Onboarding({ onDone }) {
   };
 
   return (
-    <div style={{ minHeight: "100vh", padding: "0 32px 48px" }}>
-      <div style={{ maxWidth: 440, margin: "0 auto" }}>
+    <div style={{ minHeight: "100vh", padding: "0 32px 48px", background: "linear-gradient(180deg, #0D090D 0%, #080608 100%)", position: "relative", overflow: "hidden" }}>
+      {/* Halo atmosphérique onboarding */}
+      <div style={{ position: "absolute", top: "20%", left: "50%", transform: "translateX(-50%)", width: 500, height: 300, borderRadius: "50%", background: "radial-gradient(ellipse, rgba(80,35,22,0.22) 0%, transparent 70%)", filter: "blur(60px)", pointerEvents: "none" }} />
+      <div style={{ maxWidth: 440, margin: "0 auto", position: "relative", zIndex: 1 }}>
 
         {/* Progress bar – full width, top, segments */}
         <div style={{ display: "flex", gap: 6, paddingTop: 52, marginBottom: 40 }}>
@@ -818,9 +825,9 @@ function Onboarding({ onDone }) {
           ))}
         </div>
 
-        {/* Logo – wordmark only */}
+        {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: 44 }}>
-          <span className="serif" style={{ fontStyle: "italic", fontSize: 18, fontWeight: 400, color: "var(--brand)", letterSpacing: ".04em" }}>NERA</span>
+          <span className="serif" style={{ fontStyle: "normal", fontSize: 22, fontWeight: 400, color: "rgba(245,237,230,0.60)", letterSpacing: ".32em" }}>NERA</span>
         </div>
 
         <AnimatePresence mode="wait">
@@ -828,15 +835,14 @@ function Onboarding({ onDone }) {
             <motion.div key="s0" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, x: -16 }} transition={{ duration: .2 }}>
 
               <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0, duration: .38 }}>
-                <h2 className="serif" style={{ fontSize: 34, fontWeight: 600, marginBottom: 8 }}>Bienvenue</h2>
-                <p style={{ color: "var(--ink-soft)", fontSize: 14, fontWeight: 300, lineHeight: 1.65 }}>Je suis Elïa. Dis-moi comment t'appeler.</p>
+                <h2 className="serif" style={{ fontSize: 34, fontWeight: 400, marginBottom: 8, color: "rgba(245,237,230,0.90)" }}>Bienvenue</h2>
+                <p style={{ color: "rgba(245,237,230,0.48)", fontSize: 14, fontWeight: 300, lineHeight: 1.65 }}>Je suis Elïa. Dis-moi comment t'appeler.</p>
               </motion.div>
 
               <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .06, duration: .38 }}
                 style={{ marginTop: 48 }}>
                 <label style={{ fontSize: 11, fontWeight: 500, color: "var(--ink-faint)", textTransform: "uppercase", letterSpacing: ".08em", display: "block", marginBottom: 12 }}>Ton prénom</label>
-                <input className="field" placeholder="ex. Sophie…" value={d.parentName} onChange={e => upd({ parentName: e.target.value })}
-                  style={{ background: "var(--surface)", border: "1px solid var(--surface-border-s)" }} />
+                <input className="field" placeholder="ex. Sophie…" value={d.parentName} onChange={e => upd({ parentName: e.target.value })} />
               </motion.div>
 
               <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .12, duration: .38 }}
@@ -863,8 +869,8 @@ function Onboarding({ onDone }) {
 
           {step === 1 && (
             <motion.div key="s1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: .3 }}>
-              <h2 className="serif" style={{ fontSize: 34, fontWeight: 600, marginBottom: 8 }}>Tes enfants</h2>
-              <p style={{ color: "var(--ink-soft)", fontSize: 14, marginBottom: 24, fontWeight: 300 }}>Pour t'accompagner au mieux, parle-moi d'eux.</p>
+              <h2 className="serif" style={{ fontSize: 34, fontWeight: 400, marginBottom: 8, color: "rgba(245,237,230,0.90)" }}>Tes enfants</h2>
+              <p style={{ color: "rgba(245,237,230,0.48)", fontSize: 14, marginBottom: 24, fontWeight: 300 }}>Pour t'accompagner au mieux, parle-moi d'eux.</p>
               {detectMultiple(d.children) && (
                 <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "linear-gradient(135deg,var(--accent),var(--accent-deep))", borderRadius: 50, padding: "5px 14px", color: "#fff", fontSize: 12, fontWeight: 500, marginBottom: 12 }}>
                   {detectMultiple(d.children)} détectés
@@ -879,7 +885,7 @@ function Onboarding({ onDone }) {
                         <Xmark />
                       </button>
                     )}
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
                       <input className="field" placeholder="Prénom" value={c.firstName} onChange={e => updChild(i, "firstName", e.target.value)} style={{ fontSize: 14 }} />
                       <input className="field" type="date" value={c.birthDate} onChange={e => updChild(i, "birthDate", e.target.value)} style={{ fontSize: 13 }} />
                     </div>
@@ -919,8 +925,8 @@ function Onboarding({ onDone }) {
 
           {step === 2 && (
             <motion.div key="s2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: .3 }}>
-              <h2 className="serif" style={{ fontSize: 34, fontWeight: 600, marginBottom: 8 }}>Ce qui te pèse</h2>
-              <p style={{ color: "var(--ink-soft)", fontSize: 14, marginBottom: 24, fontWeight: 300 }}>Sélectionne ce qui te touche en ce moment.</p>
+              <h2 className="serif" style={{ fontSize: 34, fontWeight: 400, marginBottom: 8, color: "rgba(245,237,230,0.90)" }}>Ce qui t'importe</h2>
+              <p style={{ color: "rgba(245,237,230,0.48)", fontSize: 14, marginBottom: 24, fontWeight: 300 }}>Qu'est-ce qui compte le plus pour toi en ce moment ?</p>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 32 }}>
                 {CHALS.map(c => (
                   <button key={c} className={`chip ${d.challenges.includes(c) ? "on" : ""}`}
@@ -938,8 +944,8 @@ function Onboarding({ onDone }) {
 
           {step === 3 && (
             <motion.div key="s3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: .3 }}>
-              <h2 className="serif" style={{ fontSize: 34, fontWeight: 600, marginBottom: 8 }}>En quelques mots</h2>
-              <p style={{ color: "var(--ink-soft)", fontSize: 14, marginBottom: 24, fontWeight: 300 }}>Y a-t-il quelque chose d'important à savoir ? Facultatif.</p>
+              <h2 className="serif" style={{ fontSize: 34, fontWeight: 400, marginBottom: 8, color: "rgba(245,237,230,0.90)" }}>En quelques mots</h2>
+              <p style={{ color: "rgba(245,237,230,0.48)", fontSize: 14, marginBottom: 24, fontWeight: 300 }}>Y a-t-il quelque chose d'important à savoir ? Facultatif.</p>
               <textarea className="field"
                 placeholder="ex. Je suis séparée, je gère tout seul, ma fille a été hospitalisée récemment…"
                 value={d.freeText} onChange={e => upd({ freeText: e.target.value })}
@@ -959,22 +965,22 @@ function Onboarding({ onDone }) {
 
 // ─── HOME ─────────────────────────────────────────────────────────────────────
 const TIPS = [
-  "Un parent imparfait présent vaut mille parents parfaits absents.",
-  "Ce que tu traverses est difficile. Ce que tu fais est précieux.",
-  "Prendre soin de soi, c'est aussi prendre soin de ses enfants.",
-  "Toutes les émotions que tu ressens sont valides. Même la culpabilité.",
-  "Tu n'as pas à tout réussir. Tu as juste à essayer.",
-  "Avec des multiples, survivre les premières semaines, c'est déjà réussir.",
-  "Il n'existe pas de manuel pour élever des jumeaux. Tu inventes chaque jour.",
+  "Tu es exactement le parent dont ils ont besoin. Pas parfait — présent.",
+  "Élever des multiples demande une force rare. Tu l'as déjà en toi.",
+  "Prendre soin de toi, c'est le plus beau cadeau que tu leur fais.",
+  "Chaque moment partagé avec eux compte, même les plus ordinaires.",
+  "Tu construis quelque chose d'unique et d'extraordinaire, jour après jour.",
+  "Ils grandissent parce que tu es là. C'est déjà tout.",
+  "La famille que tu bâtis — elle est belle, elle est à toi.",
 ];
 const SIGNATURES = [
-  "pour les nuits à moitié dormies",
-  "pour les moments difficiles",
-  "pour les parents de multiples épuisés",
-  "pour quand c'est trop lourd",
-  "pour les jours sans lumière",
-  "pour les débuts difficiles",
-  "pour les pionniers du quotidien double",
+  "pour les parents présents et imparfaits",
+  "pour les créateurs de famille hors du commun",
+  "pour toi, en premier",
+  "pour les petites grandes victoires du quotidien",
+  "pour les bâtisseurs de foyers uniques",
+  "pour chaque instant qui compte",
+  "pour les aventuriers du double",
 ];
 const CHECKIN_MOODS = ["Épuisée", "Débordée", "Douce", "Lumineuse"];
 
@@ -1079,10 +1085,7 @@ function Home({ profile, onStart, onPremium }) {
       <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", minHeight: "calc(100vh - 68px)", padding: "0 24px 28px" }}>
 
         {/* HEADER */}
-        <header style={{ paddingTop: 44, paddingBottom: 0 }}>
-          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
-            <ThemeToggle />
-          </div>
+        <header style={{ paddingTop: 20, paddingBottom: 0 }}>
           <div style={{ textAlign: "center" }}>
             <h1 className="serif" style={{ fontSize: 48, letterSpacing: "0.36em", color: "rgba(245,237,230,0.92)", fontStyle: "normal", fontWeight: 400, lineHeight: 1, margin: 0 }}>
               NERA
@@ -1117,12 +1120,17 @@ function Home({ profile, onStart, onPremium }) {
         <section style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
 
           {/* ── ORB ZONE interactive ────────────────────────── */}
-          <div
+          <motion.div
             ref={orbRef}
             onMouseMove={handleMouseMove}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={handleMouseLeave}
-            style={{ position: "relative", width: 340, height: 340, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20, flexShrink: 0, cursor: "none" }}
+            onClick={() => onStart(false)}
+            animate={{ scale: hovered ? 1.04 : 1 }}
+            whileTap={{ scale: 0.97 }}
+            transition={{ duration: 0.55, ease: "easeOut" }}
+            className="orb-zone"
+            style={{ position: "relative", width: 220, height: 220, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10, flexShrink: 0, cursor: "pointer" }}
           >
 
             {/* ── WISPS DERRIÈRE L'ORBE ────────────────────── */}
@@ -1253,12 +1261,12 @@ function Home({ profile, onStart, onPremium }) {
               style={{ position: "absolute", width: 160, height: 1.5, top: "50%", left: "50%", marginTop: 78, marginLeft: -195, background: "linear-gradient(90deg, transparent 0%, rgba(200,105,65,0.55) 40%, rgba(228,148,100,0.72) 60%, transparent 100%)", filter: "blur(0.5px)", transform: "rotate(10deg)", transformOrigin: "center", zIndex: 8 }}
             />
 
-          </div>
+          </motion.div>
 
           {/* TEXTE + SIGNATURE */}
           <motion.div
             initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1.6, ease: "easeOut" }}
-            style={{ maxWidth: 320, textAlign: "center", marginBottom: 36 }}
+            style={{ maxWidth: 320, textAlign: "center", marginBottom: 20 }}
           >
             <p className="serif" style={{ fontSize: 30, lineHeight: 1.22, letterSpacing: "-0.01em", color: "rgba(245,237,230,0.90)", fontStyle: "italic", fontWeight: 400 }}>
               {tip}
@@ -1303,19 +1311,25 @@ function Home({ profile, onStart, onPremium }) {
               Mode SOS
             </motion.button>
 
-            {/* Respirer */}
-            <button style={{ background: "none", border: "none", cursor: "pointer", textAlign: "center", fontSize: 12.5, letterSpacing: "0.04em", color: "rgba(245,237,230,0.24)", fontFamily: "'Jost', system-ui, sans-serif", padding: "6px 0" }}>
-              🌿 Respirer 2 minutes
-            </button>
           </div>
 
           {/* ÉTAT DU SOIR */}
           <div style={{ marginTop: 24, textAlign: "center" }}>
-            <p style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.22em", color: "rgba(245,237,230,0.18)", marginBottom: 10 }}>État du moment</p>
+            <p style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.22em", color: "rgba(245,237,230,0.32)", marginBottom: 10 }}>État du moment</p>
             <div style={{ display: "flex", gap: 7, justifyContent: "center", flexWrap: "wrap" }}>
-              {CHECKIN_MOODS.map(m => (
-                <button key={m} onClick={() => saveCheckin(m)} style={{ padding: "5px 14px", borderRadius: 999, border: tracking?.checkin === m ? "1px solid rgba(201,117,96,0.60)" : "1px solid rgba(245,237,230,0.08)", background: tracking?.checkin === m ? "rgba(201,117,96,0.20)" : "rgba(255,255,255,0.02)", color: tracking?.checkin === m ? "rgba(245,237,230,0.90)" : "rgba(245,237,230,0.30)", fontSize: 12, cursor: "pointer", fontFamily: "'Jost', system-ui, sans-serif", transition: "all 0.22s ease" }}>{m}</button>
-              ))}
+              {CHECKIN_MOODS.map(m => {
+                const active = tracking?.checkin === m;
+                return (
+                  <motion.button
+                    key={m}
+                    onClick={() => saveCheckin(m)}
+                    animate={{ scale: active ? 1.06 : 1 }}
+                    whileTap={{ scale: 0.94 }}
+                    transition={{ duration: 0.18 }}
+                    style={{ padding: "6px 16px", borderRadius: 999, border: active ? "1px solid rgba(201,117,96,0.65)" : "1px solid rgba(245,237,230,0.09)", background: active ? "rgba(201,117,96,0.22)" : "rgba(255,255,255,0.02)", color: active ? "rgba(245,237,230,0.95)" : "rgba(245,237,230,0.32)", fontSize: 12, cursor: "pointer", fontFamily: "'Jost', system-ui, sans-serif", boxShadow: active ? "0 0 12px rgba(201,117,96,0.30)" : "none", transition: "background 0.2s, border 0.2s, color 0.2s, box-shadow 0.2s" }}
+                  >{m}</motion.button>
+                );
+              })}
             </div>
           </div>
         </section>
@@ -1515,29 +1529,37 @@ function Chat({ profile, isSos, onBack, onPremium, premiumToken }) {
   };
 
   return (
-    <div style={{ height: "calc(100vh - 68px)", display: "flex", flexDirection: "column" }}>
+    <div style={{ height: "calc(100vh - 68px)", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" }}>
+
+      {/* Fond atmosphérique Chat */}
+      <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 90% 55% at 50% 0%, rgba(120,52,35,0.55) 0%, rgba(80,30,50,0.30) 40%, transparent 70%), linear-gradient(180deg, #1A0E14 0%, #120A10 50%, #0C070B 100%)", pointerEvents: "none", zIndex: 0 }} />
 
       {/* Header */}
-      <div style={{ background: "var(--surface-header)", borderBottom: "1px solid var(--surface-border-s)", padding: "14px 20px", display: "flex", alignItems: "center", gap: 12, boxShadow: "var(--shadow-card)", flexShrink: 0, backdropFilter: "blur(20px)" }}>
-        <button onClick={onBack} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--ink-soft)", display: "flex", padding: 4 }}><Back s={19} /></button>
-        <div className="av">E</div>
+      <div style={{ position: "relative", zIndex: 10, background: "rgba(22,12,18,0.85)", borderBottom: "1px solid rgba(245,237,230,0.09)", padding: "14px 20px", display: "flex", alignItems: "center", gap: 12, flexShrink: 0, backdropFilter: "blur(28px)" }}>
+        <button onClick={onBack} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(245,237,230,0.45)", display: "flex", padding: 4 }}><Back s={19} /></button>
+        {/* Avatar Elïa */}
+        <motion.div
+          animate={{ boxShadow: ["0 0 10px rgba(201,117,96,0.40)", "0 0 22px rgba(201,117,96,0.70)", "0 0 10px rgba(201,117,96,0.40)"] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+          style={{ width: 36, height: 36, borderRadius: "50%", background: "radial-gradient(circle at 35% 30%, #FFDCC8 0%, #D47550 35%, #7E3020 75%)", flexShrink: 0 }}
+        />
         <div>
-          <div style={{ fontSize: 17, fontWeight: 600, lineHeight: 1.1 }}>Elia</div>
-          <div style={{ fontSize: 11, color: isSos ? "var(--accent)" : "var(--sage)", fontStyle: "italic" }}>
-            {isSos ? <span style={{ display: "flex", alignItems: "center", gap: 5 }}><span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent)", display: "inline-block" }} />Mode SOS</span> : "Assistante parentale"}
+          <div style={{ fontSize: 16, fontWeight: 500, lineHeight: 1.1, color: "rgba(245,237,230,0.92)", letterSpacing: "0.02em" }}>Elïa</div>
+          <div style={{ fontSize: 11, fontStyle: "italic", marginTop: 1 }}>
+            {isSos
+              ? <span style={{ display: "flex", alignItems: "center", gap: 5, color: "rgba(201,117,96,0.90)" }}><span style={{ width: 5, height: 5, borderRadius: "50%", background: "rgba(201,117,96,1)", display: "inline-block", boxShadow: "0 0 6px rgba(201,117,96,0.90)" }} />Mode SOS</span>
+              : <span style={{ color: "rgba(245,237,230,0.38)" }}>Présence émotionnelle</span>}
           </div>
         </div>
         {!profile.isPremium && (
-          <button
-            onClick={onPremium}
-            style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 5, background: "linear-gradient(135deg, var(--accent), var(--accent-deep))", border: "none", borderRadius: 50, padding: "6px 14px", fontSize: 12, color: "#fff", cursor: "pointer", fontWeight: 500 }}>
+          <button onClick={onPremium} style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 5, background: "linear-gradient(135deg, rgba(201,117,96,0.85), rgba(168,85,63,0.90))", border: "none", borderRadius: 50, padding: "6px 14px", fontSize: 12, color: "#fff", cursor: "pointer", fontWeight: 500, boxShadow: "0 2px 10px rgba(201,117,96,0.35)" }}>
             <Star s={11} /> Premium
           </button>
         )}
       </div>
 
       {/* Messages */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "20px 16px", display: "flex", flexDirection: "column", gap: 14, background: "transparent" }}>
+      <div style={{ position: "relative", zIndex: 1, flex: 1, overflowY: "auto", padding: "20px 16px", display: "flex", flexDirection: "column", gap: 14 }}>
         <div style={{ maxWidth: 640, width: "100%", margin: "0 auto", display: "flex", flexDirection: "column", gap: 14 }}>
 
           {/* Nudge premium */}
@@ -1574,21 +1596,27 @@ function Chat({ profile, isSos, onBack, onPremium, premiumToken }) {
           {msgs.map((m, i) => (
             <motion.div
               key={m.id || i}
-              initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .3 }}
-              style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start", gap: 8, alignItems: "flex-end" }}>
-              {m.role === "assistant" && <div className="av" style={{ width: 30, height: 30, fontSize: 13 }}>E</div>}
-              <div
-                className={m.role === "user" ? "bubble-u" : "bubble-a"}
-                style={{ maxWidth: "78%", padding: "13px 17px", fontSize: 15, lineHeight: 1.7, fontWeight: 300, whiteSpace: "pre-wrap" }}>
+              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .35 }}
+              style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start", gap: 9, alignItems: "flex-end" }}>
+              {m.role === "assistant" && (
+                <div style={{ width: 28, height: 28, borderRadius: "50%", background: "radial-gradient(circle at 35% 30%, #FFDCC8 0%, #D47550 38%, #7E3020 78%)", boxShadow: "0 0 10px rgba(201,117,96,0.45)", flexShrink: 0 }} />
+              )}
+              <div style={{
+                maxWidth: "78%", padding: "13px 17px", fontSize: 15, lineHeight: 1.75, fontWeight: 300, whiteSpace: "pre-wrap",
+                ...(m.role === "user"
+                  ? { background: "linear-gradient(135deg, rgba(201,117,96,0.90), rgba(168,85,63,0.95))", color: "#FFF0E8", borderRadius: "18px 18px 4px 18px", boxShadow: "0 4px 18px rgba(201,117,96,0.30)" }
+                  : { background: "rgba(245,237,230,0.09)", color: "rgba(245,237,230,0.92)", borderRadius: "18px 18px 18px 4px", border: "1px solid rgba(245,237,230,0.13)", backdropFilter: "blur(20px)", boxShadow: "0 2px 12px rgba(0,0,0,0.25)" }
+                ),
+              }}>
                 {m.content}
               </div>
             </motion.div>
           ))}
 
           {loading && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
-              <div className="av" style={{ width: 30, height: 30, fontSize: 13 }}>E</div>
-              <div className="bubble-a" style={{ padding: "13px 17px" }}>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ display: "flex", alignItems: "flex-end", gap: 9 }}>
+              <div style={{ width: 28, height: 28, borderRadius: "50%", background: "radial-gradient(circle at 35% 30%, #FFDCC8 0%, #D47550 38%, #7E3020 78%)", boxShadow: "0 0 10px rgba(201,117,96,0.45)", flexShrink: 0 }} />
+              <div style={{ background: "rgba(245,237,230,0.09)", border: "1px solid rgba(245,237,230,0.13)", borderRadius: "18px 18px 18px 4px", padding: "13px 17px", backdropFilter: "blur(20px)", boxShadow: "0 2px 12px rgba(0,0,0,0.25)" }}>
                 <div className="dots"><span /><span /><span /></div>
               </div>
             </motion.div>
@@ -1600,15 +1628,15 @@ function Chat({ profile, isSos, onBack, onPremium, premiumToken }) {
 
       {/* SOS shortcuts */}
       {isSos && msgs.length <= 1 && (
-        <div style={{ padding: "0 16px 10px", display: "flex", flexWrap: "wrap", gap: 7, justifyContent: "center" }}>
+        <div style={{ position: "relative", zIndex: 2, padding: "0 16px 10px", display: "flex", flexWrap: "wrap", gap: 7, justifyContent: "center" }}>
           {SOS_SHORTS.map(s => (
-            <button key={s} className="chip" style={{ fontSize: 12 }} onClick={() => send(s)}>{s}</button>
+            <button key={s} onClick={() => send(s)} style={{ padding: "7px 14px", borderRadius: 999, border: "1px solid rgba(201,117,96,0.22)", background: "rgba(201,117,96,0.08)", color: "rgba(245,237,230,0.62)", fontSize: 12, cursor: "pointer", fontFamily: "'Jost', system-ui, sans-serif", backdropFilter: "blur(16px)" }}>{s}</button>
           ))}
         </div>
       )}
 
       {/* Input */}
-      <div style={{ background: "var(--surface-header)", borderTop: "1px solid var(--surface-border-s)", padding: "14px 16px", flexShrink: 0, backdropFilter: "blur(20px)" }}>
+      <div style={{ position: "relative", zIndex: 10, background: "rgba(20,12,18,0.90)", borderTop: "1px solid rgba(245,237,230,0.09)", padding: "14px 16px", flexShrink: 0, backdropFilter: "blur(32px)" }}>
         {!profile.isPremium && (isSos ? sosCount >= SOS_DAILY_LIMIT : dailyCount >= FREE_DAILY_LIMIT) ? (
           <div style={{ maxWidth: 640, margin: "0 auto", textAlign: "center" }}>
             <p style={{ fontSize: 14, fontWeight: 500, color: "var(--accent-deep)", marginBottom: 12 }}>
@@ -1685,30 +1713,43 @@ function Chat({ profile, isSos, onBack, onPremium, premiumToken }) {
 function BottomNav({ screen, onNavigate }) {
   const tabs = [
     { id: "home",    label: "Accueil", Icon: HomeIcon },
-    { id: "chat",    label: "El\u200Cia",    Icon: ChatIcon },
+    { id: "chat",    label: "El\u00EFa",    Icon: ChatIcon },
     { id: "profile", label: "Profil",  Icon: UserIcon },
   ];
   return (
     <div style={{
       position: "fixed", bottom: 0, left: 0, right: 0,
-      background: "var(--surface-header)", borderTop: "1px solid var(--surface-border)",
-      display: "flex", zIndex: 100, boxShadow: "0 -4px 32px rgba(0,0,0,.45)",
-      backdropFilter: "blur(20px)"
+      background: "rgba(8,6,8,0.88)",
+      borderTop: "1px solid rgba(245,237,230,0.07)",
+      display: "flex", zIndex: 100,
+      backdropFilter: "blur(28px)",
+      boxShadow: "0 -8px 32px rgba(0,0,0,0.60)",
     }}>
       {tabs.map(({ id, label, Icon }) => {
         const active = screen === id;
         return (
-          <button key={id} onClick={() => onNavigate(id)} style={{
-            flex: 1, display: "flex", flexDirection: "column", alignItems: "center",
-            justifyContent: "center", gap: 4, padding: "10px 0 12px",
-            background: "none", border: "none", cursor: "pointer",
-            color: active ? "var(--accent)" : "var(--ink-faint)",
-            transition: "color .18s", position: "relative"
-          }}>
-            <Icon s={21} />
-            <span style={{ fontSize: 10, fontWeight: active ? 500 : 400, letterSpacing: ".03em", fontVariantLigatures: "none" }}>{label}</span>
-            {active && <span style={{ position: "absolute", bottom: 0, width: 24, height: 2, background: "var(--accent)", borderRadius: 2 }} />}
-          </button>
+          <motion.button
+            key={id}
+            onClick={() => onNavigate(id)}
+            whileTap={{ scale: 0.88 }}
+            style={{
+              flex: 1, display: "flex", flexDirection: "column", alignItems: "center",
+              justifyContent: "center", gap: 4, padding: "10px 0 12px",
+              background: "none", border: "none", cursor: "pointer",
+              color: active ? "rgba(201,117,96,0.95)" : "rgba(245,237,230,0.28)",
+              transition: "color .2s ease", position: "relative",
+            }}>
+            <motion.div animate={{ scale: active ? 1.12 : 1, y: active ? -1 : 0 }} transition={{ duration: 0.2 }}>
+              <Icon s={21} />
+            </motion.div>
+            <span style={{ fontSize: 10, fontWeight: active ? 500 : 400, letterSpacing: ".04em" }}>{label}</span>
+            {active && (
+              <motion.span
+                layoutId="nav-indicator"
+                style={{ position: "absolute", bottom: 0, width: 28, height: 2.5, background: "rgba(201,117,96,0.90)", borderRadius: 2, boxShadow: "0 0 10px rgba(201,117,96,0.70)" }}
+              />
+            )}
+          </motion.button>
         );
       })}
     </div>
@@ -1736,12 +1777,14 @@ function ProfileScreen({ profile, onSave, onPremium, onLegal, onConfidentialite,
   };
 
   return (
-    <div style={{ minHeight: "100vh", paddingBottom: 80 }}>
-      <div style={{ background: "var(--surface-header)", borderBottom: "1px solid var(--surface-border-s)", padding: "20px 24px", boxShadow: "var(--shadow-card)", backdropFilter: "blur(20px)" }}>
+    <div style={{ minHeight: "100vh", paddingBottom: 80, background: "linear-gradient(180deg, #0D090D 0%, #080608 100%)", position: "relative", overflow: "hidden" }}>
+      {/* Halo atmosphérique */}
+      <div style={{ position: "absolute", top: -60, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 400, height: 280, borderRadius: "50%", background: "radial-gradient(ellipse, rgba(100,42,28,0.38) 0%, transparent 70%)", filter: "blur(45px)", pointerEvents: "none" }} />
+      <div style={{ position: "relative", zIndex: 1, background: "rgba(18,10,16,0.80)", borderBottom: "1px solid rgba(245,237,230,0.09)", padding: "20px 24px", backdropFilter: "blur(28px)" }}>
         <div style={{ marginBottom: 4 }}>
-          <span className="serif" style={{ fontStyle: "italic", fontSize: 18, fontWeight: 400, color: "var(--brand)", letterSpacing: ".04em" }}>NERA</span>
+          <span className="serif" style={{ fontStyle: "normal", fontSize: 16, fontWeight: 400, color: "rgba(245,237,230,0.35)", letterSpacing: ".28em" }}>NERA</span>
         </div>
-        <h1 className="serif" style={{ fontSize: 26, fontWeight: 600 }}>Mon profil</h1>
+        <h1 className="serif" style={{ fontSize: 26, fontWeight: 400, color: "rgba(245,237,230,0.90)" }}>Mon profil</h1>
       </div>
 
       <div style={{ maxWidth: 480, margin: "0 auto", padding: "24px 20px", display: "flex", flexDirection: "column", gap: 20 }}>
@@ -1767,7 +1810,7 @@ function ProfileScreen({ profile, onSave, onPremium, onLegal, onConfidentialite,
         )}
 
         {/* Identité */}
-        <div style={{ background: "var(--surface)", borderRadius: 20, padding: "20px", border: "1px solid var(--surface-border-s)", boxShadow: "var(--shadow-card)", backdropFilter: "blur(20px)" }}>
+        <div style={{ background: "rgba(245,237,230,0.03)", borderRadius: 20, padding: "20px", border: "1px solid rgba(245,237,230,0.08)", backdropFilter: "blur(24px)" }}>
           <p style={{ fontSize: 11, fontWeight: 500, color: "var(--ink-faint)", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 14 }}>Identité</p>
           <div style={{ marginBottom: 14 }}>
             <label style={{ fontSize: 11, color: "var(--ink-faint)", display: "block", marginBottom: 6 }}>Prénom</label>
@@ -1784,7 +1827,7 @@ function ProfileScreen({ profile, onSave, onPremium, onLegal, onConfidentialite,
         </div>
 
         {/* Enfants */}
-        <div style={{ background: "var(--surface)", borderRadius: 20, padding: "20px", border: "1px solid var(--surface-border-s)", boxShadow: "var(--shadow-card)", backdropFilter: "blur(20px)" }}>
+        <div style={{ background: "rgba(245,237,230,0.03)", borderRadius: 20, padding: "20px", border: "1px solid rgba(245,237,230,0.08)", backdropFilter: "blur(24px)" }}>
           <p style={{ fontSize: 11, fontWeight: 500, color: "var(--ink-faint)", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 14 }}>Mes enfants</p>
           {d.children.map((c, i) => (
             <div key={c.id} style={{ background: "var(--surface-tint)", borderRadius: 14, padding: 14, marginBottom: 10, border: "1px solid var(--surface-border)", position: "relative" }}>
@@ -1794,7 +1837,7 @@ function ProfileScreen({ profile, onSave, onPremium, onLegal, onConfidentialite,
                   <Xmark />
                 </button>
               )}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 8 }}>
                 <input className="field" placeholder="Prénom" value={c.firstName} onChange={e => updChild(i, "firstName", e.target.value)} style={{ fontSize: 14 }} />
                 <input className="field" type="date" value={c.birthDate} onChange={e => updChild(i, "birthDate", e.target.value)} style={{ fontSize: 13 }} />
               </div>
@@ -1820,7 +1863,7 @@ function ProfileScreen({ profile, onSave, onPremium, onLegal, onConfidentialite,
         </div>
 
         {/* Type de naissance */}
-        <div style={{ background: "var(--surface)", borderRadius: 20, padding: "20px", border: "1px solid var(--surface-border-s)", boxShadow: "var(--shadow-card)", backdropFilter: "blur(20px)" }}>
+        <div style={{ background: "rgba(245,237,230,0.03)", borderRadius: 20, padding: "20px", border: "1px solid rgba(245,237,230,0.08)", backdropFilter: "blur(24px)" }}>
           <p style={{ fontSize: 11, fontWeight: 500, color: "var(--ink-faint)", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 14 }}>Type de naissance</p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {BIRTH_TYPES.map(t => (
@@ -1833,7 +1876,7 @@ function ProfileScreen({ profile, onSave, onPremium, onLegal, onConfidentialite,
         </div>
 
         {/* Défis */}
-        <div style={{ background: "var(--surface)", borderRadius: 20, padding: "20px", border: "1px solid var(--surface-border-s)", boxShadow: "var(--shadow-card)", backdropFilter: "blur(20px)" }}>
+        <div style={{ background: "rgba(245,237,230,0.03)", borderRadius: 20, padding: "20px", border: "1px solid rgba(245,237,230,0.08)", backdropFilter: "blur(24px)" }}>
           <p style={{ fontSize: 11, fontWeight: 500, color: "var(--ink-faint)", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 14 }}>Ce qui me touche</p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {CHALS.map(c => (
@@ -1846,18 +1889,9 @@ function ProfileScreen({ profile, onSave, onPremium, onLegal, onConfidentialite,
         </div>
 
         {/* Contexte */}
-        <div style={{ background: "var(--surface)", borderRadius: 20, padding: "20px", border: "1px solid var(--surface-border-s)", boxShadow: "var(--shadow-card)", backdropFilter: "blur(20px)" }}>
+        <div style={{ background: "rgba(245,237,230,0.03)", borderRadius: 20, padding: "20px", border: "1px solid rgba(245,237,230,0.08)", backdropFilter: "blur(24px)" }}>
           <p style={{ fontSize: 11, fontWeight: 500, color: "var(--ink-faint)", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 14 }}>Mon contexte</p>
           <textarea className="field" placeholder="ex. Je suis séparée, je gère tout seul…" value={d.freeText} onChange={e => upd({ freeText: e.target.value })} rows={4} style={{ resize: "none", lineHeight: 1.6 }} />
-        </div>
-
-        {/* Apparence */}
-        <div style={{ background: "var(--surface)", borderRadius: 20, padding: "20px", border: "1px solid var(--surface-border)", boxShadow: "var(--shadow-card)", backdropFilter: "blur(20px)" }}>
-          <p style={{ fontSize: 11, fontWeight: 500, color: "var(--ink-faint)", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 14 }}>Apparence</p>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <span style={{ fontSize: 14, color: "var(--ink)", fontWeight: 300 }}>Thème de l'application</span>
-            <ThemeToggle />
-          </div>
         </div>
 
         {/* Save */}
@@ -1881,12 +1915,19 @@ function ProfileScreen({ profile, onSave, onPremium, onLegal, onConfidentialite,
           Réinitialiser mon profil
         </button>
 
-        <div style={{ display: "flex", justifyContent: "center", gap: 20, flexWrap: "wrap" }}>
-          <MentionsLegalesLink onOpen={onLegal} />
-          <ConfidentialiteLink onOpen={onConfidentialite} />
-          <CguLink onOpen={onCgu} />
-          <CgvLink onOpen={onCgv} />
-          <CookiesLink onOpen={onCookies} />
+        <div style={{ borderTop: "1px solid rgba(245,237,230,0.06)", paddingTop: 16, display: "flex", justifyContent: "center", gap: 0, flexWrap: "wrap" }}>
+          {[
+            { label: "Mentions légales", fn: onLegal },
+            { label: "Confidentialité", fn: onConfidentialite },
+            { label: "CGU", fn: onCgu },
+            { label: "CGV", fn: onCgv },
+            { label: "Cookies", fn: onCookies },
+          ].map(({ label, fn }, i, arr) => (
+            <span key={label} style={{ display: "flex", alignItems: "center" }}>
+              <button onClick={fn} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(245,237,230,0.22)", fontSize: 11, padding: "4px 8px", fontFamily: "'Jost', system-ui, sans-serif", letterSpacing: ".02em" }}>{label}</button>
+              {i < arr.length - 1 && <span style={{ color: "rgba(245,237,230,0.10)", fontSize: 11 }}>·</span>}
+            </span>
+          ))}
         </div>
       </div>
     </div>
@@ -2043,9 +2084,10 @@ function AppInner() {
   if (screen === "loading") return (
     <ErrorBoundary>
       <GlobalStyles />
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <motion.div animate={{ opacity: [.25, .9, .25] }} transition={{ duration: 2.5, repeat: Infinity }}>
-          <span className="serif" style={{ fontStyle: "normal", fontSize: 28, fontWeight: 400, color: "rgba(245,237,230,0.80)", letterSpacing: ".32em" }}>NERA</span>
+      <div style={{ minHeight: "100vh", background: "#080608", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", left: "50%", top: "50%", width: 320, height: 320, transform: "translate(-50%,-50%)", borderRadius: "50%", background: "radial-gradient(circle, rgba(180,80,45,0.18) 0%, transparent 70%)", filter: "blur(60px)", pointerEvents: "none" }} />
+        <motion.div animate={{ opacity: [0.18, 0.85, 0.18] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }} style={{ textAlign: "center" }}>
+          <span className="serif" style={{ fontStyle: "normal", fontSize: 32, fontWeight: 400, color: "rgba(245,237,230,0.85)", letterSpacing: ".36em" }}>NERA</span>
         </motion.div>
       </div>
     </ErrorBoundary>
@@ -2060,7 +2102,7 @@ function AppInner() {
 
       <AnimatePresence mode="wait">
         {screen === "legal" && (
-          <motion.div key="legal" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+          <motion.div key="legal" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.32, ease: "easeOut" }}>
             <LegalConsent onAccept={async () => {
               await S.set("elia_legal", true);
               fetch("/api/consent", {
@@ -2074,47 +2116,47 @@ function AppInner() {
           </motion.div>
         )}
         {screen === "onboarding" && (
-          <motion.div key="ob" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+          <motion.div key="ob" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.32, ease: "easeOut" }}>
             <Onboarding onDone={handleDone} />
           </motion.div>
         )}
         {screen === "home" && profile && (
-          <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="has-nav">
+          <motion.div key="home" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.28, ease: "easeOut" }} className="has-nav">
             <Home profile={profile} onStart={s => { setSos(s); setScreen("chat"); }} onPremium={() => setShowPremium(true)} />
           </motion.div>
         )}
         {screen === "chat" && profile && (
-          <motion.div key="chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ height: "calc(100vh - 68px)" }}>
+          <motion.div key="chat" initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} transition={{ duration: 0.28, ease: "easeOut" }} style={{ height: "calc(100vh - 68px)" }}>
             <Chat profile={profile} isSos={sos} onBack={() => setScreen("home")} onPremium={() => setShowPremium(true)} premiumToken={premiumToken} />
           </motion.div>
         )}
         {screen === "profile" && profile && (
-          <motion.div key="profile" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="has-nav">
+          <motion.div key="profile" initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} transition={{ duration: 0.28, ease: "easeOut" }} className="has-nav">
             <ProfileScreen profile={profile} onSave={updateProfile} onPremium={() => setShowPremium(true)} onLegal={() => setScreen("mentions-legales")} onConfidentialite={() => setScreen("confidentialite")} onCgu={() => setScreen("cgu")} onCgv={() => setScreen("cgv")} onCookies={() => setScreen("cookies")} />
           </motion.div>
         )}
         {screen === "mentions-legales" && (
-          <motion.div key="mentions-legales" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+          <motion.div key="mentions-legales" initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} transition={{ duration: 0.28, ease: "easeOut" }}>
             <MentionsLegalesScreen onBack={() => setScreen("profile")} />
           </motion.div>
         )}
         {screen === "confidentialite" && (
-          <motion.div key="confidentialite" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+          <motion.div key="confidentialite" initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} transition={{ duration: 0.28, ease: "easeOut" }}>
             <ConfidentialiteScreen onBack={() => setScreen("profile")} />
           </motion.div>
         )}
         {screen === "cgu" && (
-          <motion.div key="cgu" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+          <motion.div key="cgu" initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} transition={{ duration: 0.28, ease: "easeOut" }}>
             <CguScreen onBack={() => setScreen("profile")} />
           </motion.div>
         )}
         {screen === "cgv" && (
-          <motion.div key="cgv" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+          <motion.div key="cgv" initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} transition={{ duration: 0.28, ease: "easeOut" }}>
             <CgvScreen onBack={() => setScreen("profile")} />
           </motion.div>
         )}
         {screen === "cookies" && (
-          <motion.div key="cookies" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+          <motion.div key="cookies" initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} transition={{ duration: 0.28, ease: "easeOut" }}>
             <CookiesScreen onBack={() => setScreen("profile")} />
           </motion.div>
         )}
