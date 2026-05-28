@@ -5,7 +5,7 @@ const NOM_DOMAINE = "DOMAINE_À_RENSEIGNER";
 function Section({ title, children }) {
   return (
     <div style={{
-      background: "var(--surface)",
+      background: "rgba(245,237,230,0.07)",
       borderRadius: 20,
       padding: "20px 18px",
       border: "1px solid var(--surface-border-s)",
@@ -42,31 +42,38 @@ function CookieRow({ name, type, finalite, duree }) {
 export default function CookiesScreen({ onBack }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -16 }}
-      style={{ minHeight: "100vh", paddingBottom: 48 }}
+      initial={{ opacity: 0, x: 18 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -18 }}
+      transition={{ duration: 0.28, ease: "easeOut" }}
+      style={{
+        minHeight: "100vh", paddingBottom: 48,
+        background: "radial-gradient(ellipse 100% 28% at 50% 0%, rgba(120,52,35,0.20) 0%, transparent 100%) #080608",
+      }}
     >
       {/* Header */}
       <div style={{
-        background: "var(--surface-header)",
+        position: "sticky", top: 0, zIndex: 10,
+        background: "rgba(8,6,8,0.88)",
         borderBottom: "1px solid var(--surface-border-s)",
-        padding: "20px 24px",
-        backdropFilter: "blur(20px)",
+        padding: "16px 20px",
+        backdropFilter: "blur(24px)",
         display: "flex",
         alignItems: "center",
-        gap: 14,
+        gap: 12,
       }}>
         <button
           onClick={onBack}
           style={{
             background: "none", border: "none", cursor: "pointer",
-            color: "var(--ink-soft)", fontSize: 20, lineHeight: 1,
-            padding: "4px 2px", display: "flex", alignItems: "center",
+            color: "var(--ink-soft)", padding: "6px",
+            display: "flex", alignItems: "center", borderRadius: 8,
           }}
           aria-label="Retour"
         >
-          ←
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
         </button>
         <div>
           <span className="serif" style={{
@@ -125,7 +132,7 @@ export default function CookiesScreen({ onBack }) {
           <CookieRow
             name="Préférences d'affichage (localStorage)"
             type="Strictement nécessaire — Fonctionnel"
-            finalite="Mémoriser votre thème (clair/sombre/auto), vos préférences de profil et les données de votre session de conversation locale."
+            finalite="Mémoriser vos préférences de profil et les données de votre session de conversation locale."
             duree="Jusqu'à la suppression de votre compte ou réinitialisation manuelle"
           />
 
