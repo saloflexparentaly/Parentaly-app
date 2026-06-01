@@ -9,6 +9,7 @@ import { fileURLToPath } from "url";
 import path from "path";
 import { createClient } from "@supabase/supabase-js";
 import { ELIA_SYSTEM_PROMPT } from "./eliaPrompt.js";
+import { calcAge, detectMultiple } from "./shared.js";
 
 // ─── Supabase (service role — serveur uniquement) ─────────────────────────────
 const supabaseAdmin = process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -50,8 +51,30 @@ function verifyToken(token) {
   } catch { return null; }
 }
 
-// ─── Replay prevention ────────────────────────────────────────────────────────
-const usedSessions = new Set();
+// ─── Replay prevention (Supabase-backed, fallback in-memory) ─────────────────
+const usedSessionsFallback = new Set();
+
+async function isSessionUsed(sessionId) {
+  if (supabaseAdmin) {
+    const { data } = await supabaseAdmin
+      .from("stripe_used_sessions")
+      .select("session_id")
+      .eq("session_id", sessionId)
+      .maybeSingle();
+    return !!data;
+  }
+  return usedSessionsFallback.has(sessionId);
+}
+
+async function markSessionUsed(sessionId, userId) {
+  if (supabaseAdmin) {
+    await supabaseAdmin
+      .from("stripe_used_sessions")
+      .insert({ session_id: sessionId, user_id: userId || null });
+  } else {
+    usedSessionsFallback.add(sessionId);
+  }
+}
 
 // ─── Daily limits (free tier, in-memory par IP) ───────────────────────────────
 const FREE_DAILY_LIMIT = 10;
@@ -71,12 +94,19 @@ function checkFreeLimit(clientId) {
   const key = `${clientId}:${today}`;
   const count = dailyUsage.get(key) || 0;
   if (count >= FREE_DAILY_LIMIT) return false;
-  dailyUsage.set(key, count + 1);
+  const newCount = count + 1;
+  dailyUsage.set(key, newCount);
   if (dailyUsage.size > 50000) {
     const cutoff = new Date(Date.now() - 2 * 86400000).toISOString().slice(0, 10);
     for (const k of dailyUsage.keys()) {
       if (k.split(":")[1] < cutoff) dailyUsage.delete(k);
     }
+  }
+  if (supabaseAdmin) {
+    supabaseAdmin.from("rate_limits").upsert(
+      { client_id: clientId, date: today, count: newCount, updated_at: new Date().toISOString() },
+      { onConflict: "client_id,date" }
+    ).catch(() => {});
   }
   return true;
 }
@@ -101,6 +131,12 @@ function checkGlobalCap() {
   if (globalDaily.date !== today) globalDaily = { date: today, count: 0 };
   if (globalDaily.count >= GLOBAL_DAILY_CAP) return false;
   globalDaily.count++;
+  if (supabaseAdmin) {
+    supabaseAdmin.from("rate_limits").upsert(
+      { client_id: "__global__", date: today, count: globalDaily.count, updated_at: new Date().toISOString() },
+      { onConflict: "client_id,date" }
+    ).catch(() => {});
+  }
   return true;
 }
 
@@ -113,38 +149,6 @@ function sanitize(str, maxLen = 200) {
 }
 
 // ─── Helpers prompt ───────────────────────────────────────────────────────────
-function calcAge(birth) {
-  if (!birth) return null;
-  try {
-    const b = new Date(birth);
-    if (isNaN(b.getTime())) return null;
-    const now = new Date();
-    let mo = (now.getFullYear() - b.getFullYear()) * 12 + now.getMonth() - b.getMonth();
-    if (now.getDate() < b.getDate()) mo--;
-    if (mo < 0) return null;
-    if (mo === 0) return "Nouveau-né";
-    if (mo < 12) return mo + " mois";
-    const y = Math.floor(mo / 12), m = mo % 12;
-    return m > 0 ? `${y} ans ${m} mois` : `${y} ans`;
-  } catch { return null; }
-}
-
-function detectMultiple(children) {
-  const dated = (children || []).filter(c => c.birthDate && c.firstName);
-  if (dated.length < 2) return null;
-  const ms = dated.map(c => new Date(c.birthDate).getTime()).filter(n => !isNaN(n));
-  const groups = new Set();
-  for (let i = 0; i < ms.length; i++) {
-    for (let j = i + 1; j < ms.length; j++) {
-      if (Math.abs(ms[i] - ms[j]) / 86400000 <= 90) { groups.add(i); groups.add(j); }
-    }
-  }
-  if (groups.size >= 5) return "Quintuplés";
-  if (groups.size === 4) return "Quadruplés";
-  if (groups.size === 3) return "Triplés";
-  if (groups.size === 2) return "Jumeaux";
-  return null;
-}
 
 function buildSystemPrompt(profile, isSos, memory, isPremium) {
   const parentName = sanitize(profile.parentName, 50);
@@ -236,11 +240,34 @@ const verifyLimiter = rateLimit({
   max: 10,
   message: { error: "Trop de tentatives." },
 });
+const consentLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  message: { error: "Trop de tentatives." },
+});
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
+// ─── Restore rate limits depuis Supabase au démarrage ────────────────────────
+if (supabaseAdmin) {
+  const today = new Date().toISOString().slice(0, 10);
+  supabaseAdmin.from("rate_limits").select("client_id, count").eq("date", today)
+    .then(({ data }) => {
+      if (!data) return;
+      for (const row of data) {
+        if (row.client_id === "__global__") {
+          globalDaily = { date: today, count: row.count };
+        } else {
+          dailyUsage.set(`${row.client_id}:${today}`, row.count);
+        }
+      }
+      console.log(`♻️  Rate limits restaurés (${data.length} entrées)`);
+    })
+    .catch(() => {});
+}
+
 // ─── Webhook Stripe (body brut requis) ───────────────────────────────────────
-app.post("/api/webhook", express.raw({ type: "application/json" }), (req, res) => {
+app.post("/api/webhook", express.raw({ type: "application/json" }), async (req, res) => {
   const sig = req.headers["stripe-signature"];
   let event;
   try {
@@ -249,7 +276,28 @@ app.post("/api/webhook", express.raw({ type: "application/json" }), (req, res) =
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
   if (event.type === "checkout.session.completed") {
-    console.log("✅ Paiement confirmé :", event.data.object.customer_email);
+    const stripeSession = event.data.object;
+    const userId = stripeSession.metadata?.userId;
+    console.log("✅ Paiement confirmé :", stripeSession.customer_email, "userId:", userId);
+    if (userId && supabaseAdmin) {
+      try {
+        const token = signToken({ premium: true, exp: Date.now() + 366 * 24 * 60 * 60 * 1000 });
+        await supabaseAdmin.from("user_data").upsert(
+          { user_id: userId, key: "elia_premium_token", value: token, updated_at: new Date().toISOString() },
+          { onConflict: "user_id,key" }
+        );
+        const { data: profileRow } = await supabaseAdmin.from("user_data")
+          .select("value").eq("user_id", userId).eq("key", "elia_profile").maybeSingle();
+        if (profileRow?.value) {
+          await supabaseAdmin.from("user_data").upsert(
+            { user_id: userId, key: "elia_profile", value: { ...profileRow.value, isPremium: true }, updated_at: new Date().toISOString() },
+            { onConflict: "user_id,key" }
+          );
+        }
+      } catch (err) {
+        console.error("Webhook DB error:", err.message);
+      }
+    }
   }
   res.json({ received: true });
 });
@@ -257,12 +305,19 @@ app.post("/api/webhook", express.raw({ type: "application/json" }), (req, res) =
 app.use(express.json({ limit: "50kb" }));
 
 // ─── Log consentement RGPD (preuve serveur, art. 7 RGPD) ─────────────────────
-app.post("/api/consent", (req, res) => {
+app.post("/api/consent", consentLimiter, (req, res) => {
   const ip      = getClientId(req);
   const ts      = new Date().toISOString();
   const version = typeof req.body?.version === "string" ? req.body.version.slice(0, 20) : "1.0";
   const ua      = (req.headers["user-agent"] || "").slice(0, 200);
+  // Hash IP avant stockage (minimisation des données RGPD)
+  const ipHash  = crypto.createHash("sha256").update(ip).digest("hex").slice(0, 16);
   console.log(JSON.stringify({ event: "consent_accepted", ip, ts, cgu_version: version, ua }));
+  if (supabaseAdmin) {
+    supabaseAdmin.from("consent_logs").insert({
+      ip_hash: ipHash, cgu_version: version, user_agent: ua,
+    }).catch(() => {});
+  }
   res.json({ ok: true });
 });
 
@@ -350,7 +405,7 @@ app.post("/api/chat", chatLimiter, async (req, res) => {
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 app.post("/api/create-checkout-session", checkoutLimiter, async (req, res) => {
-  const { priceId, email, parentName } = req.body;
+  const { priceId, email, parentName, userId } = req.body;
 
   if (!priceId || !email || !EMAIL_RE.test(email)) {
     return res.status(400).json({ error: "Données invalides." });
@@ -375,7 +430,10 @@ app.post("/api/create-checkout-session", checkoutLimiter, async (req, res) => {
       line_items:           [{ price: priceId, quantity: 1 }],
       success_url:          `${process.env.FRONTEND_URL}?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url:           `${process.env.FRONTEND_URL}?canceled=1`,
-      metadata:             { parentName: sanitize(parentName, 100) },
+      metadata:             {
+        parentName: sanitize(parentName, 100),
+        ...(userId && typeof userId === "string" ? { userId: userId.slice(0, 36) } : {}),
+      },
       locale:               "fr",
       subscription_data:    { metadata: { parentName: sanitize(parentName, 100) } },
     });
@@ -392,14 +450,16 @@ app.get("/api/verify-session", verifyLimiter, async (req, res) => {
   if (!id || typeof id !== "string" || !id.startsWith("cs_")) {
     return res.status(400).json({ paid: false });
   }
-  // Anti-replay : une session ne peut activer premium qu'une seule fois
-  if (usedSessions.has(id)) {
-    return res.status(400).json({ paid: false });
-  }
+  // Anti-replay persistant (Supabase) — résiste aux redémarrages serveur
+  try {
+    if (await isSessionUsed(id)) return res.status(400).json({ paid: false });
+  } catch { /* si Supabase est indispo, on continue (sécurité dégradée) */ }
+
   try {
     const session = await stripe.checkout.sessions.retrieve(id);
     if (session.payment_status !== "paid") return res.json({ paid: false });
-    usedSessions.add(id);
+    const userId = session.metadata?.userId;
+    await markSessionUsed(id, userId);
     const token = signToken({ premium: true, exp: Date.now() + 366 * 24 * 60 * 60 * 1000 });
     res.json({ paid: true, token });
   } catch {

@@ -34,3 +34,31 @@ $$;
 create or replace trigger user_data_updated_at
   before update on public.user_data
   for each row execute procedure public.handle_updated_at();
+
+-- Sessions Stripe utilisées (anti-replay premium)
+-- Accessible uniquement via service_role (backend) — pas de RLS
+create table if not exists public.stripe_used_sessions (
+  session_id  text        primary key,
+  user_id     uuid        references auth.users(id) on delete set null,
+  created_at  timestamptz default now()
+);
+
+-- Logs de consentement RGPD (art. 7 RGPD — preuve serveur, conservation 3 ans)
+-- ip_hash = SHA-256 tronqué de l'IP (16 hex) — minimisation des données
+create table if not exists public.consent_logs (
+  id          uuid        primary key default gen_random_uuid(),
+  ip_hash     text        not null,
+  cgu_version text        not null default '1.0',
+  user_agent  text,
+  created_at  timestamptz default now()
+);
+
+-- Compteurs de rate-limiting persistants (résistants aux redémarrages serveur)
+-- client_id = IP ou '__global__' pour le cap global
+create table if not exists public.rate_limits (
+  client_id   text        not null,
+  date        text        not null,
+  count       integer     not null default 0,
+  updated_at  timestamptz default now(),
+  primary key (client_id, date)
+);

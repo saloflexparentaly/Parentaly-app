@@ -7,6 +7,7 @@ import CguScreen from "./CguScreen";
 import CgvScreen from "./CgvScreen";
 import CookiesScreen from "./CookiesScreen";
 import { supabase, getOrCreateSession } from "./supabase.js";
+import { calcAge, detectMultiple } from "../shared.js";
 
 // ─── ERROR BOUNDARY ───────────────────────────────────────────────────────────
 class ErrorBoundary extends Component {
@@ -595,13 +596,9 @@ function StripeModal({ profile, onClose, onSuccess }) {
     setLoading(true);
     setError("");
     try {
-      // Redirect to Stripe Checkout
-      // In production, this call goes to YOUR backend which creates a Stripe Checkout Session
-      // and returns a URL. Here we show the flow clearly.
       const priceId = STRIPE_PRICES[selected];
-
-      // ⚠️ THIS REQUIRES A BACKEND — see deployment guide below
-      // For now, we show a placeholder that will work once deployed
+      let userId = null;
+      try { const s = await getOrCreateSession(); userId = s?.user?.id; } catch {}
       const res = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -609,6 +606,7 @@ function StripeModal({ profile, onClose, onSuccess }) {
           priceId,
           email,
           parentName: profile.parentName,
+          userId,
           successUrl: window.location.origin + "?success=1",
           cancelUrl: window.location.origin + "?canceled=1",
         }),
@@ -728,44 +726,8 @@ async function askElia({ profile, messages, isSos, memory, premiumToken }) {
 }
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
-function calcAge(birth) {
-  if (!birth) return null;
-  try {
-    const b = new Date(birth);
-    if (isNaN(b.getTime())) return null;
-    const now = new Date();
-    let mo = (now.getFullYear() - b.getFullYear()) * 12 + now.getMonth() - b.getMonth();
-    if (now.getDate() < b.getDate()) mo--;
-    if (mo < 0) return null;
-    if (mo === 0) return "Nouveau-né";
-    if (mo < 12) return mo + " mois";
-    const y = Math.floor(mo / 12), m = mo % 12;
-    return m > 0 ? `${y} ans ${m} mois` : `${y} ans`;
-  } catch {
-    return null;
-  }
-}
 let _childId = 0;
 const newChild = () => ({ id: `c-${Date.now()}-${++_childId}`, firstName: "", birthDate: "", temperament: "", notes: "" });
-
-function detectMultiple(children) {
-  const dated = children.filter(c => c.birthDate && c.firstName);
-  if (dated.length < 2) return null;
-  const ms = dated.map(c => new Date(c.birthDate).getTime());
-  const groups = new Set();
-  for (let i = 0; i < ms.length; i++) {
-    for (let j = i + 1; j < ms.length; j++) {
-      if (Math.abs(ms[i] - ms[j]) / 86400000 <= 90) {
-        groups.add(i); groups.add(j);
-      }
-    }
-  }
-  if (groups.size >= 5) return "Quintuplés";
-  if (groups.size === 4) return "Quadruplés";
-  if (groups.size === 3) return "Triplés";
-  if (groups.size === 2) return "Jumeaux";
-  return null;
-}
 
 // ─── ONBOARDING ───────────────────────────────────────────────────────────────
 const ROLES = ["Maman", "Papa", "Co-parent", "Grand-parent", "Beau-parent", "Autre"];
@@ -1934,81 +1896,6 @@ function ProfileScreen({ profile, onSave, onPremium, onLegal, onConfidentialite,
   );
 }
 
-function MentionsLegalesLink({ onOpen }) {
-  return (
-    <button
-      onClick={onOpen}
-      style={{
-        background: "none", border: "none", cursor: "pointer",
-        color: "var(--ink-faint)", fontSize: 11,
-        textDecoration: "underline", marginTop: 8,
-      }}
-    >
-      Mentions légales
-    </button>
-  );
-}
-
-function ConfidentialiteLink({ onOpen }) {
-  return (
-    <button
-      onClick={onOpen}
-      style={{
-        background: "none", border: "none", cursor: "pointer",
-        color: "var(--ink-faint)", fontSize: 11,
-        textDecoration: "underline", marginTop: 8,
-      }}
-    >
-      Confidentialité
-    </button>
-  );
-}
-
-function CguLink({ onOpen }) {
-  return (
-    <button
-      onClick={onOpen}
-      style={{
-        background: "none", border: "none", cursor: "pointer",
-        color: "var(--ink-faint)", fontSize: 11,
-        textDecoration: "underline", marginTop: 8,
-      }}
-    >
-      CGU
-    </button>
-  );
-}
-
-function CgvLink({ onOpen }) {
-  return (
-    <button
-      onClick={onOpen}
-      style={{
-        background: "none", border: "none", cursor: "pointer",
-        color: "var(--ink-faint)", fontSize: 11,
-        textDecoration: "underline", marginTop: 8,
-      }}
-    >
-      CGV
-    </button>
-  );
-}
-
-function CookiesLink({ onOpen }) {
-  return (
-    <button
-      onClick={onOpen}
-      style={{
-        background: "none", border: "none", cursor: "pointer",
-        color: "var(--ink-faint)", fontSize: 11,
-        textDecoration: "underline", marginTop: 8,
-      }}
-    >
-      Cookies
-    </button>
-  );
-}
-
 // ─── ROOT ─────────────────────────────────────────────────────────────────────
 function AppInner() {
   const [profile, setProfile] = useState(null);
@@ -2019,14 +1906,30 @@ function AppInner() {
 
   useEffect(() => {
     const init = async () => {
-      // 1. S'assurer qu'on a une session Supabase (anonymous si première visite)
+      // 1. Session Supabase
       let session = null;
       try {
         session = await getOrCreateSession();
         if (session) await migrateLocalStorageToSupabase(session.user.id);
       } catch {}
 
-      // 2. Charger profil, consentement légal et token premium en parallèle
+      // 2. Vérification Stripe AVANT de charger le profil (évite la race condition)
+      const params = new URLSearchParams(window.location.search);
+      const sessionId = params.get("session_id");
+      if (sessionId) {
+        window.history.replaceState({}, "", window.location.pathname);
+        try {
+          const r = await fetch(`/api/verify-session?id=${encodeURIComponent(sessionId)}`);
+          const { paid, token } = await r.json();
+          if (paid) {
+            if (token) await S.set("elia_premium_token", token);
+            const existing = await S.get("elia_profile");
+            if (existing) await S.set("elia_profile", { ...existing, isPremium: true });
+          }
+        } catch {}
+      }
+
+      // 3. Charger profil, consentement légal et token premium en parallèle
       const [p, legal, token] = await Promise.all([
         S.get("elia_profile"),
         S.get("elia_legal"),
@@ -2038,30 +1941,6 @@ function AppInner() {
       else setScreen(p?.parentName ? "home" : "onboarding");
     };
     init();
-
-    const params = new URLSearchParams(window.location.search);
-    const sessionId = params.get("session_id");
-    if (sessionId) {
-      window.history.replaceState({}, "", window.location.pathname);
-      fetch(`/api/verify-session?id=${encodeURIComponent(sessionId)}`)
-        .then(r => r.json())
-        .then(({ paid, token }) => {
-          if (paid) {
-            if (token) {
-              S.set("elia_premium_token", token);
-              setPremiumToken(token);
-            }
-            S.get("elia_profile").then(p => {
-              if (p) {
-                const updated = { ...p, isPremium: true };
-                S.set("elia_profile", updated);
-                setProfile(updated);
-              }
-            });
-          }
-        })
-        .catch(() => {});
-    }
   }, []);
 
   const handleDone = async p => {
