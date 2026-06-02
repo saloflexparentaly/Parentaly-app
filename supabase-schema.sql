@@ -35,6 +35,12 @@ create or replace trigger user_data_updated_at
   before update on public.user_data
   for each row execute procedure public.handle_updated_at();
 
+-- Grants service_role sur toutes les tables backend (bypass RLS)
+grant all on public.stripe_used_sessions to service_role;
+grant all on public.consent_logs         to service_role;
+grant all on public.rate_limits          to service_role;
+grant all on public.crisis_logs          to service_role;
+
 -- Sessions Stripe utilisées (anti-replay premium)
 -- Accessible uniquement via service_role (backend) — pas de RLS
 create table if not exists public.stripe_used_sessions (

@@ -354,9 +354,7 @@ function LegalConsent({ onAccept }) {
   const [disclaimer, setDisclaimer] = useState(false);
   const [cgu,        setCgu]        = useState(false);
   const [rgpd,       setRgpd]       = useState(false);
-  const [showDisclaimer, setShowDisclaimer] = useState(false);
-  const [showCgu,        setShowCgu]        = useState(false);
-  const [showRgpd,       setRgpd2]          = useState(false);
+  const [overlay,    setOverlay]    = useState(null); // null | 'disclaimer' | 'cgu' | 'rgpd'
   const canContinue = age && disclaimer && cgu && rgpd;
 
   const checkboxStyle = (val) => ({
@@ -367,17 +365,54 @@ function LegalConsent({ onAccept }) {
     justifyContent: "center", transition: "all .15s", marginTop: 1,
   });
 
-  const expandStyle = {
-    overflow: "hidden", background: "var(--surface-tint)", borderRadius: 12,
-    padding: "14px 16px", marginBottom: 16, fontSize: 12,
-    color: "var(--ink-soft)", lineHeight: 1.75, fontWeight: 300,
-  };
-
-  const linkBtn = (onClick, label) => (
-    <button onClick={onClick} style={{
+  const linkBtn = (key, label) => (
+    <button onClick={e => { e.preventDefault(); setOverlay(key); }} style={{
       background: "none", border: "none", color: "var(--accent)",
       cursor: "pointer", fontSize: 13, textDecoration: "underline", padding: 0,
     }}>{label}</button>
+  );
+
+  // Overlay plein écran — utilise les écrans légaux existants
+  if (overlay === 'cgu') return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 200, overflowY: "auto", background: "var(--bg-base-1)" }}>
+      <CguScreen onBack={() => setOverlay(null)} />
+    </div>
+  );
+  if (overlay === 'rgpd') return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 200, overflowY: "auto", background: "var(--bg-base-1)" }}>
+      <ConfidentialiteScreen onBack={() => setOverlay(null)} />
+    </div>
+  );
+  if (overlay === 'disclaimer') return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 200, overflowY: "auto", background: "var(--bg-base-1)" }}>
+      <div style={{ maxWidth: 640, margin: "0 auto", padding: "0 20px 48px" }}>
+        <div style={{ position: "sticky", top: 0, background: "rgba(8,6,8,0.92)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(245,237,230,0.07)", padding: "16px 0", marginBottom: 24, display: "flex", alignItems: "center", gap: 12 }}>
+          <button onClick={() => setOverlay(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(245,237,230,0.5)", display: "flex", padding: 4 }}><Back s={20} /></button>
+          <span className="serif" style={{ fontSize: 17, fontWeight: 400, color: "rgba(245,237,230,0.85)" }}>Déclaration médicale</span>
+        </div>
+        <div style={{ fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.85, fontWeight: 300 }}>
+          <p style={{ marginBottom: 16 }}><strong style={{ color: "var(--ink)" }}>Ce que NERA est</strong><br />
+          Application de soutien émotionnel pour parents de jumeaux et multiples. Accompagnement émotionnel, informations générales, gestion de la charge mentale.</p>
+
+          <p style={{ marginBottom: 16 }}><strong style={{ color: "var(--ink)" }}>Ce que NERA n'est pas</strong><br />
+          Ni service médical, ni psychothérapie, ni substitut à un suivi médical ou psychiatrique, ni dispositif médical au sens européen, ni service d'urgence.</p>
+
+          <p style={{ marginBottom: 16 }}><strong style={{ color: "var(--ink)" }}>Elïa ne peut pas</strong><br />
+          Poser un diagnostic · prescrire un traitement · remplacer un professionnel de santé · fournir une assistance d'urgence.</p>
+
+          <div style={{ background: "rgba(201,117,96,0.08)", border: "1px solid rgba(201,117,96,0.2)", borderRadius: 12, padding: "14px 16px", marginBottom: 16 }}>
+            <strong style={{ color: "var(--accent)", display: "block", marginBottom: 8 }}>En cas d'urgence</strong>
+            <strong>15</strong> — SAMU · <strong>17</strong> — Police · <strong>18</strong> — Pompiers · <strong>112</strong> — Européen<br />
+            <strong>3114</strong> — Prévention suicide · <strong>119</strong> — Enfance en danger · <strong>3919</strong> — Violences femmes
+          </div>
+
+          <p style={{ marginBottom: 16 }}><strong style={{ color: "var(--ink)" }}>En cochant cette case, tu reconnais</strong><br />
+          Avoir lu ce document · comprendre qu'Elïa est une IA, non un professionnel de santé · t'engager à consulter un professionnel pour toute question médicale · avoir 16 ans ou plus.</p>
+
+          <p style={{ fontSize: 11, color: "var(--ink-faint)", fontStyle: "italic" }}>Document soumis au droit français — NERA · Mai 2026</p>
+        </div>
+      </div>
+    </div>
   );
 
   return (
@@ -385,7 +420,6 @@ function LegalConsent({ onAccept }) {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
         style={{ background: "var(--surface-modal)", borderRadius: 28, padding: "36px 32px", maxWidth: 440, width: "100%", boxShadow: "var(--shadow-l)", border: "1px solid var(--surface-border-s)", backdropFilter: "blur(24px)" }}>
 
-        {/* En-tête */}
         <div style={{ textAlign: "center", marginBottom: 28 }}>
           <div style={{ marginBottom: 16 }}>
             <span className="serif" style={{ fontStyle: "italic", fontSize: 18, fontWeight: 400, color: "var(--brand)", letterSpacing: ".04em" }}>NERA</span>
@@ -397,10 +431,8 @@ function LegalConsent({ onAccept }) {
           </p>
         </div>
 
-        {/* Cases à cocher */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 24 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 24 }}>
 
-          {/* Âge */}
           <label style={{ display: "flex", alignItems: "flex-start", gap: 12, cursor: "pointer" }}>
             <div onClick={() => setAge(!age)} style={checkboxStyle(age)}>
               {age && <Check s={12} />}
@@ -410,114 +442,35 @@ function LegalConsent({ onAccept }) {
             </span>
           </label>
 
-          {/* Disclaimer non-médical */}
           <label style={{ display: "flex", alignItems: "flex-start", gap: 12, cursor: "pointer" }}>
             <div onClick={() => setDisclaimer(!disclaimer)} style={checkboxStyle(disclaimer)}>
               {disclaimer && <Check s={12} />}
             </div>
             <span style={{ fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.5, fontWeight: 300 }}>
               J'ai lu et j'accepte la{" "}
-              {linkBtn(() => setShowDisclaimer(!showDisclaimer), "Déclaration de non-substitution médicale")}
+              {linkBtn("disclaimer", "Déclaration de non-substitution médicale")}
             </span>
           </label>
 
-          {/* Disclaimer expandable */}
-          <AnimatePresence>
-            {showDisclaimer && (
-              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-                style={expandStyle}>
-                <strong style={{ display: "block", marginBottom: 8, fontSize: 13 }}>
-                  Déclaration de non-substitution médicale — NERA · Mai 2026
-                </strong>
-
-                <strong>Ce que NERA est</strong><br />
-                NERA est une application de soutien émotionnel et parental destinée aux parents de jumeaux et de multiples. Elle propose un accompagnement émotionnel, des informations générales sur la parentalité des multiples, et un soutien dans la gestion de la charge mentale et de l'épuisement du quotidien.<br /><br />
-
-                <strong>Ce que NERA n'est pas</strong><br />
-                NERA n'est pas : un service médical · un service de santé mentale ou de psychothérapie · un substitut à un suivi médical ou psychiatrique · un substitut à une consultation chez un médecin, sage-femme, pédiatre, psychologue ou tout autre professionnel de santé · un dispositif médical au sens de la réglementation européenne · un service d'urgence.<br /><br />
-
-                <strong>Limites importantes</strong><br />
-                Elïa ne peut pas : poser un diagnostic médical ou psychologique · prescrire un traitement, un médicament ou une posologie · remplacer une évaluation professionnelle de votre état de santé ou de celui de vos enfants · fournir une assistance d'urgence.<br /><br />
-
-                <strong>En cas d'urgence, contactez immédiatement :</strong><br />
-                • <strong>15</strong> — SAMU (urgence médicale)<br />
-                • <strong>17</strong> — Police secours<br />
-                • <strong>18</strong> — Pompiers<br />
-                • <strong>112</strong> — Numéro d'urgence européen<br />
-                • <strong>3114</strong> — Prévention du suicide (gratuit, 24h/24)<br />
-                • <strong>119</strong> — Enfance en danger (gratuit, 24h/24)<br />
-                • <strong>3919</strong> — Violences femmes info (gratuit, anonyme)<br /><br />
-
-                Ces numéros sont accessibles à tout moment depuis l'application, y compris sans abonnement actif.<br /><br />
-
-                <strong>Déclaration de consentement</strong><br />
-                En cochant cette case, vous reconnaissez et acceptez expressément :<br />
-                1. Avoir pris connaissance des présentes informations<br />
-                2. Comprendre que NERA est un service de soutien émotionnel, non médical ou thérapeutique<br />
-                3. Comprendre qu'Elïa est une intelligence artificielle et non un professionnel de santé<br />
-                4. Vous engager à consulter un professionnel de santé qualifié pour toute question médicale, psychologique ou psychiatrique<br />
-                5. Avoir 16 ans révolus ou plus<br /><br />
-
-                <em>Ce document est soumis au droit français.</em>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* CGU */}
           <label style={{ display: "flex", alignItems: "flex-start", gap: 12, cursor: "pointer" }}>
             <div onClick={() => setCgu(!cgu)} style={checkboxStyle(cgu)}>
               {cgu && <Check s={12} />}
             </div>
             <span style={{ fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.5, fontWeight: 300 }}>
               J'accepte les{" "}
-              {linkBtn(() => setShowCgu(!showCgu), "Conditions Générales d'Utilisation")}
+              {linkBtn("cgu", "Conditions Générales d'Utilisation")}
             </span>
           </label>
 
-          <AnimatePresence>
-            {showCgu && (
-              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-                style={expandStyle}>
-                <strong style={{ display: "block", marginBottom: 6 }}>CGU — NERA · Version 1.0 · Mai 2026</strong>
-                L'application NERA fournit un soutien émotionnel et des informations générales à titre indicatif uniquement. Elle ne remplace en aucun cas un avis médical, psychologique ou thérapeutique professionnel.<br /><br />
-                <strong>Limites de responsabilité :</strong> NERA et son assistante Elïa ne constituent pas un service d'urgence. En situation de danger immédiat, contactez le 15 (SAMU), le 17 (Police), le 18 (Pompiers) ou le 112. NERA décline toute responsabilité en cas de préjudice résultant d'un usage du service en lieu et place d'un service d'urgence ou d'un professionnel de santé.<br /><br />
-                L'utilisateur s'engage à utiliser le service de bonne foi, à ne pas tenter d'en détourner le fonctionnement, et à ne pas transmettre de données personnelles de tiers sans leur consentement.<br /><br />
-                <strong>Abonnement :</strong> L'abonnement Premium est résiliable à tout moment depuis l'app (Réglages → Abonnement) ou via le portail Stripe. Aucun remboursement partiel n'est accordé pour la période en cours sauf disposition légale contraire.<br /><br />
-                NERA se réserve le droit de modifier les présentes CGU avec un préavis de 30 jours par email. L'utilisation continue du service après ce délai vaut acceptation des modifications.
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* RGPD */}
           <label style={{ display: "flex", alignItems: "flex-start", gap: 12, cursor: "pointer" }}>
             <div onClick={() => setRgpd(!rgpd)} style={checkboxStyle(rgpd)}>
               {rgpd && <Check s={12} />}
             </div>
             <span style={{ fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.5, fontWeight: 300 }}>
               J'ai lu la{" "}
-              {linkBtn(() => setRgpd2(!showRgpd), "Politique de confidentialité")}{" "}(RGPD)
+              {linkBtn("rgpd", "Politique de confidentialité")}{" "}(RGPD)
             </span>
           </label>
-
-          <AnimatePresence>
-            {showRgpd && (
-              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-                style={expandStyle}>
-                <strong style={{ display: "block", marginBottom: 6 }}>Politique de confidentialité — RGPD</strong>
-                <strong>Responsable de traitement :</strong> De Angeli Salomé — 17 avenue de Naugeat, 87000 Limoges<br /><br />
-                <strong>Données collectées :</strong> prénom du parent, rôle parental, prénoms et dates de naissance des enfants, défis déclarés, contexte libre — stockés <em>uniquement sur votre appareil</em> (localStorage). Les messages envoyés à Elïa transitent par nos serveurs pour le traitement IA en temps réel ; ils ne sont pas conservés côté serveur après traitement. Votre consentement (date, heure, version CGU) est enregistré côté serveur à des fins de preuve (art. 7 RGPD).<br /><br />
-                <strong>Données relatives aux enfants :</strong> en renseignant des informations sur vos enfants, vous agissez en tant que représentant légal et consentez en leur nom (art. 8 RGPD).<br /><br />
-                <strong>Durée de conservation :</strong> données conservées sur votre appareil jusqu'à suppression via "Réinitialiser mon profil" ou désinstallation. Logs de consentement serveur conservés 3 ans.<br /><br />
-                <strong>Sous-traitants :</strong><br />
-                • <em>Anthropic</em> (IA) — San Francisco, USA. Transfert hors UE encadré par les SCC de la Commission européenne.<br />
-                • <em>Stripe</em> (paiement) — San Francisco, USA. Transfert hors UE encadré par les SCC.<br />
-                • <em>Railway</em> (hébergement) — Railway Corp., USA. Serveur d'application et logs.<br /><br />
-                <strong>Vos droits (art. 15 à 22 RGPD) :</strong><br />
-                • Accès, rectification, effacement, portabilité, opposition, limitation — via "Mon profil" ou sur demande<br />
-                • Réclamation — auprès de la CNIL : cnil.fr
-              </motion.div>
-            )}
-          </AnimatePresence>
 
         </div>
 
@@ -746,7 +699,7 @@ function Onboarding({ onDone }) {
   const STEPS = 4;
   const [d, setD] = useState({
     parentName: "", parentRole: "Maman",
-    children: [newChild()],
+    children: [newChild(), newChild()],
     birthTypes: [],
     challenges: [], freeText: "", isPremium: false
   });
@@ -830,28 +783,32 @@ function Onboarding({ onDone }) {
                   {detectMultiple(d.children)} détectés
                 </div>
               )}
-              <div style={{ maxHeight: 300, overflowY: "auto", paddingRight: 4 }}>
+              <div>
                 {d.children.map((c, i) => (
-                  <div key={c.id} style={{ background: "var(--surface-tint)", borderRadius: 18, padding: 16, marginBottom: 12, border: "1px solid var(--surface-border-s)", position: "relative" }}>
-                    {d.children.length > 1 && (
-                      <button onClick={() => upd({ children: d.children.filter((_, idx) => idx !== i) })}
-                        style={{ position: "absolute", top: 10, right: 10, background: "none", border: "none", cursor: "pointer", color: "var(--ink-faint)" }}>
-                        <Xmark />
-                      </button>
-                    )}
-                    <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
+                  <div key={c.id} style={{ background: "var(--surface-tint)", borderRadius: 18, padding: 16, marginBottom: 12, border: "1px solid var(--surface-border-s)", position: "relative", overflow: "hidden" }}>
+                    <div style={{ display: "flex", alignItems: "center", marginBottom: 10, gap: 8 }}>
+                      <span style={{ fontSize: 11, fontWeight: 500, color: "var(--ink-faint)", textTransform: "uppercase", letterSpacing: ".08em", flex: 1 }}>
+                        Enfant {i + 1}
+                      </span>
+                      {d.children.length > 2 && (
+                        <button onClick={() => upd({ children: d.children.filter((_, idx) => idx !== i) })}
+                          style={{ background: "none", border: "none", cursor: "pointer", color: "var(--ink-faint)", padding: 4 }}>
+                          <Xmark />
+                        </button>
+                      )}
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
                       <input className="field" placeholder="Prénom" value={c.firstName} onChange={e => updChild(i, "firstName", e.target.value)} style={{ fontSize: 14 }} />
-                      <input className="field" type="date" value={c.birthDate} onChange={e => updChild(i, "birthDate", e.target.value)} style={{ fontSize: 13 }} />
+                      <input className="field" type="date" value={c.birthDate} onChange={e => updChild(i, "birthDate", e.target.value)} style={{ fontSize: 13, minWidth: 0 }} />
                     </div>
                     {c.birthDate && calcAge(c.birthDate) && (
                       <p style={{ fontSize: 12, color: "var(--accent)", marginBottom: 8, fontStyle: "italic" }}>{calcAge(c.birthDate)}</p>
                     )}
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                       {TEMPS.map(t => (
                         <button key={t} className={`chip ${c.temperament === t ? "on" : ""}`} style={{ fontSize: 11, padding: "5px 11px" }} onClick={() => updChild(i, "temperament", c.temperament === t ? "" : t)}>{t}</button>
                       ))}
                     </div>
-                    <input className="field" placeholder="Particularités… (optionnel)" value={c.notes} onChange={e => updChild(i, "notes", e.target.value)} style={{ fontSize: 13 }} />
                   </div>
                 ))}
               </div>
@@ -1229,9 +1186,11 @@ function Home({ profile, onStart, onPremium }) {
             <p style={{ marginTop: 12, fontSize: 11.5, color: "rgba(245,237,230,0.32)", letterSpacing: "0.06em", fontStyle: "italic" }}>
               — {sig}
             </p>
-            {firstChild && (
+            {namedChildren.length > 0 && (
               <p style={{ marginTop: 6, fontSize: 11, color: "rgba(245,237,230,0.18)", letterSpacing: "0.05em" }}>
-                {firstChild.firstName}{childAge ? ` · ${childAge}` : ""}{dayNum ? ` · jour ${dayNum}` : ""}
+                {namedChildren.map(c => c.firstName).join(" & ")}
+                {childAge ? ` · ${childAge}` : ""}
+                {dayNum ? ` · jour ${dayNum}` : ""}
               </p>
             )}
           </motion.div>
@@ -1789,16 +1748,19 @@ function ProfileScreen({ profile, onSave, onPremium, onLegal, onConfidentialite,
         <div style={{ background: "rgba(245,237,230,0.03)", borderRadius: 20, padding: "20px", border: "1px solid rgba(245,237,230,0.08)", backdropFilter: "blur(24px)" }}>
           <p style={{ fontSize: 11, fontWeight: 500, color: "var(--ink-faint)", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 14 }}>Mes enfants</p>
           {d.children.map((c, i) => (
-            <div key={c.id} style={{ background: "var(--surface-tint)", borderRadius: 14, padding: 14, marginBottom: 10, border: "1px solid var(--surface-border)", position: "relative" }}>
-              {d.children.length > 1 && (
-                <button onClick={() => upd({ children: d.children.filter((_, idx) => idx !== i) })}
-                  style={{ position: "absolute", top: 10, right: 10, background: "none", border: "none", cursor: "pointer", color: "var(--ink-faint)" }}>
-                  <Xmark />
-                </button>
-              )}
-              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 8 }}>
+            <div key={c.id} style={{ background: "var(--surface-tint)", borderRadius: 14, padding: 14, marginBottom: 10, border: "1px solid var(--surface-border)", overflow: "hidden" }}>
+              <div style={{ display: "flex", alignItems: "center", marginBottom: 10, gap: 8 }}>
+                <span style={{ fontSize: 11, fontWeight: 500, color: "var(--ink-faint)", textTransform: "uppercase", letterSpacing: ".08em", flex: 1 }}>Enfant {i + 1}</span>
+                {d.children.length > 2 && (
+                  <button onClick={() => upd({ children: d.children.filter((_, idx) => idx !== i) })}
+                    style={{ background: "none", border: "none", cursor: "pointer", color: "var(--ink-faint)", padding: 4 }}>
+                    <Xmark />
+                  </button>
+                )}
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
                 <input className="field" placeholder="Prénom" value={c.firstName} onChange={e => updChild(i, "firstName", e.target.value)} style={{ fontSize: 14 }} />
-                <input className="field" type="date" value={c.birthDate} onChange={e => updChild(i, "birthDate", e.target.value)} style={{ fontSize: 13 }} />
+                <input className="field" type="date" value={c.birthDate} onChange={e => updChild(i, "birthDate", e.target.value)} style={{ fontSize: 13, minWidth: 0 }} />
               </div>
               {c.birthDate && calcAge(c.birthDate) && (
                 <p style={{ fontSize: 12, color: "var(--accent)", marginBottom: 8, fontStyle: "italic" }}>{calcAge(c.birthDate)}</p>

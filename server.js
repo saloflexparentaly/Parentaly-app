@@ -51,6 +51,11 @@ function verifyToken(token) {
   } catch { return null; }
 }
 
+// Supabase JS v2 builders sont PromiseLike mais n'ont pas .catch() natif
+function dbFire(query) {
+  Promise.resolve(query).catch(e => console.error("DB fire-and-forget error:", e?.message));
+}
+
 // ─── Replay prevention (Supabase-backed, fallback in-memory) ─────────────────
 const usedSessionsFallback = new Set();
 
@@ -103,10 +108,10 @@ function checkFreeLimit(clientId) {
     }
   }
   if (supabaseAdmin) {
-    supabaseAdmin.from("rate_limits").upsert(
+    dbFire(supabaseAdmin.from("rate_limits").upsert(
       { client_id: clientId, date: today, count: newCount, updated_at: new Date().toISOString() },
       { onConflict: "client_id,date" }
-    ).catch(() => {});
+    ));
   }
   return true;
 }
@@ -132,10 +137,10 @@ function checkGlobalCap() {
   if (globalDaily.count >= GLOBAL_DAILY_CAP) return false;
   globalDaily.count++;
   if (supabaseAdmin) {
-    supabaseAdmin.from("rate_limits").upsert(
+    dbFire(supabaseAdmin.from("rate_limits").upsert(
       { client_id: "__global__", date: today, count: globalDaily.count, updated_at: new Date().toISOString() },
       { onConflict: "client_id,date" }
-    ).catch(() => {});
+    ));
   }
   return true;
 }
@@ -322,9 +327,9 @@ app.post("/api/consent", consentLimiter, (req, res) => {
   const ipHash  = crypto.createHash("sha256").update(ip).digest("hex").slice(0, 16);
   console.log(JSON.stringify({ event: "consent_accepted", ip_hash: ipHash, ts, cgu_version: version, ua }));
   if (supabaseAdmin) {
-    supabaseAdmin.from("consent_logs").insert({
+    dbFire(supabaseAdmin.from("consent_logs").insert({
       ip_hash: ipHash, cgu_version: version, user_agent: ua,
-    }).catch(() => {});
+    }));
   }
   res.json({ ok: true });
 });
@@ -337,7 +342,7 @@ app.post("/api/crisis-alert", async (req, res) => {
   console.warn("🚨 Mot-clé de crise détecté :", keyword);
 
   if (supabaseAdmin) {
-    supabaseAdmin.from("crisis_logs").insert({ user_id: userId, keyword }).catch(() => {});
+    dbFire(supabaseAdmin.from("crisis_logs").insert({ user_id: userId, keyword }));
   }
 
   if (process.env.RESEND_API_KEY && process.env.ALERT_EMAIL) {
