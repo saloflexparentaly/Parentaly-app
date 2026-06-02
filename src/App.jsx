@@ -354,7 +354,6 @@ function LegalConsent({ onAccept }) {
   const [disclaimer, setDisclaimer] = useState(false);
   const [cgu,        setCgu]        = useState(false);
   const [rgpd,       setRgpd]       = useState(false);
-  const [overlay,    setOverlay]    = useState(null); // null | 'disclaimer' | 'cgu' | 'rgpd'
   const canContinue = age && disclaimer && cgu && rgpd;
 
   const checkboxStyle = (val) => ({
@@ -364,56 +363,6 @@ function LegalConsent({ onAccept }) {
     flexShrink: 0, display: "flex", alignItems: "center",
     justifyContent: "center", transition: "all .15s", marginTop: 1,
   });
-
-  const linkBtn = (key, label) => (
-    <button onClick={e => { e.preventDefault(); setOverlay(key); }} style={{
-      background: "none", border: "none", color: "var(--accent)",
-      cursor: "pointer", fontSize: 13, textDecoration: "underline", padding: 0,
-    }}>{label}</button>
-  );
-
-  // Overlay plein écran — utilise les écrans légaux existants
-  if (overlay === 'cgu') return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 200, overflowY: "auto", background: "var(--bg-base-1)" }}>
-      <CguScreen onBack={() => setOverlay(null)} />
-    </div>
-  );
-  if (overlay === 'rgpd') return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 200, overflowY: "auto", background: "var(--bg-base-1)" }}>
-      <ConfidentialiteScreen onBack={() => setOverlay(null)} />
-    </div>
-  );
-  if (overlay === 'disclaimer') return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 200, overflowY: "auto", background: "var(--bg-base-1)" }}>
-      <div style={{ maxWidth: 640, margin: "0 auto", padding: "0 20px 48px" }}>
-        <div style={{ position: "sticky", top: 0, background: "rgba(8,6,8,0.92)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(245,237,230,0.07)", padding: "16px 0", marginBottom: 24, display: "flex", alignItems: "center", gap: 12 }}>
-          <button onClick={() => setOverlay(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(245,237,230,0.5)", display: "flex", padding: 4 }}><Back s={20} /></button>
-          <span className="serif" style={{ fontSize: 17, fontWeight: 400, color: "rgba(245,237,230,0.85)" }}>Déclaration médicale</span>
-        </div>
-        <div style={{ fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.85, fontWeight: 300 }}>
-          <p style={{ marginBottom: 16 }}><strong style={{ color: "var(--ink)" }}>Ce que NERA est</strong><br />
-          Application de soutien émotionnel pour parents de jumeaux et multiples. Accompagnement émotionnel, informations générales, gestion de la charge mentale.</p>
-
-          <p style={{ marginBottom: 16 }}><strong style={{ color: "var(--ink)" }}>Ce que NERA n'est pas</strong><br />
-          Ni service médical, ni psychothérapie, ni substitut à un suivi médical ou psychiatrique, ni dispositif médical au sens européen, ni service d'urgence.</p>
-
-          <p style={{ marginBottom: 16 }}><strong style={{ color: "var(--ink)" }}>Elïa ne peut pas</strong><br />
-          Poser un diagnostic · prescrire un traitement · remplacer un professionnel de santé · fournir une assistance d'urgence.</p>
-
-          <div style={{ background: "rgba(201,117,96,0.08)", border: "1px solid rgba(201,117,96,0.2)", borderRadius: 12, padding: "14px 16px", marginBottom: 16 }}>
-            <strong style={{ color: "var(--accent)", display: "block", marginBottom: 8 }}>En cas d'urgence</strong>
-            <strong>15</strong> — SAMU · <strong>17</strong> — Police · <strong>18</strong> — Pompiers · <strong>112</strong> — Européen<br />
-            <strong>3114</strong> — Prévention suicide · <strong>119</strong> — Enfance en danger · <strong>3919</strong> — Violences femmes
-          </div>
-
-          <p style={{ marginBottom: 16 }}><strong style={{ color: "var(--ink)" }}>En cochant cette case, tu reconnais</strong><br />
-          Avoir lu ce document · comprendre qu'Elïa est une IA, non un professionnel de santé · t'engager à consulter un professionnel pour toute question médicale · avoir 16 ans ou plus.</p>
-
-          <p style={{ fontSize: 11, color: "var(--ink-faint)", fontStyle: "italic" }}>Document soumis au droit français — NERA · Mai 2026</p>
-        </div>
-      </div>
-    </div>
-  );
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, overflowY: "auto" }}>
@@ -442,35 +391,32 @@ function LegalConsent({ onAccept }) {
             </span>
           </label>
 
-          <label style={{ display: "flex", alignItems: "flex-start", gap: 12, cursor: "pointer" }}>
-            <div onClick={() => setDisclaimer(!disclaimer)} style={checkboxStyle(disclaimer)}>
+          <div onClick={() => setDisclaimer(!disclaimer)} style={{ display: "flex", alignItems: "flex-start", gap: 12, cursor: "pointer" }}>
+            <div style={checkboxStyle(disclaimer)}>
               {disclaimer && <Check s={12} />}
             </div>
             <span style={{ fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.5, fontWeight: 300 }}>
-              J'ai lu et j'accepte la{" "}
-              {linkBtn("disclaimer", "Déclaration de non-substitution médicale")}
+              Je comprends qu'Elïa est une <strong>IA de soutien émotionnel</strong>, pas un professionnel de santé, et ne remplace pas un suivi médical
             </span>
-          </label>
+          </div>
 
-          <label style={{ display: "flex", alignItems: "flex-start", gap: 12, cursor: "pointer" }}>
-            <div onClick={() => setCgu(!cgu)} style={checkboxStyle(cgu)}>
+          <div onClick={() => setCgu(!cgu)} style={{ display: "flex", alignItems: "flex-start", gap: 12, cursor: "pointer" }}>
+            <div style={checkboxStyle(cgu)}>
               {cgu && <Check s={12} />}
             </div>
             <span style={{ fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.5, fontWeight: 300 }}>
-              J'accepte les{" "}
-              {linkBtn("cgu", "Conditions Générales d'Utilisation")}
+              J'accepte les <strong>Conditions Générales d'Utilisation</strong>
             </span>
-          </label>
+          </div>
 
-          <label style={{ display: "flex", alignItems: "flex-start", gap: 12, cursor: "pointer" }}>
-            <div onClick={() => setRgpd(!rgpd)} style={checkboxStyle(rgpd)}>
+          <div onClick={() => setRgpd(!rgpd)} style={{ display: "flex", alignItems: "flex-start", gap: 12, cursor: "pointer" }}>
+            <div style={checkboxStyle(rgpd)}>
               {rgpd && <Check s={12} />}
             </div>
             <span style={{ fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.5, fontWeight: 300 }}>
-              J'ai lu la{" "}
-              {linkBtn("rgpd", "Politique de confidentialité")}{" "}(RGPD)
+              J'ai lu la <strong>Politique de confidentialité</strong> (RGPD)
             </span>
-          </label>
+          </div>
 
         </div>
 
