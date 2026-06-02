@@ -269,13 +269,13 @@ const FREE_DAILY_LIMIT = 10;
 const SOS_DAILY_LIMIT  = 10;
 
 async function getDailyUsage() {
-  const today = new Date().toLocaleDateString("fr-FR");
+  const today = new Date().toISOString().slice(0, 10);
   const data = await S.get("elia_daily") || { date: "", count: 0 };
   return data.date === today ? data.count : 0;
 }
 
 async function incrementDailyUsage() {
-  const today = new Date().toLocaleDateString("fr-FR");
+  const today = new Date().toISOString().slice(0, 10);
   const data = await S.get("elia_daily") || { date: "", count: 0 };
   const count = data.date === today ? data.count + 1 : 1;
   await S.set("elia_daily", { date: today, count });
@@ -571,13 +571,8 @@ function CrisisModal({ onClose }) {
 }
 
 // ─── STRIPE MODAL ─────────────────────────────────────────────────────────────
-// Price IDs from your Stripe account
-const STRIPE_PRICES = {
-  monthly: "price_1TOHRf9TErY2lFQDoObZAF6t",
-  annual:  "price_1TOHS59TErY2lFQDZz2AterS",
-};
 
-function StripeModal({ profile, onClose, onSuccess }) {
+function StripeModal({ profile, onClose }) {
   const [selected, setSelected] = useState("monthly");
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
@@ -596,19 +591,16 @@ function StripeModal({ profile, onClose, onSuccess }) {
     setLoading(true);
     setError("");
     try {
-      const priceId = STRIPE_PRICES[selected];
       let userId = null;
       try { const s = await getOrCreateSession(); userId = s?.user?.id; } catch {}
       const res = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          priceId,
+          plan: selected,
           email,
           parentName: profile.parentName,
           userId,
-          successUrl: window.location.origin + "?success=1",
-          cancelUrl: window.location.origin + "?canceled=1",
         }),
       });
 
@@ -911,6 +903,7 @@ function Onboarding({ onDone }) {
               <textarea className="field"
                 placeholder="ex. Je suis séparée, je gère tout seul, ma fille a été hospitalisée récemment…"
                 value={d.freeText} onChange={e => upd({ freeText: e.target.value })}
+                maxLength={400}
                 rows={5} style={{ resize: "none", lineHeight: 1.6 }}
               />
               <div style={{ display: "flex", gap: 10, marginTop: 24 }}>
@@ -949,7 +942,7 @@ const CHECKIN_MOODS = ["Épuisée", "Débordée", "Douce", "Lumineuse"];
 const NOISE_SVG = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`;
 
 function Home({ profile, onStart, onPremium }) {
-  const TODAY   = new Date().toLocaleDateString("fr-FR");
+  const TODAY   = new Date().toISOString().slice(0, 10);
   const tipIdx  = new Date().getDate() % TIPS.length;
   const tip     = TIPS[tipIdx];
   const sig     = SIGNATURES[tipIdx];
@@ -1369,15 +1362,19 @@ function Chat({ profile, isSos, onBack, onPremium, premiumToken }) {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [msgs, loading]);
 
-  const userMsgCount = msgs.filter(m => m.role === "user").length;
-
   const send = useCallback(async (text) => {
     const txt = (text || "").trim();
     if (!txt || loading) return;
 
     // Détection de crise
-    if (CRISIS_KEYWORDS.some(k => txt.toLowerCase().includes(k))) {
+    const triggeredKeyword = CRISIS_KEYWORDS.find(k => txt.toLowerCase().includes(k));
+    if (triggeredKeyword) {
       setCrisis(true);
+      fetch("/api/crisis-alert", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ keyword: triggeredKeyword }),
+      }).catch(() => {});
     }
 
     // Quotas gratuit
@@ -1481,7 +1478,7 @@ function Chat({ profile, isSos, onBack, onPremium, premiumToken }) {
       }
     }
     setLoading(false);
-  }, [msgs, loading, profile, isSos, memory, premiumToken, userMsgCount]);
+  }, [msgs, loading, profile, isSos, memory, premiumToken, dailyCount, sosCount]);
 
   const handleKey = e => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -1853,7 +1850,7 @@ function ProfileScreen({ profile, onSave, onPremium, onLegal, onConfidentialite,
         {/* Contexte */}
         <div style={{ background: "rgba(245,237,230,0.03)", borderRadius: 20, padding: "20px", border: "1px solid rgba(245,237,230,0.08)", backdropFilter: "blur(24px)" }}>
           <p style={{ fontSize: 11, fontWeight: 500, color: "var(--ink-faint)", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 14 }}>Mon contexte</p>
-          <textarea className="field" placeholder="ex. Je suis séparée, je gère tout seul…" value={d.freeText} onChange={e => upd({ freeText: e.target.value })} rows={4} style={{ resize: "none", lineHeight: 1.6 }} />
+          <textarea className="field" placeholder="ex. Je suis séparée, je gère tout seul…" value={d.freeText} onChange={e => upd({ freeText: e.target.value })} maxLength={400} rows={4} style={{ resize: "none", lineHeight: 1.6 }} />
         </div>
 
         {/* Save */}
@@ -1935,7 +1932,9 @@ function AppInner() {
         S.get("elia_legal"),
         S.get("elia_premium_token"),
       ]);
-      setProfile(p);
+      // isPremium dérivé du token (source de vérité) — évite toute désync
+      const profileWithPremium = p ? { ...p, isPremium: !!token } : p;
+      setProfile(profileWithPremium);
       if (token) setPremiumToken(token);
       if (!legal) setScreen("legal");
       else setScreen(p?.parentName ? "home" : "onboarding");
@@ -2048,12 +2047,6 @@ function AppInner() {
           <StripeModal
             profile={profile}
             onClose={() => setShowPremium(false)}
-            onSuccess={() => {
-              const updated = { ...profile, isPremium: true };
-              S.set("elia_profile", updated);
-              setProfile(updated);
-              setShowPremium(false);
-            }}
           />
         )}
       </AnimatePresence>

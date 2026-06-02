@@ -209,9 +209,12 @@ app.use(helmet({
       styleSrc:   ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc:    ["'self'", "https://fonts.gstatic.com"],
       scriptSrc:  ["'self'"],
-      connectSrc: ["'self'"],
+      connectSrc: ["'self'",
+        process.env.SUPABASE_URL || "",
+        "https://*.supabase.co",
+      ].filter(Boolean),
       imgSrc:     ["'self'", "data:"],
-      frameSrc:   ["https://js.stripe.com"],
+      frameSrc:   ["'none'"],
     }
   }
 }));
@@ -246,13 +249,14 @@ const consentLimiter = rateLimit({
   message: { error: "Trop de tentatives." },
 });
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2024-06-20" });
 
 // ─── Restore rate limits depuis Supabase au démarrage ────────────────────────
 if (supabaseAdmin) {
   const today = new Date().toISOString().slice(0, 10);
   supabaseAdmin.from("rate_limits").select("client_id, count").eq("date", today)
-    .then(({ data }) => {
+    .then(({ data, error }) => {
+      if (error) throw error;
       if (!data) return;
       for (const row of data) {
         if (row.client_id === "__global__") {
@@ -263,7 +267,7 @@ if (supabaseAdmin) {
       }
       console.log(`♻️  Rate limits restaurés (${data.length} entrées)`);
     })
-    .catch(() => {});
+    .catch(err => console.error("⚠️  Erreur restauration rate_limits — compteurs repartent de 0 :", err.message));
 }
 
 // ─── Webhook Stripe (body brut requis) ───────────────────────────────────────
@@ -277,6 +281,10 @@ app.post("/api/webhook", express.raw({ type: "application/json" }), async (req, 
   }
   if (event.type === "checkout.session.completed") {
     const stripeSession = event.data.object;
+    if (stripeSession.payment_status !== "paid") {
+      console.warn("⚠️  checkout.session.completed reçu mais payment_status =", stripeSession.payment_status, "— ignoré");
+      return res.json({ received: true });
+    }
     const userId = stripeSession.metadata?.userId;
     console.log("✅ Paiement confirmé :", stripeSession.customer_email, "userId:", userId);
     if (userId && supabaseAdmin) {
@@ -310,14 +318,44 @@ app.post("/api/consent", consentLimiter, (req, res) => {
   const ts      = new Date().toISOString();
   const version = typeof req.body?.version === "string" ? req.body.version.slice(0, 20) : "1.0";
   const ua      = (req.headers["user-agent"] || "").slice(0, 200);
-  // Hash IP avant stockage (minimisation des données RGPD)
+  // Hash IP avant tout stockage ou log (minimisation des données RGPD)
   const ipHash  = crypto.createHash("sha256").update(ip).digest("hex").slice(0, 16);
-  console.log(JSON.stringify({ event: "consent_accepted", ip, ts, cgu_version: version, ua }));
+  console.log(JSON.stringify({ event: "consent_accepted", ip_hash: ipHash, ts, cgu_version: version, ua }));
   if (supabaseAdmin) {
     supabaseAdmin.from("consent_logs").insert({
       ip_hash: ipHash, cgu_version: version, user_agent: ua,
     }).catch(() => {});
   }
+  res.json({ ok: true });
+});
+
+// ─── Alerte crise ─────────────────────────────────────────────────────────────
+app.post("/api/crisis-alert", async (req, res) => {
+  const keyword = typeof req.body?.keyword === "string" ? req.body.keyword.slice(0, 100) : "inconnu";
+  const userId  = typeof req.body?.userId  === "string" ? req.body.userId.slice(0, 36)  : null;
+
+  console.warn("🚨 Mot-clé de crise détecté :", keyword);
+
+  if (supabaseAdmin) {
+    supabaseAdmin.from("crisis_logs").insert({ user_id: userId, keyword }).catch(() => {});
+  }
+
+  if (process.env.RESEND_API_KEY && process.env.ALERT_EMAIL) {
+    fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Content-Type":  "application/json",
+        "Authorization": `Bearer ${process.env.RESEND_API_KEY}`,
+      },
+      body: JSON.stringify({
+        from:    "NERA Alertes <alertes@nera.app>",
+        to:      [process.env.ALERT_EMAIL],
+        subject: "NERA — Mot-clé de crise détecté",
+        text:    `Un utilisateur a déclenché une alerte crise.\n\nMot-clé : "${keyword}"\nHeure : ${new Date().toISOString()}\n\nLes numéros d'urgence (15, 3114, 119, 3919) ont été affichés à l'utilisateur.\n\nConnecte-toi au dashboard Supabase → crisis_logs pour voir l'historique.`,
+      }),
+    }).catch(() => {});
+  }
+
   res.json({ ok: true });
 });
 
@@ -340,17 +378,16 @@ app.post("/api/chat", chatLimiter, async (req, res) => {
     }
   }
 
-  // Cap global — protège les coûts API
-  if (!checkGlobalCap()) {
-    return res.status(503).json({ error: "Service momentanément indisponible. Réessaie dans quelques heures.", globalCap: true });
-  }
-
   // Vérification premium côté serveur — le client ne peut pas falsifier ceci
   const tokenPayload = verifyToken(premiumToken);
   const isPremium    = tokenPayload?.premium === true;
 
-  // Quotas pour utilisateurs gratuits
+  // Quotas pour utilisateurs gratuits uniquement
   if (!isPremium) {
+    // Cap global — protège les coûts API (exempt pour les abonnés)
+    if (!checkGlobalCap()) {
+      return res.status(503).json({ error: "Service momentanément indisponible. Réessaie dans quelques heures.", globalCap: true });
+    }
     const clientId = getClientId(req);
     if (isSos) {
       if (!checkSosLimit(clientId)) {
@@ -405,21 +442,22 @@ app.post("/api/chat", chatLimiter, async (req, res) => {
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 app.post("/api/create-checkout-session", checkoutLimiter, async (req, res) => {
-  const { priceId, email, parentName, userId } = req.body;
+  const { plan, email, parentName, userId } = req.body;
 
-  if (!priceId || !email || !EMAIL_RE.test(email)) {
+  if (!email || !EMAIL_RE.test(email)) {
     return res.status(400).json({ error: "Données invalides." });
   }
-
-  const allowedPrices = [
-    process.env.STRIPE_PRICE_MONTHLY,
-    process.env.STRIPE_PRICE_ANNUAL,
-    "price_1TOHRf9TErY2lFQDoObZAF6t",
-    "price_1TOHS59TErY2lFQDZz2AterS",
-  ].filter(Boolean);
-
-  if (!allowedPrices.includes(priceId)) {
+  if (!["monthly", "annual"].includes(plan)) {
     return res.status(400).json({ error: "Offre invalide." });
+  }
+
+  const priceId = plan === "monthly"
+    ? process.env.STRIPE_PRICE_MONTHLY
+    : process.env.STRIPE_PRICE_ANNUAL;
+
+  if (!priceId) {
+    console.error("STRIPE_PRICE_MONTHLY / STRIPE_PRICE_ANNUAL manquant dans .env");
+    return res.status(500).json({ error: "Configuration Stripe incomplète." });
   }
 
   try {
@@ -435,7 +473,10 @@ app.post("/api/create-checkout-session", checkoutLimiter, async (req, res) => {
         ...(userId && typeof userId === "string" ? { userId: userId.slice(0, 36) } : {}),
       },
       locale:               "fr",
-      subscription_data:    { metadata: { parentName: sanitize(parentName, 100) } },
+      subscription_data:    { metadata: {
+        parentName: sanitize(parentName, 100),
+        ...(userId && typeof userId === "string" ? { userId: userId.slice(0, 36) } : {}),
+      }},
     });
     res.json({ url: session.url });
   } catch (err) {

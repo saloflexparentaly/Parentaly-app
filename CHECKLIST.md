@@ -36,7 +36,7 @@
 ### 0.4 · Conformité technique RGPD
 
 - [x] Créer projet Supabase région Frankfurt (impossible de migrer après)
-- [ ] Signer le DPA Supabase (Data Processing Agreement) dans les paramètres
+- [x] Signer le DPA Supabase (Data Processing Agreement) dans les paramètres
 - [ ] Signer le DPA Anthropic (API Claude)
 - [ ] Signer le DPA Stripe
 - [x] Configurer Row-Level Security sur toutes les tables Supabase

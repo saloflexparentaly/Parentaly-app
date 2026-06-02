@@ -53,6 +53,14 @@ create table if not exists public.consent_logs (
   created_at  timestamptz default now()
 );
 
+-- Logs alertes crise (mots-clés dangereux détectés)
+create table if not exists public.crisis_logs (
+  id         uuid        primary key default gen_random_uuid(),
+  user_id    uuid        references auth.users(id) on delete set null,
+  keyword    text,
+  created_at timestamptz default now()
+);
+
 -- Compteurs de rate-limiting persistants (résistants aux redémarrages serveur)
 -- client_id = IP ou '__global__' pour le cap global
 create table if not exists public.rate_limits (
