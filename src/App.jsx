@@ -786,9 +786,9 @@ function Onboarding({ onDone }) {
                         </button>
                       )}
                     </div>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 8 }}>
                       <input className="field" placeholder="Prénom" value={c.firstName} onChange={e => updChild(i, "firstName", e.target.value)} style={{ fontSize: 14 }} />
-                      <input className="field" type="date" value={c.birthDate} onChange={e => updChild(i, "birthDate", e.target.value)} style={{ fontSize: 13, minWidth: 0 }} />
+                      <input className="field" type="date" value={c.birthDate} onChange={e => updChild(i, "birthDate", e.target.value)} style={{ fontSize: 13, minWidth: 0, width: "100%" }} />
                     </div>
                     {c.birthDate && calcAge(c.birthDate) && (
                       <p style={{ fontSize: 12, color: "var(--accent)", marginBottom: 8, fontStyle: "italic" }}>{calcAge(c.birthDate)}</p>
