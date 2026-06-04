@@ -37,8 +37,8 @@
 
 - [x] Créer projet Supabase région Frankfurt (impossible de migrer après)
 - [x] Signer le DPA Supabase (Data Processing Agreement) dans les paramètres
-- [ ] Signer le DPA Anthropic (API Claude)
-- [ ] Signer le DPA Stripe
+- [x] Signer le DPA Anthropic (API Claude) — inclus dans les ToS Anthropic
+- [x] Signer le DPA Stripe — inclus dans les ToS Stripe pour EU
 - [x] Configurer Row-Level Security sur toutes les tables Supabase
 - [ ] Mettre en place le chiffrement au repos des conversations sensibles
 - [ ] Mettre en place les logs d'accès (qui accède à quoi, quand)
