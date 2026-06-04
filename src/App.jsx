@@ -524,15 +524,18 @@ function StripeModal({ profile, onClose }) {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
-  const [retractWaiver, setRetractWaiver] = useState(false);
+  const [trialAccepted, setTrialAccepted] = useState(false);
+
+  const trialEndDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+    .toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 
   const handleCheckout = async () => {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) {
       setError("Merci d'entrer une adresse email valide.");
       return;
     }
-    if (!retractWaiver) {
-      setError("Merci d'accepter les conditions de démarrage immédiat du service.");
+    if (!trialAccepted) {
+      setError("Merci d'accepter les conditions de l'essai.");
       return;
     }
     setLoading(true);
@@ -565,14 +568,19 @@ function StripeModal({ profile, onClose }) {
       <motion.div className="modal-box" initial={{ opacity: 0, scale: .95, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: .95 }}>
         <button onClick={onClose} style={{ position: "absolute", top: 20, right: 20, background: "none", border: "none", cursor: "pointer", color: "var(--ink-faint)" }}><Xmark s={18} /></button>
 
-        <div style={{ textAlign: "center", marginBottom: 28 }}>
+        <div style={{ textAlign: "center", marginBottom: 24 }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "linear-gradient(135deg,var(--accent),var(--accent-deep))", borderRadius: 50, padding: "6px 14px", color: "#fff", fontSize: 12, fontWeight: 500, marginBottom: 16 }}>
-            <Star s={12} /> NERA Premium
+            <Star s={12} /> Essai gratuit 7 jours
           </div>
-          <h2 className="serif" style={{ fontSize: 28, fontWeight: 600, marginBottom: 8 }}>Accompagnement complet</h2>
-          <p style={{ color: "var(--ink-soft)", fontSize: 14, fontWeight: 300, lineHeight: 1.5 }}>
-            Mémoire longue, analyses hebdomadaires, accès illimité à Elïa.
-          </p>
+          <h2 className="serif" style={{ fontSize: 26, fontWeight: 600, marginBottom: 8 }}>Accompagnement complet</h2>
+          <div style={{ background: "rgba(201,117,96,0.08)", border: "1px solid rgba(201,117,96,0.25)", borderRadius: 12, padding: "10px 14px", marginBottom: 8 }}>
+            <p style={{ fontSize: 13, color: "rgba(245,237,230,0.90)", fontWeight: 500 }}>
+              Aucun débit avant le <strong>{trialEndDate}</strong>
+            </p>
+            <p style={{ fontSize: 11, color: "var(--ink-soft)", marginTop: 2, fontWeight: 300 }}>
+              Annule avant cette date et tu ne seras jamais débité(e)
+            </p>
+          </div>
         </div>
 
         {/* Features */}
@@ -610,27 +618,25 @@ function StripeModal({ profile, onClose }) {
           <input className="field" type="email" placeholder="Ton adresse email" value={email} onChange={e => setEmail(e.target.value)} style={{ fontSize: 14 }} />
         </div>
 
-        {/* Waiver rétractation — obligatoire légalement (art. L221-28 C. conso.) */}
-        <label style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 16, cursor: "pointer" }}>
-          <div onClick={() => setRetractWaiver(v => !v)}
-            style={{ width: 18, height: 18, borderRadius: 5, flexShrink: 0, marginTop: 1,
-              border: `2px solid ${retractWaiver ? "var(--accent)" : "var(--surface-border-s)"}`,
-              background: retractWaiver ? "var(--accent)" : "transparent",
-              display: "flex", alignItems: "center", justifyContent: "center", transition: "all .15s" }}>
-            {retractWaiver && <Check s={11} />}
+        <div onClick={() => setTrialAccepted(v => !v)} style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 16, cursor: "pointer" }}>
+          <div style={{ width: 18, height: 18, borderRadius: 5, flexShrink: 0, marginTop: 1,
+            border: `2px solid ${trialAccepted ? "var(--accent)" : "var(--surface-border-s)"}`,
+            background: trialAccepted ? "var(--accent)" : "transparent",
+            display: "flex", alignItems: "center", justifyContent: "center", transition: "all .15s" }}>
+            {trialAccepted && <Check s={11} />}
           </div>
           <span style={{ fontSize: 11, color: "var(--ink-soft)", lineHeight: 1.55, fontWeight: 300 }}>
-            Je demande le démarrage immédiat du service et je reconnais expressément renoncer à mon droit de rétractation de 14 jours dès le début de l'exécution (art. L221-28 du Code de la consommation).
+            Je comprends que si je n'annule pas avant le <strong>{trialEndDate}</strong>, mon abonnement démarrera automatiquement au tarif choisi.
           </span>
-        </label>
+        </div>
 
         {error && <p style={{ color: "var(--accent-deep)", fontSize: 13, marginBottom: 12, textAlign: "center" }}>{error}</p>}
 
-        <button className="btn btn-t" onClick={handleCheckout} disabled={loading || !retractWaiver}>
-          {loading ? "Chargement…" : "Commencer · Paiement sécurisé"}
+        <button className="btn btn-t" onClick={handleCheckout} disabled={loading || !trialAccepted}>
+          {loading ? "Chargement…" : "Commencer mon essai gratuit"}
         </button>
         <p style={{ fontSize: 11, color: "var(--ink-faint)", textAlign: "center", marginTop: 10, fontStyle: "italic" }}>
-          Résiliable à tout moment · Paiement via Stripe
+          7 jours gratuits · Aucun débit immédiat · Résiliable à tout moment
         </p>
       </motion.div>
     </div>
@@ -1916,6 +1922,7 @@ function AppInner() {
     await S.set("elia_profile", merged);
     setProfile(merged);
     setScreen("home");
+    if (!merged.isPremium) setShowPremium(true); // Proposer l'essai après onboarding
   };
 
   const handleNavigate = s => {

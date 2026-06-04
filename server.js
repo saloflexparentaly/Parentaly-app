@@ -291,9 +291,34 @@ app.post("/api/webhook", express.raw({ type: "application/json" }), async (req, 
   } catch (err) {
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
+  // Annulation pendant le trial → révoquer le premium
+  if (event.type === "customer.subscription.deleted") {
+    const sub = event.data.object;
+    const userId = sub.metadata?.userId;
+    console.log("❌ Abonnement annulé :", sub.customer, "userId:", userId);
+    if (userId && supabaseAdmin) {
+      try {
+        await supabaseAdmin.from("user_data").upsert(
+          { user_id: userId, key: "elia_premium_token", value: null, updated_at: new Date().toISOString() },
+          { onConflict: "user_id,key" }
+        );
+        const { data: profileRow } = await supabaseAdmin.from("user_data")
+          .select("value").eq("user_id", userId).eq("key", "elia_profile").maybeSingle();
+        if (profileRow?.value) {
+          await supabaseAdmin.from("user_data").upsert(
+            { user_id: userId, key: "elia_profile", value: { ...profileRow.value, isPremium: false }, updated_at: new Date().toISOString() },
+            { onConflict: "user_id,key" }
+          );
+        }
+      } catch (err) { console.error("Webhook annulation error:", err.message); }
+    }
+    return res.json({ received: true });
+  }
+
   if (event.type === "checkout.session.completed") {
     const stripeSession = event.data.object;
-    if (stripeSession.payment_status !== "paid") {
+    // Avec trial, payment_status = "no_payment_required" — on active le premium quand même
+    if (stripeSession.payment_status !== "paid" && stripeSession.payment_status !== "no_payment_required") {
       console.warn("⚠️  checkout.session.completed reçu mais payment_status =", stripeSession.payment_status, "— ignoré");
       return res.json({ received: true });
     }
@@ -519,10 +544,14 @@ app.post("/api/create-checkout-session", checkoutLimiter, async (req, res) => {
         ...(userId && typeof userId === "string" ? { userId: userId.slice(0, 36) } : {}),
       },
       locale:               "fr",
-      subscription_data:    { metadata: {
-        parentName: sanitize(parentName, 100),
-        ...(userId && typeof userId === "string" ? { userId: userId.slice(0, 36) } : {}),
-      }},
+      subscription_data:    {
+        trial_period_days: 7,
+        trial_settings:    { end_behavior: { missing_payment_method: "cancel" } },
+        metadata: {
+          parentName: sanitize(parentName, 100),
+          ...(userId && typeof userId === "string" ? { userId: userId.slice(0, 36) } : {}),
+        },
+      },
     });
     res.json({ url: session.url });
   } catch (err) {
