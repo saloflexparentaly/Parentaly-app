@@ -166,9 +166,10 @@ function buildSystemPrompt(profile, isSos, memory, isPremium) {
     .map(c => {
       const name   = sanitize(c.firstName, 30);
       const age    = calcAge(c.birthDate) || "âge non précisé";
+      const gender = ["Fille", "Garçon"].includes(c.gender) ? c.gender.toLowerCase() : null;
       const temp   = sanitize(c.temperament, 50);
       const notes  = sanitize(c.notes, 100);
-      const extras = [temp, notes].filter(Boolean).join(", ");
+      const extras = [gender, temp, notes].filter(Boolean).join(", ");
       return `${name} (${age}${extras ? ", " + extras : ""})`;
     }).join(", ") || "non renseigné";
 

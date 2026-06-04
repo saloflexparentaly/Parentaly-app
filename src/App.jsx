@@ -664,7 +664,7 @@ async function askElia({ profile, messages, isSos, memory, premiumToken }) {
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 let _childId = 0;
-const newChild = () => ({ id: `c-${Date.now()}-${++_childId}`, firstName: "", birthDate: "", temperament: "", notes: "" });
+const newChild = () => ({ id: `c-${Date.now()}-${++_childId}`, firstName: "", birthDate: "", gender: "", temperament: "", notes: "" });
 
 // ─── ONBOARDING ───────────────────────────────────────────────────────────────
 const ROLES = ["Maman", "Papa", "Co-parent", "Grand-parent", "Beau-parent", "Autre"];
@@ -792,6 +792,12 @@ function Onboarding({ onDone }) {
                     <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 8 }}>
                       <input className="field" placeholder="Prénom" value={c.firstName} onChange={e => updChild(i, "firstName", e.target.value)} style={{ fontSize: 14 }} />
                       <input className="field" type="date" value={c.birthDate} onChange={e => updChild(i, "birthDate", e.target.value)} style={{ fontSize: 13, minWidth: 0, width: "100%" }} />
+                    </div>
+                    <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
+                      {["Fille", "Garçon"].map(g => (
+                        <button key={g} className={`chip ${c.gender === g ? "on" : ""}`} style={{ fontSize: 11, padding: "5px 14px" }}
+                          onClick={() => updChild(i, "gender", c.gender === g ? "" : g)}>{g}</button>
+                      ))}
                     </div>
                     {c.birthDate && calcAge(c.birthDate) && (
                       <p style={{ fontSize: 12, color: "var(--accent)", marginBottom: 8, fontStyle: "italic" }}>{calcAge(c.birthDate)}</p>
