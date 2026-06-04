@@ -198,7 +198,13 @@ ${birthCtx}${challenges.length ? `\nDéfis déclarés : ${challenges.join(", ")}
 ${memBlock}
 ${tierBlock}${sosBlock}`;
 
-  return ELIA_SYSTEM_PROMPT + profileBlock;
+  // Retourne un tableau pour activer le prompt caching :
+  // - ELIA_SYSTEM_PROMPT est statique → mis en cache (22 800 tokens, économie ~80%)
+  // - profileBlock est dynamique (par utilisateur) → jamais mis en cache
+  return [
+    { type: "text", text: ELIA_SYSTEM_PROMPT, cache_control: { type: "ephemeral" } },
+    { type: "text", text: profileBlock },
+  ];
 }
 
 // ─── Sécurité headers ────────────────────────────────────────────────────────
@@ -421,6 +427,7 @@ app.post("/api/chat", chatLimiter, async (req, res) => {
         "Content-Type":      "application/json",
         "x-api-key":          process.env.ANTHROPIC_API_KEY,
         "anthropic-version": "2023-06-01",
+        "anthropic-beta":    "prompt-caching-2024-07-31",
       },
       body: JSON.stringify({
         model, max_tokens, system,
