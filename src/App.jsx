@@ -584,7 +584,7 @@ function StripeModal({ profile, onClose }) {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
           {[
             { key: "monthly", label: "Mensuel", price: "12,99€ TTC/mois", sub: "" },
-            { key: "annual",  label: "Annuel",  price: "99€ TTC/an",  sub: "~5€/mois offerts" },
+            { key: "annual",  label: "Annuel",  price: "89€ TTC/an",  sub: "~2€/mois offerts" },
           ].map(p => (
             <button key={p.key} onClick={() => setSelected(p.key)}
               style={{
@@ -652,7 +652,10 @@ async function askElia({ profile, messages, isSos, memory, premiumToken }) {
     }
     if (!resp.ok) throw new Error("API " + resp.status);
     const data = await resp.json();
-    return data.content.map(b => b.text || "").join("");
+    return {
+      text: data.content.map(b => b.text || "").join(""),
+      memoryEntry: data.memoryEntry || null,
+    };
   } catch (err) {
     clearTimeout(timeoutId);
     throw err;
@@ -1367,14 +1370,17 @@ function Chat({ profile, isSos, onBack, onPremium, premiumToken }) {
         memory,
         premiumToken,
       });
-      const am = { role: "assistant", content: reply, id: "a" + Date.now() };
+      const am = { role: "assistant", content: reply.text, id: "a" + Date.now() };
       setMsgs(prev => {
         const updated = [...prev, am];
         if (!isSos) S.set("elia_chat_history", updated);
         return updated;
       });
 
-      const entry = `${new Date().toLocaleDateString("fr-FR")} : "${txt.slice(0, 80)}"`;
+      const today = new Date().toISOString().slice(0, 10);
+      const entry = reply.memoryEntry
+        ? `${today} : ${reply.memoryEntry}`
+        : `${today} : "${txt.slice(0, 80)}"`;
       setMemory(prev => {
         const nm = [...prev.slice(-9), entry];
         S.set("elia_memory", nm);

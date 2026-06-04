@@ -370,6 +370,35 @@ app.post("/api/crisis-alert", async (req, res) => {
   res.json({ ok: true });
 });
 
+// ─── Extraction mémoire enrichie ─────────────────────────────────────────────
+async function extractMemoryEntry(messages) {
+  const lastUserMsg = messages.filter(m => m.role === "user").slice(-1)[0];
+  if (!lastUserMsg || String(lastUserMsg.content).length < 20) return null;
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 5000);
+  try {
+    const r = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type":      "application/json",
+        "x-api-key":          process.env.ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model:      "claude-haiku-4-5-20251001",
+        max_tokens: 60,
+        system:     "Extrait en 1 ligne (max 80 caractères) les faits clés à retenir sur ce parent ou sa famille. Sépare par ·. Exemple: 'Nuits difficiles · Emma pleure · stress travail reprise'. Réponds SKIP si rien d'important.",
+        messages:   [{ role: "user", content: String(lastUserMsg.content).slice(0, 300) }],
+      }),
+      signal: ctrl.signal,
+    });
+    clearTimeout(t);
+    const d = await r.json();
+    const entry = d.content?.[0]?.text?.trim();
+    return (!entry || entry === "SKIP") ? null : entry;
+  } catch { clearTimeout(t); return null; }
+}
+
 // ─── Chat API ─────────────────────────────────────────────────────────────────
 app.post("/api/chat", chatLimiter, async (req, res) => {
   const { profile, messages, isSos, memory, premiumToken } = req.body;
@@ -420,6 +449,9 @@ app.post("/api/chat", chatLimiter, async (req, res) => {
   const controller = new AbortController();
   const timeout    = setTimeout(() => controller.abort(), 30000);
 
+  // Extraction mémoire en parallèle — zéro latence ajoutée (sauf en SOS)
+  const memoryPromise = isSos ? Promise.resolve(null) : extractMemoryEntry(messages);
+
   try {
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -441,7 +473,8 @@ app.post("/api/chat", chatLimiter, async (req, res) => {
     clearTimeout(timeout);
     const data = await response.json();
     if (data.error) return res.status(400).json(data);
-    res.json(data);
+    const memoryEntry = await memoryPromise;
+    res.json({ ...data, memoryEntry });
   } catch (err) {
     clearTimeout(timeout);
     if (err.name === "AbortError") return res.status(504).json({ error: "Délai dépassé. Réessaie." });
