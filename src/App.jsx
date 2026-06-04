@@ -56,6 +56,11 @@ const GlobalStyles = () => (
     }
     .field:focus { border-color: var(--accent-light); box-shadow: 0 0 0 3px rgba(201,117,96,.15); }
     .field::placeholder { color: var(--ink-faint); }
+    input[type="date"].field {
+      -webkit-appearance: none; appearance: none;
+      min-width: 0; max-width: 100%; box-sizing: border-box;
+    }
+    input[type="date"].field::-webkit-calendar-picker-indicator { opacity: 0.5; }
 
     .chip {
       padding: 8px 16px; border-radius: 8px;
